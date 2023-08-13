@@ -4,4 +4,4 @@ version = "0.0.1"
 entrypoint = "bytefield.typ"
 authors = ["Jomaway <https://github.com/jomaway>"]
 license = "MIT"
-description = "An package to create network protocol headers"
+description = "A package to create network protocol headers"

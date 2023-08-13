@@ -30,14 +30,12 @@
     }
     if size > bits and remaining_cols == bits and calc.rem(size, bits) == 0 {
       content = content + " (" + str(size) + " Bit)"
-      cells.push(bfcell(int(bits),fill:fill, height: rowheight * 2)[#content])
+      cells.push(bfcell(int(bits),fill:fill, height: rowheight * size/bits)[#content])
       size = 0
     }
-    let tmp = 0;
+
     while size > 0 {
       let width = calc.min(size, remaining_cols);
-      //let mod_content = content + "(" + str(tmp) + "-" + str(tmp + width) +")"
-      //tmp += width;
       size -= remaining_cols
       remaining_cols = bits
       cells.push(bfcell(int(width),fill:fill, height: rowheight,)[#content])
@@ -79,7 +77,7 @@
 #let bits(len, ..args) = bitbox(len, ..args)
 #let byte(..args) = bitbox(8, ..args)
 #let bytes(len, ..args) = bitbox(len * 8, ..args)
-#let rest(..args) = bitbox(none, ..args)
+#let padding(..args) = bitbox(none, ..args)
 
 // Rotating text for flags
 #let flagtext(text) = align(end,pad(-3pt,rotate(270deg,text)))
@@ -105,13 +103,13 @@
   header: (0,8,16,31),
   byte[Type], byte[Code], bytes(2)[Checksum],
   bytes(2)[Identifier], bytes(2)[Sequence Number],
-  rest[Optional Data ]
+  padding[Optional Data ]
 )
 
 #let icmpv6 = bytefield(
   header: (0,8,16,31),
   byte[Type], byte[Code], bytes(2)[Checksum],
-  rest[Internet Header + 64 bits of Original Data Datagram  ]
+  padding[Internet Header + 64 bits of Original Data Datagram  ]
 )
 
 #let dns = bytefield(
@@ -131,7 +129,7 @@
   bits(4)[Data Offset],bits(6)[Reserved], bits(6)[Flags], bytes(2)[Window],
   bytes(2)[Checksum], bytes(2)[Urgent Pointer],
   bytes(3)[Options], byte[Padding],
-  rest[...DATA...]
+  padding[...DATA...]
 )
 
 
@@ -143,45 +141,13 @@
   bits(4)[Data Offset],bits(6)[Reserved], bit[#flagtext("URG")], bit[#flagtext("ACK")], bit[#flagtext("PSH")], bit[#flagtext("RST")], bit[#flagtext("SYN")], bit[#flagtext("FIN")], bytes(2)[Window],
   bytes(2)[Checksum], bytes(2)[Urgent Pointer],
   bytes(3)[Options], byte[Padding],
-  rest[...DATA...]
+  padding[...DATA...]
 )
 
 #let udp = bytefield(
   bitheader: (0,16,31),
   bytes(2)[Source Port], bytes(2)[ Destinatino Port],
   bytes(2)[Length], bytes(2)[Checksum],
-  rest[...DATA...]
+  padding[...DATA...]
 )
 
-
-= Bytefield
-== Random Example
-#bytefield(
-  bits(32, fill: red.lighten(30%))[Test],
-  bytes(5)[Break],
-  bits(24, fill: green.lighten(30%))[Fill],
-  bytes(12)[Addr],
-  rest(fill: purple.lighten(40%))[Padding],
-)
-
-== IPv4
-#ipv4
-
-== IPv6
-#ipv6
-
-== ICMP
-#icmp
-
-== ICMPv6
-#icmpv6
-
-== DNS
-#dns
-
-== TCP
-#tcp
-#tcp_detailed
-
-== UDP
-#udp
