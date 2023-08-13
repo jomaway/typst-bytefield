@@ -1,6 +1,5 @@
 #import "bytefield.typ": *
 
-
 = Bytefield
 == Random Example
 #bytefield(
