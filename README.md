@@ -21,7 +21,7 @@ bytefield(
 
 ## Usage
 
-To use this library through the Typst package manager (for Typst v0.6.0+), import bytefield with `#import="@preview/bytefield:0.0.1": *` at the top of your file.
+To use this library through the Typst package manager (for Typst v0.6.0+), import bytefield with `#import "@preview/bytefield:0.0.1": *` at the top of your file.
 
 The package contains some of the most common network protocol headers: `ipv4`, `ipv6`, `icmp`, `icmpv6`, `dns`, `tcp`, `udp`.
 
