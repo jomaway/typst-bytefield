@@ -80,7 +80,7 @@
 #let padding(..args) = bitbox(none, ..args)
 
 // Rotating text for flags
-#let flagtext(text) = align(end,pad(-3pt,rotate(270deg,text)))
+#let flagtext(text) = align(center,rotate(270deg,text))
 
 // Common network protocols
 #let ipv4 = bytefield(
