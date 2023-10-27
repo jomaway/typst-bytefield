@@ -10,11 +10,16 @@
   content, 
   fill: none, // color to fill the field
   height: auto, // height of the field
-  msb_first: false, // reverse bit rder
 ) = cellx(colspan: len, fill: fill, inset: 0pt)[#box(height: height, width: 100%, stroke: 1pt + black)[#content]]
 
 
-#let bytefield(bits: 32, rowheight: 2.5em, bitheader: auto, ..fields) = {
+#let bytefield(
+  bits: 32, 
+  rowheight: 2.5em, 
+  bitheader: auto,   
+  msb_first: false,
+  ..fields
+) = {
   // state variables
   let col_count = 0
   let cells = ()
@@ -44,23 +49,27 @@
   
   }
 
+
   bitheader = if bitheader == auto { 
-    range(bits).map(i => if calc.rem(i,8) == 0 or i == (bits - 1) { text(9pt)[#i] } else { none }) 
+    range(bits).map(i => if calc.rem(i,8) == 0 or i == (bits - 1) { 
+      text(9pt)[#i]
+      } else { none })
+  } else if bitheader == "all" {
+    range(bits).map(i => text(9pt)[#i])
   } else if bitheader != none {
-    assert(type(bitheader) == "array", message: "header must be an array or none")
+    assert(type(bitheader) == array, message: "header must be an array, none or 'all' ")
     range(bits).map(i => if i in bitheader { text(9pt)[#i] } else {none})
   }
 
-  if(msb_first) {
-    bitheader.rev()
+  if(msb_first == true) {
+    bitheader = bitheader.rev()
   }
+
   
   box(width: 100%)[
-    //#show grid: set block(below: 0pt)
     #gridx(
       columns: range(bits).map(i => 1fr),
       align: center + horizon,
-      //inset:0pt,
       ..bitheader,
       ..cells,
     )

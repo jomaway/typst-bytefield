@@ -21,7 +21,7 @@ bytefield(
 
 ## Usage
 
-To use this library through the Typst package manager (for Typst v0.6.0+), import bytefield with `#import "@preview/bytefield:0.0.1": *` at the top of your file.
+To use this library through the Typst package manager (for Typst v0.6.0+), import bytefield with `#import "@preview/bytefield:0.0.2": *` at the top of your file.
 
 The package contains some of the most common network protocol headers: `ipv4`, `ipv6`, `icmp`, `icmpv6`, `dns`, `tcp`, `udp`.
 
@@ -42,6 +42,13 @@ At the moment very limited features. Feel free to extend if you like.
 
 
 ## Changelog
+
+### v0.0.2
+
+Added support for reversed bitheader order with `msb_first:true`.
+Quick way to show all headerbits with `bitheader: "all"`.
+Updated `flagtext` center alignment.
+
 
 ### v0.0.1
 
