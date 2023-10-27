@@ -9,7 +9,8 @@
   len, // lenght of the fields in bits 
   content, 
   fill: none, // color to fill the field
-  height: auto // height of the field
+  height: auto, // height of the field
+  msb_first: false, // reverse bit rder
 ) = cellx(colspan: len, fill: fill, inset: 0pt)[#box(height: height, width: 100%, stroke: 1pt + black)[#content]]
 
 
@@ -48,6 +49,10 @@
   } else if bitheader != none {
     assert(type(bitheader) == "array", message: "header must be an array or none")
     range(bits).map(i => if i in bitheader { text(9pt)[#i] } else {none})
+  }
+
+  if(msb_first) {
+    bitheader.rev()
   }
   
   box(width: 100%)[
