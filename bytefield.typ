@@ -25,6 +25,8 @@
   let cells = ()
 
   // calculate cells
+  let current_offset = 0;
+  let computed_offsets = ();
   for (idx, field) in fields.pos().enumerate() {
     let (size, content, fill, ..) = field;
     let remaining_cols = bits - col_count;
@@ -34,6 +36,10 @@
       size = remaining_cols
       content = content + sym.star
     }
+
+    computed_offsets.push(current_offset);
+    current_offset += size;
+    
     if size > bits and remaining_cols == bits and calc.rem(size, bits) == 0 {
       content = content + " (" + str(size) + " Bit)"
       cells.push(bfcell(int(bits),fill:fill, height: rowheight * size/bits)[#content])
@@ -48,6 +54,8 @@
     }
   
   }
+  
+  computed_offsets.push(bits - 1);
 
 
   bitheader = if bitheader == auto { 
@@ -56,12 +64,14 @@
       } else { none })
   } else if bitheader == "all" {
     range(bits).map(i => text(9pt)[#i])
+  } else if bitheader == "smart" {
+    range(bits).map(i => if i in computed_offsets { text(9pt)[#i] } else {none})
   } else if bitheader != none {
-    assert(type(bitheader) == array, message: "header must be an array, none or 'all' ")
+    assert(type(bitheader) == array, message: "header must be an array, none, 'all' or 'smart'")
     range(bits).map(i => if i in bitheader { text(9pt)[#i] } else {none})
   }
 
-  if(msb_first == true) {
+  if msb_first == true {
     bitheader = bitheader.rev()
   }
 
