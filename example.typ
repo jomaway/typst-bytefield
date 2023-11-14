@@ -46,6 +46,20 @@ Show start bit of each bitbox with `bitheader: "smart"`.
   padding()[]
 )
 
+And with `msb_first: true`:
+
+#bytefield(
+  bits: 32,
+  msb_first: true,
+  // same as bitheader: (0,8,13,18,23,31),
+  bitheader: "smart",
+  bits(8)[opcode],
+  bits(5)[rd],
+  bits(5)[rs1],
+  bits(5)[rs2],
+  padding()[]
+)
+
 == Custom bit header
 
 #bytefield(
