@@ -58,27 +58,30 @@
   computed_offsets.push(bits - 1);
 
   let bitheader_font_size = 9pt;
+  let bh_num_text(num) = {
+    text(bitheader_font_size)[#num];
+  }
+
   bitheader = if bitheader == auto { 
     range(bits).map(i =>
-      if calc.rem(i,8) == 0 or i == (bits - 1) { text(bitheader_font_size)[#i] } 
+      if calc.rem(i,8) == 0 or i == (bits - 1) { bh_num_text(i) } 
       else { none })
   } else if bitheader == "all" {
-    range(bits).map(i => text(9pt)[#i])
+    range(bits).map(i => bh_num_text(i))
   } else if bitheader == "smart" {
     if msb_first == true {
       computed_offsets = computed_offsets.map(i => bits - i - 1);
     }
-
-    range(bits).map(i => if i in computed_offsets { text(bitheader_font_size)[#i] } else {none})
+    range(bits).map(i => if i in computed_offsets { bh_num_text(i) } else {none})
   } else if bitheader != none {
     assert(type(bitheader) == array, message: "header must be an array, none, 'all' or 'smart'")
-    range(bits).map(i => if i in bitheader { text(bitheader_font_size)[#i] } else {none})
+    range(bits).map(i => if i in bitheader { bh_num_text(i) } else {none})
   }
 
+  // revers bit order
   if msb_first == true {
     bitheader = bitheader.rev()
   }
-
   
   box(width: 100%)[
     #gridx(
