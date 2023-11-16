@@ -62,13 +62,16 @@
     text(bitheader_font_size)[#num];
   }
 
-  bitheader = if bitheader == auto { 
+  let _bitheader = if bitheader == auto { 
+    // Default mode - show every 8 bit + last.
     range(bits).map(i =>
       if calc.rem(i,8) == 0 or i == (bits - 1) { bh_num_text(i) } 
       else { none })
   } else if bitheader == "all" {
+    // Show all numbers from 0 to total bits.
     range(bits).map(i => bh_num_text(i))
   } else if bitheader == "smart" {
+    // Show nums aligned with given fields
     if msb_first == true {
       computed_offsets = computed_offsets.map(i => bits - i - 1);
     }
@@ -80,14 +83,14 @@
 
   // revers bit order
   if msb_first == true {
-    bitheader = bitheader.rev()
+    _bitheader = _bitheader.rev()
   }
   
   box(width: 100%)[
     #gridx(
       columns: range(bits).map(i => 1fr),
       align: center + horizon,
-      ..bitheader,
+      .._bitheader,
       ..cells,
     )
   ]
