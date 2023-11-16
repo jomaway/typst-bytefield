@@ -43,6 +43,12 @@ At the moment very limited features. Feel free to extend if you like.
 
 ## Changelog
 
+### v0.0.3 (WIP)
+
+- Added "smart" bit headers thanks to [hgruniaux](https://github.com/hgruniaux)
+- Added option to pass an `int` as bitheader, which shows all multiples of this number
+
+
 ### v0.0.2
 
 Added support for reversed bitheader order with `msb_first:true`.
