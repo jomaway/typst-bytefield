@@ -62,23 +62,31 @@
     text(bitheader_font_size)[#num];
   }
 
-  let _bitheader = if bitheader == auto { 
-    // Default mode - show every 8 bit + last.
-    range(bits).map(i =>
-      if calc.rem(i,8) == 0 or i == (bits - 1) { bh_num_text(i) } 
-      else { none })
-  } else if bitheader == "all" {
+  // Define default behavior - show every 8 bit
+  if (bitheader == auto) { bitheader = 8}
+
+  let _bitheader = if ( bitheader == "all" ) {
     // Show all numbers from 0 to total bits.
     range(bits).map(i => bh_num_text(i))
-  } else if bitheader == "smart" {
+  } else if ( bitheader == "smart" ) {
     // Show nums aligned with given fields
     if msb_first == true {
       computed_offsets = computed_offsets.map(i => bits - i - 1);
     }
     range(bits).map(i => if i in computed_offsets { bh_num_text(i) } else {none})
-  } else if bitheader != none {
-    assert(type(bitheader) == array, message: "header must be an array, none, 'all' or 'smart'")
+  } else if ( type(bitheader) == array ) {
+    // show given numbers from array
     range(bits).map(i => if i in bitheader { bh_num_text(i) } else {none})
+  } else if ( type(bitheader) == int ) {
+    // if an int is given show all multiples of this number
+    let val = bitheader;
+    range(bits).map(i =>
+      if calc.rem(i,val) == 0 or i == (bits - 1) { bh_num_text(i) } 
+      else { none })
+  } else if ( bitheader == none ) {
+    range(bits).map(_ => []);
+  } else {
+    panic("bitheader must be an integer,array, none, 'all' or 'smart'")
   }
 
   // revers bit order
