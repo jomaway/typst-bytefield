@@ -21,7 +21,7 @@ bytefield(
 
 ## Usage
 
-To use this library through the Typst package manager (for Typst v0.6.0+), import bytefield with `#import "@preview/bytefield:0.0.2": *` at the top of your file.
+To use this library through the Typst package manager (for Typst v0.6.0+), import bytefield with `#import "@preview/bytefield:0.0.3": *` at the top of your file.
 
 The package contains some of the most common network protocol headers: `ipv4`, `ipv6`, `icmp`, `icmpv6`, `dns`, `tcp`, `udp`.
 
@@ -43,7 +43,7 @@ At the moment very limited features. Feel free to extend if you like.
 
 ## Changelog
 
-### v0.0.3 (WIP)
+### v0.0.3
 
 - Added "smart" bit headers thanks to [hgruniaux](https://github.com/hgruniaux)
   - Added "smart-firstline" to only consider the first row for calculation.

@@ -62,10 +62,13 @@
 
   let bitheader_font_size = 9pt;
   let bh_num_text(num) = {
-    let alignment =  if (msb_first) {
-      if (num == 0) {end} else if (num == (bits - 1)) { start } else { center }
-    } else { 
-      if (num == (bits - 1)) {end} else if (num == 0) { start } else { center }
+    let alignment = if (bitheader == "all") {center} 
+    else {
+      if (msb_first) {
+        if (num == 0) {end} else if (num == (bits - 1)) { start } else { center }
+      } else { 
+        if (num == (bits - 1)) {end} else if (num == 0) { start } else { center }
+      }
     }
 
     align(alignment, text(bitheader_font_size)[#num]);

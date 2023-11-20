@@ -1,4 +1,4 @@
-#import "@local/bytefield:0.0.2": *
+#import "@local/bytefield:0.0.3": *
 
 = Bytefield
 == Colored Example
