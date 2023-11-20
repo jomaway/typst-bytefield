@@ -2,7 +2,7 @@
 // Feel free to contribute with any features you think are missing.
 // Still a WIP - alpha stage and a bit hacky at the moment
 
-#import "@preview/tablex:0.0.4": tablex, cellx, gridx
+#import "@preview/tablex:0.0.6": tablex, cellx, gridx
 #set text(font: "IBM Plex Mono")
 
 #let bfcell(
@@ -24,6 +24,9 @@
   let col_count = 0
   let cells = ()
 
+  // Define default behavior - show 
+  if (bitheader == auto) { bitheader = "smart"}
+
   // calculate cells
   let current_offset = 0;
   let computed_offsets = ();
@@ -37,7 +40,7 @@
       content = content + sym.star
     }
 
-    computed_offsets.push(current_offset);
+    computed_offsets.push(if (bitheader == "smart-firstline") { current_offset } else { calc.rem(current_offset,bits) } );
     current_offset += size;
     
     if size > bits and remaining_cols == bits and calc.rem(size, bits) == 0 {
@@ -62,13 +65,11 @@
     text(bitheader_font_size)[#num];
   }
 
-  // Define default behavior - show every 8 bit
-  if (bitheader == auto) { bitheader = 8}
 
   let _bitheader = if ( bitheader == "all" ) {
     // Show all numbers from 0 to total bits.
     range(bits).map(i => bh_num_text(i))
-  } else if ( bitheader == "smart" ) {
+  } else if ( bitheader == "smart" or bitheader == "smart-firstline") {
     // Show nums aligned with given fields
     if msb_first == true {
       computed_offsets = computed_offsets.map(i => bits - i - 1);

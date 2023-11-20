@@ -16,10 +16,10 @@
 Show all bit headers with `bitheader: "all"` 
 
 #bytefield(
-    bits:16,
+    bits:32,
     msb_first: true,
     bitheader: "all",
-    ..range(16).map(i => bit[#flagtext[B#i]]).rev(),
+    ..range(32).map(i => bit[#flagtext[B#i]]).rev(),
 )
 
 == Smart bit header

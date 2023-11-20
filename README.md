@@ -46,21 +46,23 @@ At the moment very limited features. Feel free to extend if you like.
 ### v0.0.3 (WIP)
 
 - Added "smart" bit headers thanks to [hgruniaux](https://github.com/hgruniaux)
-- Added option to pass an `int` as bitheader, which shows all multiples of this number
+- Added "smart-firstline" to only consider the first row for calculation.
+- Added option to pass an `int` as bitheader, which shows all multiples of this number.
+
 
 
 ### v0.0.2
 
-Added support for reversed bitheader order with `msb_first:true`.
-Quick way to show all headerbits with `bitheader: "all"`.
-Updated `flagtext` center alignment.
+- Added support for reversed bitheader order with `msb_first:true`.
+- Quick way to show all headerbits with `bitheader: "all"`.
+- Updated `flagtext` center alignment.
 
 
 ### v0.0.1
 
 Initial Release
 
-Added `bytefield`, as main function to create an new bytefield diagram. 
-Added `bit`, `bits`, `byte`, `bytes`, `padding`, as high level API for adding fields to a bytefield. 
-Added `flagtext` as a utility function to create rotate text for short flag descriptions.
-Added `ipv4`, `ipv6`, `icmp`, `icmpv6`, `dns`, `tcp`, `udp` as predefined diagrams.
+- Added `bytefield`, as main function to create an new bytefield diagram. 
+- Added `bit`, `bits`, `byte`, `bytes`, `padding`, as high level API for adding fields to a bytefield. 
+- Added `flagtext` as a utility function to create rotate text for short flag descriptions.
+- Added `ipv4`, `ipv6`, `icmp`, `icmpv6`, `dns`, `tcp`, `udp` as predefined diagrams.
