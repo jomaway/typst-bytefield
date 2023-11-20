@@ -71,6 +71,36 @@ Pass an `integer` to show all multiples of this number.
     bits(3)[Last],
 )
 
+== Text header instead of numbers  [*WIP*]
+
+Pass an `dictionary` as bitheader. Example: 
+```typst
+#let myCustomTextBitheader = (
+  "0": "LSB_starting_at_bit_0", 
+  "13": "test", 
+  "24": "next_field_at_bit_24", 
+  "31":"MSB", 
+  angle: -40deg,
+  marker: auto // or none
+)
+```
+
+#box(width: 100%)[
+
+#bytefield(
+  bitheader: ("0": "LSB_starting_at_bit_0", "13": "test", "25": "next_field_at_bit_25", "31":"MSB", angle: -45deg,),
+  bits: 32,
+  bit[F],
+  byte[Start],
+  bytes(2, fill: red.lighten(30%))[Test],
+  bit[H],
+  bits(5, fill: purple.lighten(40%))[CRC],
+  bit[T],
+)
+]
+
+= Some predefined network protocols
+
 == IPv4
 #ipv4
 

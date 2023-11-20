@@ -16,7 +16,7 @@
 #let bytefield(
   bits: 32, 
   rowheight: 2.5em, 
-  bitheader: auto,   
+  bitheader: auto, 
   msb_first: false,
   ..fields
 ) = {
@@ -62,7 +62,13 @@
 
   let bitheader_font_size = 9pt;
   let bh_num_text(num) = {
-    text(bitheader_font_size)[#num];
+    let alignment =  if (msb_first) {
+      if (num == 0) {end} else if (num == (bits - 1)) { start } else { center }
+    } else { 
+      if (num == (bits - 1)) {end} else if (num == 0) { start } else { center }
+    }
+
+    align(alignment, text(bitheader_font_size)[#num]);
   }
 
 
@@ -86,8 +92,21 @@
       else { none })
   } else if ( bitheader == none ) {
     range(bits).map(_ => []);
+  } else if (type(bitheader) == dictionary) {
+    range(bits).map(i => [
+      #set align(start + bottom)
+      #let h_text = bitheader.at(str(i),default: "");
+      #style(styles => {
+        let size = measure(h_text, styles).width
+        return box(height: size, inset:(left: 50%))[
+          
+          #if (h_text != "" and bitheader.at("marker", default: auto) != none){ place(bottom, line(end:(0pt, 5pt))) }
+          #rotate(bitheader.at("angle", default: -60deg), origin: left, h_text)
+        ]  
+      })
+    ])
   } else {
-    panic("bitheader must be an integer,array, none, 'all' or 'smart'")
+     panic("bitheader must be an integer,array, none, 'all' or 'smart'")
   }
 
   // revers bit order
@@ -99,6 +118,7 @@
     #gridx(
       columns: range(bits).map(i => 1fr),
       align: center + horizon,
+      inset: (x:0pt, y: 4pt),
       .._bitheader,
       ..cells,
     )
