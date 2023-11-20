@@ -46,8 +46,10 @@ At the moment very limited features. Feel free to extend if you like.
 ### v0.0.3 (WIP)
 
 - Added "smart" bit headers thanks to [hgruniaux](https://github.com/hgruniaux)
-- Added "smart-firstline" to only consider the first row for calculation.
+  - Added "smart-firstline" to only consider the first row for calculation.
 - Added option to pass an `int` as bitheader, which shows all multiples of this number.
+- Added experimental "text_header" support by passing a `dictionary` to bitheader.
+- Fixed bitheader number alignment on edge cases. (This could be improved and extended in a future version.)
 
 
 
