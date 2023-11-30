@@ -8,8 +8,10 @@ Using [tablex](https://github.com/PgBiel/typst-tablex) under the hood.
 
 ![ipv4 example](ipv4-example.png)
 
-```typst  
-bytefield(
+```typst
+#import "@preview/bytefield:0.0.3": *
+
+#bytefield(
   bits(4)[Version], bits(4)[TTL], bytes(1)[TOS], bytes(2)[Total Length],
   bytes(2)[Identification], bits(3)[Flags], bits(13)[Fragment Offset],
   bytes(1)[TTL], bytes(1)[Protocol], bytes(2)[Header Checksum],
