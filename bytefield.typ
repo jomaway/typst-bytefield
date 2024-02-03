@@ -18,6 +18,8 @@
   rowheight: 2.5em, 
   bitheader: auto, 
   msb_first: false,
+  pre: (),
+  post: (),
   ..fields
 ) = {
   // state variables
@@ -31,6 +33,12 @@
   let current_offset = 0;
   let computed_offsets = ();
   for (idx, field) in fields.pos().enumerate() {
+    if (type(field) != dictionary or field.at("type",default:none) != "bitbox") {
+      // forward unknown content to tablex (useful for pre/post)
+      cells.push(field)
+      continue
+    }
+
     let (size, content, fill, ..) = field;
     let remaining_cols = bits - col_count;
     col_count = calc.rem(col_count + size, bits);
@@ -40,8 +48,14 @@
       content = content + sym.star
     }
 
-    computed_offsets.push(if (bitheader == "smart-firstline") { current_offset } else { calc.rem(current_offset,bits) } );
+    computed_offsets.push(if (bitheader == "smart-firstline") { current_offset } else { calc.rem(current_offset + pre.len(),bits) } );
     current_offset += size;
+    if (bitheader == "bounds") {
+      let offset = calc.rem(current_offset - 1,bits)
+      if (computed_offsets.last() != offset) {
+        computed_offsets.push(offset)
+      }
+    }
     
     if size > bits and remaining_cols == bits and calc.rem(size, bits) == 0 {
       content = content + " (" + str(size) + " Bit)"
@@ -62,7 +76,7 @@
 
   let bitheader_font_size = 9pt;
   let bh_num_text(num) = {
-    let alignment = if (bitheader == "all") {center} 
+    let alignment = if (bitheader in ("all","bounds")) {center} 
     else {
       if (msb_first) {
         if (num == 0) {end} else if (num == (bits - 1)) { start } else { center }
@@ -78,7 +92,7 @@
   let _bitheader = if ( bitheader == "all" ) {
     // Show all numbers from 0 to total bits.
     range(bits).map(i => bh_num_text(i))
-  } else if ( bitheader == "smart" or bitheader == "smart-firstline") {
+  } else if ( bitheader in ("smart","smart-firstline","bounds")) {
     // Show nums aligned with given fields
     if msb_first == true {
       computed_offsets = computed_offsets.map(i => bits - i - 1);
@@ -116,10 +130,11 @@
   if msb_first == true {
     _bitheader = _bitheader.rev()
   }
-  
+  let _bitheader = ([],)*pre.len() + _bitheader + ([],)*post.len()
+
   box(width: 100%)[
     #gridx(
-      columns: range(bits).map(i => 1fr),
+      columns: pre + range(bits).map(i => 1fr) + post,
       align: center + horizon,
       inset: (x:0pt, y: 4pt),
       .._bitheader,
@@ -144,6 +159,9 @@
 #let byte(..args) = bitbox(8, ..args)
 #let bytes(len, ..args) = bitbox(len * 8, ..args)
 #let padding(..args) = bitbox(none, ..args)
+#let flag(..args,text) = bitbox(1,..args,flagtext(text))
+#let left_aligned(..args) = cellx(inset:5pt,align:left+horizon, ..args)
+#let right_aligned(..args) = cellx(inset:5pt,align:right+horizon, ..args)
 
 // Rotating text for flags
 #let flagtext(text) = align(center,rotate(270deg,text))
@@ -216,4 +234,3 @@
   bytes(2)[Length], bytes(2)[Checksum],
   padding[...DATA...]
 )
-

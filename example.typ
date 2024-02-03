@@ -1,4 +1,4 @@
-#import "@local/bytefield:0.0.3": *
+#import "bytefield.typ" : *
 
 = Bytefield
 == Colored Example
@@ -30,6 +30,21 @@ Show start bit of each bitbox with `bitheader: "smart"`.
   bits: 32,
   // same as bitheader: (0,8,13,18,23,31),
   bitheader: "smart",
+  bits(8)[opcode],
+  bits(5)[rd],
+  bits(5)[rs1],
+  bits(5)[rs2],
+  padding()[]
+)
+
+== Bounds bit header
+
+Show start bit of each bitbox with `bitheader: "bounds"`.
+
+#bytefield(
+  bits: 32,
+  // same as bitheader: (0,7,8,12,13,17,18,22,23,30,31),
+  bitheader: "bounds",
   bits(8)[opcode],
   bits(5)[rd],
   bits(5)[rs1],
@@ -98,6 +113,41 @@ Pass an `dictionary` as bitheader. Example:
   bit[T],
 )
 ]
+
+== Pre/Post columns
+
+Define additional columns with before the bitfield with `pre` or behind the bitfield with `post`
+and pass any tablex object.
+
+You can use the helpers `left_aligned` and `right_aligned` for left and right aligned text.
+
+```typst
+#bytefield(
+  bits:1,
+  pre:(auto,),
+  post:(auto,),
+  right_aligned[0x0],
+  bit[some thing],
+  left_aligned[first word],
+  right_aligned[0x10],
+  bit[some other thing],
+  left_aligned[second word],
+)
+```
+
+#bytefield(
+  bits:1,
+  bitheader: none,
+  pre:(auto,),
+  post:(auto,),
+  right_aligned[0x0],
+  bit[some thing],
+  left_aligned[first word],
+  right_aligned[0x10],
+  bit[some other thing],
+  left_aligned[second word],
+)
+
 
 = Some predefined network protocols
 
