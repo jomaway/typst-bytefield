@@ -29,6 +29,8 @@
   // Define default behavior - show 
   if (bitheader == auto) { bitheader = "smart"}
 
+  let compute_bounds = (bitheader == "bounds") or ( type(bitheader) == dictionary and bitheader.at("numbers",default:none) == "bounds" )
+
   // calculate cells
   let current_offset = 0;
   let computed_offsets = ();
@@ -50,7 +52,7 @@
 
     computed_offsets.push(if (bitheader == "smart-firstline") { current_offset } else { calc.rem(current_offset + pre.len(),bits) } );
     current_offset += size;
-    if (bitheader == "bounds") {
+    if (compute_bounds) {
       let offset = calc.rem(current_offset - 1,bits)
       if (computed_offsets.last() != offset) {
         computed_offsets.push(offset)
@@ -110,15 +112,37 @@
   } else if ( bitheader == none ) {
     range(bits).map(_ => []);
   } else if (type(bitheader) == dictionary) {
+    let numbers = bitheader.at("numbers",default:none) 
+    if msb_first == true {
+      computed_offsets = computed_offsets.map(i => bits - i - 1);
+    }
     range(bits).map(i => [
       #set align(start + bottom)
       #let h_text = bitheader.at(str(i),default: "");
       #style(styles => {
         let size = measure(h_text, styles).width
-        return box(height: size, inset:(left: 50%))[
-          
+        return [
+          #box(height: size,inset:(left: 50%))[
           #if (h_text != "" and bitheader.at("marker", default: auto) != none){ place(bottom, line(end:(0pt, 5pt))) }
           #rotate(bitheader.at("angle", default: -60deg), origin: left, h_text)
+          ]
+          #if (type(numbers) == bool and numbers and h_text != "") {
+              v(-0.5em)
+              align(center, text(bitheader_font_size)[#i])
+          } else if (numbers == "all") {
+            v(-0.5em)
+            align(center, text(bitheader_font_size)[#i])
+          } else if (numbers in ("smart","smart-firstline","bounds")) {
+            if (i in computed_offsets) {
+              v(-0.5em)
+              align(center, text(bitheader_font_size)[#i])
+            }
+          } else if (type(numbers) == array) {
+            if (i in array) {
+              v(-0.5em)
+              align(center, text(bitheader_font_size)[#i])
+            }
+          }
         ]  
       })
     ])

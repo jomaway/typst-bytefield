@@ -90,20 +90,77 @@ Pass an `integer` to show all multiples of this number.
 
 Pass an `dictionary` as bitheader. Example: 
 ```typst
-#let myCustomTextBitheader = (
+#bytefield(
+  bitheader: (
+    "0": "LSB_starting_at_bit_0", 
+    "13": "test", 
+    "24": "next_field_at_bit_24", 
+    "31":"MSB", 
+    angle: -40deg,
+    marker: auto // or none
+  ),
+  bits: 32,
+  bit[F],
+  byte[Start],
+  bytes(2, fill: red.lighten(30%))[Test],
+  bit[H],
+  bits(5, fill: purple.lighten(40%))[CRC],
+  bit[T],
+)
+```
+
+#box(width: 100%)[ 
+#bytefield(
+  bitheader: (
+    "0": "LSB_starting_at_bit_0", 
+    "13": "test", 
+    "24": "next_field_at_bit_24", 
+    "31":"MSB", 
+    angle: -40deg,
+    marker: auto // or none
+  ),
+  bits: 32,
+  bit[F],
+  byte[Start],
+  bytes(2, fill: red.lighten(30%))[Test],
+  bit[H],
+  bits(5, fill: purple.lighten(40%))[CRC],
+  bit[T],
+)
+]
+
+#box(width: 100%)[
+You can also show labels and numbers
+```typst
+#bytefield(
+  bitheader: (
   "0": "LSB_starting_at_bit_0", 
   "13": "test", 
   "24": "next_field_at_bit_24", 
   "31":"MSB", 
+  numbers:"smart", // the numbers to show
   angle: -40deg,
   marker: auto // or none
+),
+  bits: 32,
+  bit[F],
+  byte[Start],
+  bytes(2, fill: red.lighten(30%))[Test],
+  bit[H],
+  bits(5, fill: purple.lighten(40%))[CRC],
+  bit[T],
 )
 ```
-
-#box(width: 100%)[
-
 #bytefield(
-  bitheader: ("0": "LSB_starting_at_bit_0", "13": "test", "25": "next_field_at_bit_25", "31":"MSB", angle: -45deg,),
+  bitheader: (
+  "0": "LSB_starting_at_bit_0", 
+  "13": "test", 
+  "24": "next_field_at_bit_24", 
+  "31":"MSB", 
+  numbers:"smart", // the numbers to show
+  angle: -40deg,
+  marker: auto // or none
+),
   bits: 32,
   bit[F],
   byte[Start],
@@ -147,7 +204,6 @@ You can use the helpers `left_aligned` and `right_aligned` for left and right al
   bit[some other thing],
   left_aligned[second word],
 )
-
 
 = Some predefined network protocols
 
