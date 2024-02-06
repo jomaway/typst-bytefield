@@ -50,7 +50,7 @@
       content = content + sym.star
     }
 
-    computed_offsets.push(if (bitheader == "smart-firstline") { current_offset } else { calc.rem(current_offset + pre.len(),bits) } );
+    computed_offsets.push(if (bitheader == "smart-firstline") { current_offset } else { calc.rem(current_offset,bits) } );
     current_offset += size;
     if (compute_bounds) {
       let offset = calc.rem(current_offset - 1,bits)
