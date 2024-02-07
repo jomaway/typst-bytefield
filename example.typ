@@ -233,14 +233,14 @@ You can use the helpers `left_aligned` and `right_aligned` for left and right al
 
 #example(```typst
 #bytefield(
-  bits:1,
+  bits:8,
   pre:(auto,),
   post:(auto,),
   right_aligned[0x0],
-  bit[some thing],
+  byte[some thing],
   left_aligned[first word],
   right_aligned[0x10],
-  bit[some other thing],
+  byte[some other thing],
   left_aligned[second word],
 )
 ```)
