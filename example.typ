@@ -130,7 +130,11 @@ Pass an `dictionary` as bitheader. Example:
 ]
 
 #box(width: 100%)[
-You can also show labels and numbers
+You can also show labels and indexes by specifying `numbers`.
+`numbers` accepts the same string arguments as `bitheader`.
+You may also specify an array of indexes to show
+or simply `true` to show the index for each specified label. 
+
 ```typst
 #bytefield(
   bitheader: (
