@@ -10,8 +10,10 @@
   content, 
   fill: none, // color to fill the field
   height: auto, // height of the field
-) = cellx(colspan: len, fill: fill, inset: 0pt)[#box(height: height, width: 100%, stroke: 1pt + black)[#content]]
-
+  stroke: 1pt + black,
+  x: auto,
+  y: auto,
+) = cellx(colspan: len, fill: fill, inset: 0pt, x:x, y:y)[#box(height: height, width: 100%, stroke: stroke)[#content]]
 
 #let bytefield(
   bits: 32, 
@@ -32,6 +34,7 @@
   let compute_bounds = (bitheader == "bounds") or ( type(bitheader) == dictionary and bitheader.at("numbers",default:none) == "bounds" )
 
   // calculate cells
+  let current_row = if (bitheader != none) { 1 } else { 0 };
   let current_offset = 0;
   let computed_offsets = ();
   for (idx, field) in fields.pos().enumerate() {
@@ -60,16 +63,24 @@
     }
     
     if size > bits and remaining_cols == bits and calc.rem(size, bits) == 0 {
+      let x = int(bits - remaining_cols + pre.len())
+      let y = int(current_row)
       content = content + " (" + str(size) + " Bit)"
-      cells.push(bfcell(int(bits),fill:fill, height: rowheight * size/bits)[#content])
+      cells.push(bfcell(int(bits),fill:fill, height: rowheight * size/bits, x:x, y:y)[#content])
+      current_row += 1
       size = 0
     }
 
     while size > 0 {
       let width = calc.min(size, remaining_cols);
+      let x = int(pre.len() + bits - remaining_cols)
+      let y = int(current_row)
+      if (size >= remaining_cols) {
+        current_row += 1
+      }
       size -= remaining_cols
       remaining_cols = bits
-      cells.push(bfcell(int(width),fill:fill, height: rowheight,)[#content])
+      cells.push(bfcell(int(width),fill:fill, height: rowheight, x:x, y:y)[#content])
     }
   
   }
@@ -168,10 +179,11 @@
 }
 
 // Low level API
-#let bitbox(length_in_bits, content, fill: none) = (
+#let bitbox(length_in_bits, content, fill: none, stroke: auto) = (
   type: "bitbox",
   size: length_in_bits,   // length of the field 
   fill: fill,
+  stroke: stroke,
   content: content,
   var: false, 
   show_size: false,
