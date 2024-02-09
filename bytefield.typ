@@ -20,8 +20,8 @@
   rowheight: 2.5em, 
   bitheader: auto, 
   msb_first: false,
-  pre: (),
-  post: (),
+  pre: auto,
+  post: auto,
   ..fields
 ) = {
   // state variables
@@ -30,6 +30,24 @@
 
   // Define default behavior - show 
   if (bitheader == auto) { bitheader = "smart"}
+
+  // Calculate needed pre/post columns
+  if (pre == auto or post == auto) {
+    let left_max_level = 0
+    let right_max_level = 0
+    for field in fields.pos() {
+      if (type(field) == dictionary and field.at("type",default:none) == "annotation") {
+        let (side, level, ..) = field;
+        if (side == left) {
+          left_max_level = calc.max(left_max_level,level)
+        } else {
+          right_max_level = calc.max(right_max_level,level)
+        }
+      }
+    }
+    if (pre == auto) { pre = (auto,)*(left_max_level+1)}
+    if (post == auto) { post = (auto,)*(right_max_level+1)}
+  }
 
   let compute_bounds = (bitheader == "bounds") or ( type(bitheader) == dictionary and bitheader.at("numbers",default:none) == "bounds" )
 
@@ -47,9 +65,13 @@
     }
 
     if (field_type == "annotation") {
-      let (pos, col, args, body) = field;
+      let (side, level, args, body) = field;
       let y = int(current_row)
-      let x = if (pos == left) { col } else { pre.len() + bits + col }
+      let x = if (side == left) {
+        pre.len() - level - 1
+      } else {
+        pre.len() + bits + level
+      }
       cells.push(cellx(
         x:x,
         y:y,
@@ -203,10 +225,10 @@
   show_size: false,
 )
 
-#let annotation(pos, col:0, ..args, body) = (
+#let annotation(side, level:0, ..args, body) = (
   type: "annotation",
-  pos: pos,
-  col: col,
+  side: side,
+  level: level,
   args: args,
   body: body
 )
@@ -219,17 +241,17 @@
 #let padding(..args) = bitbox(none, ..args)
 #let flag(..args,text) = bitbox(1,..args,flagtext(text))
 
-#let note(pos,col:0,rowspan:1,content) = {
-  let _align = if (pos == left) { right } else { left }
-  annotation(pos,col:col,rowspan:rowspan,inset:5pt,align:_align+horizon,content)
+#let note(side,rowspan:1,level:0,content) = {
+  let _align = if (side == left) { right } else { left }
+  annotation(side,level:level,rowspan:rowspan,inset:5pt,align:_align+horizon,content)
 }
 
-#let group(pos,col:0,rowspan,content) = {
+#let group(side,rowspan,level:0,content) = {
   let _align  = none
   let _first  = none
   let _second = none
 
-  if (pos == left) {
+  if (side == left) {
     _align  = right
     _first  = box(height:100%,content)
     _second = box(height:100%,inset:(right:5pt),layout(size => {math.lr("{",size:size.height)}))
@@ -240,8 +262,8 @@
   }
 
   annotation(
-    pos,
-    col:col,
+    side,
+    level:level,
     rowspan:rowspan,
     align:_align+horizon,
     inset:0pt,

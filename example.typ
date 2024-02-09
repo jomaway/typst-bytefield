@@ -224,27 +224,50 @@ or simply `true` to show the index for each specified label.
 )
 ```)
 
-== Pre/Post columns
+== Annotations
 
-Define additional columns before the bitfield with `pre` or behind the bitfield with `post`.
+Define annotations in columns left or right of the bitfields current row with the helpers `note` and `group`.
 
-You can use the helpers `note` and `group` for left and right aligned text.
+The needed number of columns is determined automatically,
+but can be forced with the `pre` and `post` arguments.
+
+The helper `note` takes the side it should appear on as first argument, an optional `rowspan` for the number of rows it should span
+and an optional `level` for the nesting level.
+
+The helper `group` takes the side it should appear on as first argument, as second argument `rowspan` for the number of rows it should span
+and an optional `level` for the nesting level.
 
 #example(```typst
 #bytefield(
   bits:32,
-  pre:(auto,),
-  post:(auto,2cm),
+
   note(left)[0x00],
   group(right,2)[group],
   bytes(4)[some thing],
+
   note(left)[0x04],
-  group(right,2,col:1)[
-    overlapping group
+  bytes(4)[some other thing],
+)
+```)
+
+#example(```typst
+#bytefield(
+  bits:32,
+  pre: (1cm,auto),
+  post: (auto,1cm),
+
+  note(left, rowspan:3, level:1)[
+    #flagtext[spanning_3_rows]
   ],
+  note(left)[0x00],
+  group(right,2)[group],
+  bytes(4)[some thing],
+
+  note(left)[0x04],
+  group(right,2,level:1)[another group],
   bytes(4)[some other thing],
   note(left)[0x08],
-  bytes(4)[some other thing],
+  bytes(4)[some third thing],
 )
 ```)
 
