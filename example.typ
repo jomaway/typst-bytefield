@@ -13,8 +13,8 @@
     "bits" : bf.bits,
     "padding" : bf.padding,
     "flagtext" : bf.flagtext,
-    "right_aligned" : bf.right_aligned,
-    "left_aligned" : bf.left_aligned,
+    "note" : bf.note,
+    "group" : bf.group,
     "ipv4" : bf.ipv4,
     "ipv6": bf.ipv6,
     "icmp": bf.icmp,
@@ -226,22 +226,25 @@ or simply `true` to show the index for each specified label.
 
 == Pre/Post columns
 
-Define additional columns with before the bitfield with `pre` or behind the bitfield with `post`
-and pass any tablex object.
+Define additional columns before the bitfield with `pre` or behind the bitfield with `post`.
 
-You can use the helpers `left_aligned` and `right_aligned` for left and right aligned text.
+You can use the helpers `note` and `group` for left and right aligned text.
 
 #example(```typst
 #bytefield(
-  bits:8,
+  bits:32,
   pre:(auto,),
-  post:(auto,),
-  right_aligned[0x0],
-  byte[some thing],
-  left_aligned[first word],
-  right_aligned[0x10],
-  byte[some other thing],
-  left_aligned[second word],
+  post:(auto,2cm),
+  note(left)[0x00],
+  group(right,2)[group],
+  bytes(4)[some thing],
+  note(left)[0x04],
+  group(right,2,col:1)[
+    overlapping group
+  ],
+  bytes(4)[some other thing],
+  note(left)[0x08],
+  bytes(4)[some other thing],
 )
 ```)
 

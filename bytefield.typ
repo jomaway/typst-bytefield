@@ -38,9 +38,23 @@
   let current_offset = 0;
   let computed_offsets = ();
   for (idx, field) in fields.pos().enumerate() {
-    if (type(field) != dictionary or field.at("type",default:none) != "bitbox") {
+    let field_type = if type(field) == dictionary { field.at("type",default:none) } else { none }
+
+    if (field_type not in ("bitbox","annotation")) {
       // forward unknown content to tablex (useful for pre/post)
       cells.push(field)
+      continue
+    }
+
+    if (field_type == "annotation") {
+      let (pos, col, args, body) = field;
+      let y = int(current_row)
+      let x = if (pos == left) { col } else { pre.len() + bits + col }
+      cells.push(cellx(
+        x:x,
+        y:y,
+        ..args
+      )[#body])
       continue
     }
 
@@ -189,6 +203,14 @@
   show_size: false,
 )
 
+#let annotation(pos, col:0, ..args, body) = (
+  type: "annotation",
+  pos: pos,
+  col: col,
+  args: args,
+  body: body
+)
+
 // High level API
 #let bit(..args) = bitbox(1, ..args)
 #let bits(len, ..args) = bitbox(len, ..args)
@@ -196,8 +218,41 @@
 #let bytes(len, ..args) = bitbox(len * 8, ..args)
 #let padding(..args) = bitbox(none, ..args)
 #let flag(..args,text) = bitbox(1,..args,flagtext(text))
-#let left_aligned(..args) = cellx(inset:5pt,align:left+horizon, ..args)
-#let right_aligned(..args) = cellx(inset:5pt,align:right+horizon, ..args)
+
+#let note(pos,col:0,rowspan:1,content) = {
+  let _align = if (pos == left) { right } else { left }
+  annotation(pos,col:col,rowspan:rowspan,inset:5pt,align:_align+horizon,content)
+}
+
+#let group(pos,col:0,rowspan,content) = {
+  let _align  = none
+  let _first  = none
+  let _second = none
+
+  if (pos == left) {
+    _align  = right
+    _first  = box(height:100%,content)
+    _second = box(height:100%,inset:(right:5pt),layout(size => {math.lr("{",size:size.height)}))
+  } else {
+    _align  = left
+    _first  = box(height:100%,inset:(left:5pt),layout(size => {math.lr("}",size:size.height)}))
+    _second = box(height:100%,content)
+  }
+
+  annotation(
+    pos,
+    col:col,
+    rowspan:rowspan,
+    align:_align+horizon,
+    inset:0pt,
+    grid(
+        columns:2,
+        gutter:5pt,
+        _first,
+        _second
+      )
+    )
+}
 
 // Rotating text for flags
 #let flagtext(text) = align(center,rotate(270deg,text))
