@@ -3,6 +3,7 @@
 // Still a WIP - alpha stage and a bit hacky at the moment
 
 #import "@preview/tablex:0.0.6": tablex, cellx, gridx
+#import "@preview/oxifmt:0.2.0": strfmt
 #set text(font: "IBM Plex Mono")
 
 #let bfcell(
@@ -12,6 +13,39 @@
   height: auto, // height of the field
 ) = cellx(colspan: len, fill: fill, inset: 0pt)[#box(height: height, width: 100%, stroke: 1pt + black)[#content]]
 
+
+
+#let calc_meta_data(bitboxes, row_width: 32) = {
+  let bitcells = ();
+  let idx = 0;
+
+  for bb in bitboxes {
+    let remaining_bits_in_current_row = row_width - calc.rem(idx, row_width);
+
+    let (size, content, fill, ..) = bb;
+    assert(type(size) == int or size == auto, message: strfmt("expected auto or integer for parameter size, found {} ", type(size)))
+    // if no size was specified
+    if (size == auto ) { size = remaining_bits_in_current_row; } 
+    
+    // update start and idx
+    let start = idx;
+    idx = start + size;
+    // create bc
+    let bc = (
+      type: "bitcell",
+      size: size,
+      start: start,
+      end: (start + size) -1,
+      wrap: if (remaining_bits_in_current_row < size) { true } else { false },
+      multirow: if (size > row_width and calc.rem(size, row_width) == 0) { size/row_width } else { 1 },
+      fill: bb.fill,
+      content: bb.content,
+    )
+    bitcells.push(bc);
+  }
+
+  return bitcells
+}
 
 #let bytefield(
   bits: 32, 
@@ -23,9 +57,25 @@
   // state variables
   let col_count = 0
   let cells = ()
+  let row_width = bits
 
   // Define default behavior - show 
   if (bitheader == auto) { bitheader = "smart"}
+  // create bitcells from bitboxes
+  let _cells = calc_meta_data(fields.pos(), row_width: bits)
+ 
+  // split cells 
+  _cells = _cells.map(c => if (c.multirow > 1 ) { c.size = row_width; c.wrap = false; c } else { c } );
+  _cells = _cells.map(c => if (c.wrap) { 
+    let first = c; 
+    let second = c;
+
+    first.size = row_width - calc.rem(c.start, row_width)
+    second.size = c.size - first.size
+    
+    return (first, second)
+  } else { c }).flatten()
+  cells = _cells.map(c => bfcell(int(c.size),fill:c.fill, height: rowheight * c.multirow)[#c.content])
 
   // calculate cells
   let current_offset = 0;
@@ -33,8 +83,10 @@
   for (idx, field) in fields.pos().enumerate() {
     let (size, content, fill, ..) = field;
     let remaining_cols = bits - col_count;
-    col_count = calc.rem(col_count + size, bits);
     // if no size was specified
+    if (size == auto) { size = remaining_cols }
+    col_count = calc.rem(col_count + size, bits);
+    
     if size == none {
       size = remaining_cols
       content = content + sym.star
@@ -43,18 +95,18 @@
     computed_offsets.push(if (bitheader == "smart-firstline") { current_offset } else { calc.rem(current_offset,bits) } );
     current_offset += size;
     
-    if size > bits and remaining_cols == bits and calc.rem(size, bits) == 0 {
-      content = content + " (" + str(size) + " Bit)"
-      cells.push(bfcell(int(bits),fill:fill, height: rowheight * size/bits)[#content])
-      size = 0
-    }
+    // if size > bits and remaining_cols == bits and calc.rem(size, bits) == 0 {
+    //   content = content + " (" + str(size) + " Bit)"
+    //   cells.push(bfcell(int(bits),fill:fill, height: rowheight * size/bits)[#content])
+    //   size = 0
+    // }
 
-    while size > 0 {
-      let width = calc.min(size, remaining_cols);
-      size -= remaining_cols
-      remaining_cols = bits
-      cells.push(bfcell(int(width),fill:fill, height: rowheight,)[#content])
-    }
+    // while size > 0 {
+    //   let width = calc.min(size, remaining_cols);
+    //   size -= remaining_cols
+    //   remaining_cols = bits
+    //   cells.push(bfcell(int(width),fill:fill, height: rowheight,)[#content])
+    // }
   
   }
   
@@ -143,7 +195,7 @@
 #let bits(len, ..args) = bitbox(len, ..args)
 #let byte(..args) = bitbox(8, ..args)
 #let bytes(len, ..args) = bitbox(len * 8, ..args)
-#let padding(..args) = bitbox(none, ..args)
+#let padding(..args) = bitbox(auto, ..args)
 
 // Rotating text for flags
 #let flagtext(text) = align(center,rotate(270deg,text))
@@ -161,8 +213,8 @@
 #let ipv6 = bytefield(
   bits(4)[Version], bytes(1)[Traffic Class], bits(20)[Flowlabel],
   bytes(2)[Payload Length], bytes(1)[Next Header], bytes(1)[Hop Limit],
-  bytes(128/8)[Source Address],
-  bytes(128/8)[Destination Address],
+  bytes(int(128/8))[Source Address],
+  bytes(int(128/8))[Destination Address],
 )
 
 #let icmp = bytefield(
