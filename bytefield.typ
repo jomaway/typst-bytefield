@@ -5,6 +5,16 @@
 #import "@preview/tablex:0.0.6": tablex, cellx, gridx
 #set text(font: "IBM Plex Mono")
 
+// dictionary is missing functionality to set a value if it does not contain it.
+#let set_default(dict, defaults) = {
+  for (key,value) in defaults {
+    value = dict.at(key,default:value)
+    dict.insert(key,value)
+  }
+  return dict
+}
+
+// internal cells
 #let bfcell(
   len, // lenght of the fields in bits 
   content, 
@@ -15,155 +25,184 @@
   y: auto,
 ) = cellx(colspan: len, fill: fill, inset: 0pt, x:x, y:y)[#box(height: height, width: 100%, stroke: stroke)[#content]]
 
-#let bytefield(
-  bits: 32, 
-  rowheight: 2.5em, 
-  bitheader: auto, 
-  msb_first: false,
-  pre: auto,
-  post: auto,
-  ..fields
-) = {
-  // state variables
-  let col_count = 0
+// Calculate needed pre/post columns
+#let config_extend_pre_post_columns(config, (idx,field)) = {
+  let (side, level, ..) = field;
+  if (side == left){
+    let diff = level - config.pre.len() + 1
+    if (diff > 0 ) {
+      config.pre += (auto,)*diff
+    } 
+  } else if (side == right) {
+    let diff = level - config.post.len() + 1
+    if (diff > 0 ) {
+      config.post.insert(0,auto)
+    }
+  }
+  return config
+}
+
+// Calculate bitbox offsets
+#let config_calc_offsets(config, (idx,field)) = {
+  let (size, ..) = field
+
+  if (size == none) {
+    size = config.bits
+  }
+
+  let start = if config.offsets.len() == 0 { 0 } else  {
+    let (start,end) = config.offsets.values().last()
+    end + 1
+  }
+  let end = start + size - 1
+
+  let rowstart = if config.rows.len() == 0 { 0 } else {
+    let (_,rowend) = config.rows.values().last()
+    let (_,colend) = config.columns.values().last()
+    if colend == config.bits - 1 {
+      rowend += 1
+    }
+    rowend
+  }
+
+  let end = start + size - 1
+  config.offsets.insert(str(idx),(start,end))
+  config.rows.insert(str(idx),(rowstart,rowstart+int((size - 1)/config.bits)))
+  config.columns.insert(str(idx),(calc.rem(start,config.bits),calc.rem(end,config.bits)))
+  return config
+}
+
+// Calculate bitbox offsets
+#let config_calc_offsets_annotation(config, (idx,field)) = {
+  let (rowspan,..) = field
+  let start = if config.rows.len() == 0 { 0 } else {
+    let (_,rowend) = config.rows.values().last()
+    let (_,colend) = config.columns.values().last()
+    if colend == config.bits - 1 {
+      rowend += 1
+    }
+    rowend
+  }
+  let end = start + rowspan - 1
+  config.annotated_rows.insert(str(idx),(start,end))
+  return config
+}
+
+// Calculate bitheader offsets
+#let config_calc_offsets_bitheader(config, (idx,field)) = {
+  let start = if config.offsets.len() == 0 { 0 } else {
+    let (_,rowend) = config.rows.values().last()
+    rowend + 1
+  }
+  config.rows.insert(str(idx),(start,start))
+  config.columns.insert(str(idx),(0,config.bits - 1))
+  return config
+}
+
+#let cell_bitbox(config, (idx, field)) = {
+  let (size, fill, content, ..) = field
+
+  if (size == none) {
+    size = config.bits
+  }
+
+  // content = [#content (#idx)]
+
+  let (start,end) = config.columns.at(str(idx))
+  let (current_row,_) = config.rows.at(str(idx))
+  let remaining_cols = config.bits - calc.rem(start,config.bits)
   let cells = ()
-
-  // Define default behavior - show 
-  if (bitheader == auto) { bitheader = "smart"}
-
-  // Calculate needed pre/post columns
-  if (pre == auto or post == auto) {
-    let left_max_level = 0
-    let right_max_level = 0
-    for field in fields.pos() {
-      if (type(field) == dictionary and field.at("type",default:none) == "annotation") {
-        let (side, level, ..) = field;
-        if (side == left) {
-          left_max_level = calc.max(left_max_level,level)
-        } else {
-          right_max_level = calc.max(right_max_level,level)
-        }
-      }
-    }
-    if (pre == auto) { pre = (auto,)*(left_max_level+1)}
-    if (post == auto) { post = (auto,)*(right_max_level+1)}
+  if size > config.bits and remaining_cols == config.bits and calc.rem(size, config.bits) == 0 {
+    let x = int(config.bits - remaining_cols + config.pre.len())
+    let y = int(current_row)
+    content = content + " (" + str(size) + " Bit)"
+    cells.push(bfcell(int(config.bits),fill:fill, height: config.rowheight * size/config.bits, x:x, y:y)[#content])
+    current_row += 1
+    size = 0
   }
 
-  let compute_bounds = (bitheader == "bounds") or ( type(bitheader) == dictionary and bitheader.at("numbers",default:none) == "bounds" )
-
-  // calculate cells
-  let current_row = if (bitheader != none) { 1 } else { 0 };
-  let current_offset = 0;
-  let computed_offsets = ();
-  for (idx, field) in fields.pos().enumerate() {
-    let field_type = if type(field) == dictionary { field.at("type",default:none) } else { none }
-
-    if (field_type not in ("bitbox","annotation")) {
-      // forward unknown content to tablex (useful for pre/post)
-      cells.push(field)
-      continue
-    }
-
-    if (field_type == "annotation") {
-      let (side, level, args, body) = field;
-      let y = int(current_row)
-      let x = if (side == left) {
-        pre.len() - level - 1
-      } else {
-        pre.len() + bits + level
-      }
-      cells.push(cellx(
-        x:x,
-        y:y,
-        ..args
-      )[#box(height:100%)[#body]])
-      continue
-    }
-
-    let (size, content, fill, ..) = field;
-    let remaining_cols = bits - col_count;
-    col_count = calc.rem(col_count + size, bits);
-    // if no size was specified
-    if size == none {
-      size = remaining_cols
-      content = content + sym.star
-    }
-
-    computed_offsets.push(if (bitheader == "smart-firstline") { current_offset } else { calc.rem(current_offset,bits) } );
-    current_offset += size;
-    if (compute_bounds) {
-      let offset = calc.rem(current_offset - 1,bits)
-      if (computed_offsets.last() != offset) {
-        computed_offsets.push(offset)
-      }
-    }
-    
-    if size > bits and remaining_cols == bits and calc.rem(size, bits) == 0 {
-      let x = int(bits - remaining_cols + pre.len())
-      let y = int(current_row)
-      content = content + " (" + str(size) + " Bit)"
-      cells.push(bfcell(int(bits),fill:fill, height: rowheight * size/bits, x:x, y:y)[#content])
+  while size > 0 {
+    let width = calc.min(size, remaining_cols);
+    let x = int(config.pre.len() + config.bits - remaining_cols)
+    let y = int(current_row)
+    if (size >= remaining_cols) {
       current_row += 1
-      size = 0
     }
-
-    while size > 0 {
-      let width = calc.min(size, remaining_cols);
-      let x = int(pre.len() + bits - remaining_cols)
-      let y = int(current_row)
-      if (size >= remaining_cols) {
-        current_row += 1
-      }
-      size -= remaining_cols
-      remaining_cols = bits
-      cells.push(bfcell(int(width),fill:fill, height: rowheight, x:x, y:y)[#content])
-    }
-  
+    size -= remaining_cols
+    remaining_cols = config.bits
+    cells.push(bfcell(int(width),fill:fill, height: config.rowheight, x:x, y:y)[#content])
   }
-  
-  computed_offsets.push(bits - 1);
+  return cells
+}
 
-  let bitheader_font_size = 9pt;
+#let cell_annotation(config, (idx, field)) = {
+  let (side, level, rowspan, args, body) = field;
+  let (y,_) = config.annotated_rows.at(str(idx))
+  let x = if (side == left) {
+    config.pre.len() - level - 1
+  } else {
+    config.pre.len() + config.bits + level
+  }
+  (cellx(
+    x:x,
+    y:y,
+    rowspan:rowspan,
+    ..args,
+    body
+    // [#body (#idx)]
+  ),)
+}
+
+#let cell_bitheader(config, (idx,field)) = {
+  let (msb,numbers,labels,ticks,fontsize, ..) = field
+
+  let msb_first = (msb == left)
+
+  let computed_offsets = for (start,end) in config.columns.values() {
+    if numbers == "bounds" {
+      (start,end)
+    } else {
+      (start,)
+    }
+  }
+  computed_offsets.push(config.bits - 1)
+
+  if msb_first == true {
+    computed_offsets = computed_offsets.map(i => bits - i - 1);
+  }
+
   let bh_num_text(num) = {
-    let alignment = if (bitheader in ("all","bounds")) {center} 
+    let alignment = if (numbers in ("all","bounds")) {center} 
     else {
       if (msb_first) {
-        if (num == 0) {end} else if (num == (bits - 1)) { start } else { center }
+        if (num == 0) {end} else if (num == (config.bits - 1)) { start } else { center }
       } else { 
-        if (num == (bits - 1)) {end} else if (num == 0) { start } else { center }
+        if (num == (config.bits - 1)) {end} else if (num == 0) { start } else { center }
       }
     }
 
-    align(alignment, text(bitheader_font_size)[#num]);
+    align(alignment, text(fontsize)[#num]);
   }
 
-
-  let _bitheader = if ( bitheader == "all" ) {
+  let _bitheader = if ( numbers == "all" ) {
     // Show all numbers from 0 to total bits.
-    range(bits).map(i => bh_num_text(i))
-  } else if ( bitheader in ("smart","smart-firstline","bounds")) {
+    range(config.bits).map(i => bh_num_text(i))
+  } else if ( numbers in ("smart","smart-firstline","bounds")) {
     // Show nums aligned with given fields
-    if msb_first == true {
-      computed_offsets = computed_offsets.map(i => bits - i - 1);
-    }
-    range(bits).map(i => if i in computed_offsets { bh_num_text(i) } else {none})
-  } else if ( type(bitheader) == array ) {
+    range(config.bits).map(i => if i in computed_offsets { bh_num_text(i) } else {none})
+  } else if ( type(numbers) == array ) {
     // show given numbers from array
-    range(bits).map(i => if i in bitheader { bh_num_text(i) } else {none})
-  } else if ( type(bitheader) == int ) {
+    range(config.bits).map(i => if i in numbers { bh_num_text(i) } else {none})
+  } else if ( type(numbers) == int ) {
     // if an int is given show all multiples of this number
-    let val = bitheader;
-    range(bits).map(i =>
+    let val = numbers;
+    range(config.bits).map(i =>
       if calc.rem(i,val) == 0 or i == (bits - 1) { bh_num_text(i) } 
       else { none })
-  } else if ( bitheader == none ) {
-    range(bits).map(_ => []);
-  } else if (type(bitheader) == dictionary) {
-    let numbers = bitheader.at("numbers",default:none) 
-    if msb_first == true {
-      computed_offsets = computed_offsets.map(i => bits - i - 1);
-    }
-    range(bits).map(i => [
+  } else if ( numbers == none ) {
+    range(config.bits).map(_ => []);
+  } else {
+    range(config.bits).map(i => [
       #set align(start + bottom)
       #let h_text = bitheader.at(str(i),default: "");
       #style(styles => {
@@ -193,22 +232,72 @@
         ]  
       })
     ])
-  } else {
-     panic("bitheader must be an integer,array, none, 'all' or 'smart'")
   }
+  return ([],)*config.pre.len() + _bitheader + ([],)*config.post.len()
+}
 
-  // revers bit order
-  if msb_first == true {
-    _bitheader = _bitheader.rev()
-  }
-  let _bitheader = ([],)*pre.len() + _bitheader + ([],)*post.len()
+// construct arguments
+#let config_pass(args, fields, ..pass) = {
+  fields.enumerate().fold(args,
+    (args,(idx,field)) => {
+      args = pass.named().at(field.type, default:()).fold(args,(a,f)=> f(a,(idx,field)))
+      args = pass.pos().fold(args,(a,f) => f(a,(idx,field)))
+      return args
+    }
+  )
+}
+
+// construct cells
+#let cell_pass(config, fields, ..pass) = {
+  fields.enumerate().map(
+    ((idx,field)) => (
+      pass.named().at(field.type, default:()).map(f=> f(config,(idx,field))),
+      pass.pos().map(f => f(config,(idx,field))),
+    )
+  ).flatten()
+}
+
+#let bytefield(
+  ..args
+) = {
+
+  let (args, fields) = (args.named(), args.pos())
+
+  // default values
+  args = set_default(args,(
+    bits: 32,
+    rowheight: 2.5em,
+    offsets: (:),
+    rows: (:),
+    columns: (:),
+    annotated_rows: (:),
+    pre: (),
+    post: (),
+  ))
+
+  // args pass generates missing arguments
+  let config = config_pass(args, fields,
+    bitheader :  (config_calc_offsets_bitheader,),
+    bitbox :     (config_calc_offsets,),
+    annotation : (
+      config_extend_pre_post_columns,
+      config_calc_offsets_annotation,
+    ),
+  )
+  
+  // cell pass generates internal cells
+  let cells = cell_pass(config, fields,
+    bitheader :  (cell_bitheader,),
+    bitbox :     (cell_bitbox,),
+    annotation : (cell_annotation,),
+  )
 
   box(width: 100%)[
     #gridx(
-      columns: pre + range(bits).map(i => 1fr) + post,
+      columns: config.pre + range(config.bits).map(i => 1fr) + config.post,
       align: center + horizon,
       inset: (x:0pt, y: 4pt),
-      .._bitheader,
+      // .._bitheader,
       ..cells,
     )
   ]
@@ -225,12 +314,28 @@
   show_size: false,
 )
 
-#let annotation(side, level:0, ..args, body) = (
+#let annotation(side, rowspan:1, level:0, ..args, body) = (
   type: "annotation",
   side: side,
+  rowspan: rowspan,
   level: level,
   args: args,
   body: body
+)
+
+#let bitheader(
+  msb: right,
+  numbers: "smart",
+  labels: (:),
+  ticks: auto,
+  fontsize: 9pt,
+) = (
+  type: "bitheader",
+  msb: msb,
+  numbers: numbers,
+  labels:labels,
+  ticks:ticks,
+  fontsize:fontsize,
 )
 
 // High level API
