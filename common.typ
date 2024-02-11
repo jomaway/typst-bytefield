@@ -64,7 +64,7 @@
 
 #let udp = bytefield(
   bitheader: (0,16,31),
-  bytes(2)[Source Port], bytes(2)[ Destinatino Port],
+  bytes(2)[Source Port], bytes(2)[ Destination Port],
   bytes(2)[Length], bytes(2)[Checksum],
   padding[...DATA...]
 )
