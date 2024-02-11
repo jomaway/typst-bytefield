@@ -57,6 +57,7 @@
         y: int(idx/row_width) + 1,  // +1 because of the bitheader 
         content: field.content,
         fill: field.fill,
+        stroke: (0.7pt + black) // prepare for multirow fields without strokes in between.
       ))
 
       field.content = "..."
@@ -76,7 +77,7 @@
       inset: 0pt,
       fill: c.fill,
     )[
-      #box(height: 2.5em, width: 100%, stroke: 1pt + black)[#c.content]  // ToDo: make height changeable again.
+      #box(height: 2.5em, width: 100%, stroke: c.stroke)[#c.content]  // ToDo: make height changeable again.
     ]
   })
 }
