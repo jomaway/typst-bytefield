@@ -14,38 +14,70 @@
 ) = cellx(colspan: len, fill: fill, inset: 0pt)[#box(height: height, width: 100%, stroke: 1pt + black)[#content]]
 
 
-
-#let calc_meta_data(bitboxes, row_width: 32) = {
-  let bitcells = ();
+#let calc_field_bounds(data_fields) = {
+  let bounds = ();
   let idx = 0;
 
-  for bb in bitboxes {
-    let remaining_bits_in_current_row = row_width - calc.rem(idx, row_width);
-
-    let (size, content, fill, ..) = bb;
-    assert(type(size) == int or size == auto, message: strfmt("expected auto or integer for parameter size, found {} ", type(size)))
-    // if no size was specified
-    if (size == auto ) { size = remaining_bits_in_current_row; } 
-    
-    // update start and idx
+  for (i,field) in data_fields.enumerate() {
+    assert(type(field.size) == int or field.size == auto, message: strfmt("expected auto or integer for parameter size, found {} ", type(field.size)))
+    field.size = if (field.size == auto) { 32 - calc.rem(idx, 32) } else { field.size }
     let start = idx;
-    idx = start + size;
-    // create bc
-    let bc = (
-      type: "bitcell",
-      size: size,
+    idx += field.size;
+
+    bounds.push((
+      type: "field-meta-data",
+      index: i,
+      size: field.size,
       start: start,
-      end: (start + size) -1,
-      wrap: if (remaining_bits_in_current_row < size) { true } else { false },
-      multirow: if (size > row_width and calc.rem(size, row_width) == 0) { size/row_width } else { 1 },
-      fill: bb.fill,
-      content: bb.content,
-    )
-    bitcells.push(bc);
+      end: idx -1,
+    ));
   }
 
-  return bitcells
+  return bounds
 }
+
+#let convert_data_fields_to_table_cells(data_fields, row_width: 32) = {
+  let _cells = ();
+  let idx = 0;
+
+  for field in data_fields {
+    assert(type(field) == dictionary, message: strfmt("expected field to be a dictionary, found {}", type(field)));
+    assert(type(field.size) == int or field.size == auto, message: strfmt("expected auto or integer for parameter size, found {} ", type(field.size)))
+    let len = if (field.size == auto) { row_width - calc.rem(idx, row_width); } else { field.size }
+
+    while len > 0 {
+      let rem_space = row_width - calc.rem(idx, row_width);
+      let cell_size = calc.min(len, rem_space);
+      
+      _cells.push((
+        type: "data-cell",
+        len: cell_size,
+        x: calc.rem(idx,row_width),
+        y: int(idx/row_width) + 1,  // +1 because of the bitheader 
+        content: field.content,
+        fill: field.fill,
+      ))
+
+      // prepare for next cell
+      idx += cell_size;
+      len -= cell_size;
+    }
+  }
+
+  // map data-cell to tablex-dict-type cell
+  return _cells.map(c => {
+    cellx(
+      x: c.x,
+      y: c.y,
+      colspan: c.len,
+      inset: 0pt,
+      fill: c.fill,
+    )[
+      #box(height: 2.5em, width: 100%, stroke: 1pt + black)[#c.content]
+    ]
+  })
+}
+
 
 #let bytefield(
   bits: 32, 
@@ -61,21 +93,15 @@
 
   // Define default behavior - show 
   if (bitheader == auto) { bitheader = "smart"}
-  // create bitcells from bitboxes
-  let _cells = calc_meta_data(fields.pos(), row_width: bits)
- 
-  // split cells 
-  _cells = _cells.map(c => if (c.multirow > 1 ) { c.size = row_width; c.wrap = false; c } else { c } );
-  _cells = _cells.map(c => if (c.wrap) { 
-    let first = c; 
-    let second = c;
 
-    first.size = row_width - calc.rem(c.start, row_width)
-    second.size = c.size - first.size
-    
-    return (first, second)
-  } else { c }).flatten()
-  cells = _cells.map(c => bfcell(int(c.size),fill:c.fill, height: rowheight * c.multirow)[#c.content])
+
+  // filter data cells 
+  let data_fields = fields.pos().filter(f => f.type == "bitbox")
+
+  // let meta_data = calc_field_bounds(data_fields);
+
+  let data_cells = convert_data_fields_to_table_cells(data_fields, row_width: bits);
+
 
   // calculate cells
   let current_offset = 0;
@@ -175,7 +201,7 @@
       align: center + horizon,
       inset: (x:0pt, y: 4pt),
       .._bitheader,
-      ..cells,
+      ..data_cells,
     )
   ]
 }

@@ -1,4 +1,5 @@
-#import "@local/bytefield:0.0.3": *
+#import "bytefield.typ": *
+#import "common.typ": *
 
 = Bytefield
 == Colored Example
