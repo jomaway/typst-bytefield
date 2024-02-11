@@ -99,7 +99,7 @@
   //let _cells = range(metadata.bits_per_row).map(_ => none);
   if (bitheader == auto){
     // auto shows all offsets in the first row.
-    bitheader == "smart"
+    bitheader = "smart"
   }
 
   let header_type = type(bitheader);
