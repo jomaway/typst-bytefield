@@ -55,6 +55,8 @@
         fill: field.fill,
       ))
 
+      field.content = "..."
+
       // prepare for next cell
       idx += cell_size;
       len -= cell_size;
@@ -70,49 +72,47 @@
       inset: 0pt,
       fill: c.fill,
     )[
-      #box(height: 2.5em, width: 100%, stroke: 1pt + black)[#c.content]
+      #box(height: 2.5em, width: 100%, stroke: 1pt + black)[#c.content]  // ToDo: make height changeable again.
     ]
   })
 }
 
-#let bytefield(
-  bits: 32, 
-  rowheight: 2.5em, 
-  bitheader: auto, 
-  msb_first: false,
-  ..fields
-) = {
-  // Define default behavior - show 
-  if (bitheader == auto) { bitheader = "smart"}
-
-
-  // filter data cells 
-  let data_fields = fields.pos().filter(f => f.type == "bitbox")
-
-  // convert 
-  let data_cells = convert_data_fields_to_table_cells(data_fields, row_width: bits);
-
-  // compute offsets for bitheader
-  let computed_offsets = calc_field_bounds(data_fields).map(f => {
-    if (bitheader == "smart-firstline") { f.start } else { calc.rem(f.start,bits) }
-  })
-  computed_offsets.push(bits - 1);
-
+#let get_aligned_header_label(num, excludes) = {
   let bitheader_font_size = 9pt;
-  let bh_num_text(num) = {
-    let alignment = if (bitheader == "all") {center} 
-    else {
-      if (msb_first) {
-        if (num == 0) {end} else if (num == (bits - 1)) { start } else { center }
-      } else { 
-        if (num == (bits - 1)) {end} else if (num == 0) { start } else { center }
-      }
+  let alignment = if (bitheader == "all") {center} 
+  else {
+    if (msb_first) {
+      if (num == 0) {end} else if (num == (bits - 1)) { start } else { center }
+    } else { 
+      if (num == (bits - 1)) {end} else if (num == 0) { start } else { center }
     }
-
-    align(alignment, text(bitheader_font_size)[#num]);
   }
 
-  let _bitheader = if ( bitheader == "all" ) {
+  align(alignment, text(bitheader_font_size)[#num]);
+}
+
+#let calc_offsets(field_meta_data, bits_per_row, only_first_row: false) = {
+  // compute offsets for bitheader
+  let _offsets = field_meta_data.map(f => { f.start })
+
+  if (only_first_row) { 
+    _offsets.filter(value => value < bits_per_row ) 
+  } else { 
+    _offsets.map(value => calc.rem(value,bits_per_row))
+  }
+  
+  _offsets.push(bits_per_row - 1);
+  return _offsets
+}
+
+#let convert_bitheader_to_table_cells(bitheader, metadata) = {
+  
+  let bh_num_text(num) = text(9pt)[#num]
+  let computed_offsets = calc_offsets(metadata.field_data, metadata.bits_per_row)
+  let bits = metadata.bits_per_row
+  let msb_first = metadata.msb
+
+  let _bitheader =  if ( bitheader == "all" ) {
     // Show all numbers from 0 to total bits.
     range(bits).map(i => bh_num_text(i))
   } else if ( bitheader == "smart" or bitheader == "smart-firstline") {
@@ -151,9 +151,37 @@
 
   // revers bit order
   if msb_first == true {
-    _bitheader = _bitheader.rev()
+    return _bitheader.rev()
   }
+
+  return _bitheader
+}
+
+#let bytefield(
+  bits: 32, 
+  rowheight: 2.5em, 
+  bitheader: auto, 
+  msb_first: false,
+  ..fields
+) = {
+  // Define default behavior - show 
+  if (bitheader == auto) { bitheader = "smart"}
   
+  // filter data cells 
+  let data_fields = fields.pos().filter(f => f.type == "bitbox")
+
+  // collect metadata into an dictionary
+  let meta = (
+    bits_per_row: bits,
+    msb: msb_first, // if msb_first { "big" } else { "little" }
+    field_data: calc_field_bounds(data_fields)
+  )
+
+  // convert 
+  let data_cells = convert_data_fields_to_table_cells(data_fields, row_width: bits);
+  let _bitheader = convert_bitheader_to_table_cells(bitheader, meta);
+  
+  // wrap inside a box
   box(width: 100%)[
     #gridx(
       columns: range(bits).map(i => 1fr),
