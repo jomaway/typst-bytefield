@@ -196,22 +196,24 @@
 
 #let convert_annotations_to_table_cells(annotations, pre, post, bits) = {
   let _cells = ()
-  
+
   // calculate cells
   // let current_row = if (bitheader != none) { 1 } else { 0 };
   let current_row_counter = (1,1)
 
-  for (idx, field) in annotations.enumerate() {
+  for field in annotations {
     let (side, level, args, body) = field;
+
     let current_row = if (side == left) { 
       let tmp = current_row_counter.at(0)
-      current_row_counter.at(0) += 1;
+      if ( level == 0 ) {current_row_counter.at(0) += 1;}
       tmp;
     } else {
       let tmp = current_row_counter.at(1)
-      current_row_counter.at(1) += 1;
+      if ( level == 0 ) {current_row_counter.at(1) += 1;}
       tmp;
     }
+    
     let y = int(current_row)
     let x = if (side == left) {
       pre.len() - level - 1
@@ -278,7 +280,8 @@
   let meta = (
     bits_per_row: bits,
     msb: msb_first, // if msb_first { "big" } else { "little" }
-    pre: (
+    aside: (pre: pre.len(), post: post.len()),
+    pre:(
       len: pre.len()
     ),
     post: (
@@ -314,7 +317,6 @@
   fill: fill,
   stroke: stroke,
   content: content,
-  // var: false, 
   show_size: false,
 )
 
@@ -331,9 +333,10 @@
 #let bits(len, ..args) = bitbox(len, ..args)
 #let byte(..args) = bitbox(8, ..args)
 #let bytes(len, ..args) = bitbox(len * 8, ..args)
-
-#let padding(..args) = bitbox(auto, ..args)
 #let flag(..args,text) = bitbox(1,..args,flagtext(text))
+#let padding(..args) = bitbox(auto, ..args)
+
+#let flagtext(text) = align(center,rotate(270deg,text)) // Rotating text for flags
 
 #let note(side,rowspan:1,level:0,content) = {
   let _align = if (side == left) { right } else { left }
@@ -370,6 +373,6 @@
     )
 }
 
-// Rotating text for flags
-#let flagtext(text) = align(center,rotate(270deg,text))
+
+
 
