@@ -2,7 +2,9 @@
 #import "common.typ" as common
 #import "@preview/codelst:2.0.0": sourcecode
 
-#let example(columns:2,source) = box(grid(
+#set text(font: "Rubik", weight: 300);
+
+#let example(columns:1,source) = box(grid(
   columns:columns,
   gutter: 5pt,
   align(horizon,sourcecode(source)),
