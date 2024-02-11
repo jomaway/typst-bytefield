@@ -1,4 +1,5 @@
 #import "bytefield.typ" as bf
+#import "common.typ" as common
 #import "@preview/codelst:2.0.0": sourcecode
 
 #let example(columns:2,source) = box(grid(
@@ -15,18 +16,16 @@
     "flagtext" : bf.flagtext,
     "note" : bf.note,
     "group" : bf.group,
-    "ipv4" : bf.ipv4,
-    "ipv6": bf.ipv6,
-    "icmp": bf.icmp,
-    "icmpv6": bf.icmpv6,
-    "dns": bf.dns,
-    "tcp": bf.tcp,
-    "tcp_detailed": bf.tcp_detailed,
-    "udp": bf.udp,
+    "ipv4" : common.ipv4,
+    "ipv6": common.ipv6,
+    "icmp": common.icmp,
+    "icmpv6": common.icmpv6,
+    "dns": common.dns,
+    "tcp": common.tcp,
+    "tcp_detailed": common.tcp_detailed,
+    "udp": common.udp,
   )))
 ))
-
-
 
 = Bytefield
 == Colored Example

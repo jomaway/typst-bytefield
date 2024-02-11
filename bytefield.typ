@@ -3,142 +3,130 @@
 // Still a WIP - alpha stage and a bit hacky at the moment
 
 #import "@preview/tablex:0.0.6": tablex, cellx, gridx
+#import "@preview/oxifmt:0.2.0": strfmt
+
 #set text(font: "IBM Plex Mono")
 
-#let bfcell(
-  len, // lenght of the fields in bits 
-  content, 
-  fill: none, // color to fill the field
-  height: auto, // height of the field
-  stroke: 1pt + black,
-  x: auto,
-  y: auto,
-) = cellx(colspan: len, fill: fill, inset: 0pt, x:x, y:y)[#box(height: height, width: 100%, stroke: stroke)[#content]]
+#let assert_data_field(field) = {
+  assert(type(field) == dictionary, message: strfmt("expected field to be a dictionary, found {}", type(field)));
+  assert(type(field.size) == int or field.size == auto, message: strfmt("expected auto or integer for parameter size, found {} ", type(field.size)))
+}
 
-#let bytefield(
-  bits: 32, 
-  rowheight: 2.5em, 
-  bitheader: auto, 
-  msb_first: false,
-  pre: auto,
-  post: auto,
-  ..fields
-) = {
-  // state variables
-  let col_count = 0
-  let cells = ()
+#let calc_field_bounds(data_fields) = {
+  let bounds = ();
+  let idx = 0;
 
-  // Define default behavior - show 
-  if (bitheader == auto) { bitheader = "smart"}
+  for (i,field) in data_fields.enumerate() {
+    assert_data_field(field)
+    field.size = if (field.size == auto) { 32 - calc.rem(idx, 32) } else { field.size }  // 32 is a workaround and causes errors. will be fixed soon.
+    let start = idx;
+    idx += field.size;
 
-  // Calculate needed pre/post columns
-  if (pre == auto or post == auto) {
-    let left_max_level = 0
-    let right_max_level = 0
-    for field in fields.pos() {
-      if (type(field) == dictionary and field.at("type",default:none) == "annotation") {
-        let (side, level, ..) = field;
-        if (side == left) {
-          left_max_level = calc.max(left_max_level,level)
-        } else {
-          right_max_level = calc.max(right_max_level,level)
-        }
-      }
-    }
-    if (pre == auto) { pre = (auto,)*(left_max_level+1)}
-    if (post == auto) { post = (auto,)*(right_max_level+1)}
+    bounds.push((
+      type: "field-meta-data",
+      index: i,
+      size: field.size,
+      start: start,
+      end: idx -1,
+    ));
   }
 
-  let compute_bounds = (bitheader == "bounds") or ( type(bitheader) == dictionary and bitheader.at("numbers",default:none) == "bounds" )
+  return bounds
+}
 
-  // calculate cells
-  let current_row = if (bitheader != none) { 1 } else { 0 };
-  let current_offset = 0;
-  let computed_offsets = ();
-  for (idx, field) in fields.pos().enumerate() {
-    let field_type = if type(field) == dictionary { field.at("type",default:none) } else { none }
+#let convert_data_fields_to_table_cells(data_fields, metadata) = {
+  let row_width = metadata.bits_per_row;
+  let pre_size = metadata.pre.len;
+  let post_size = metadata.post.len;
 
-    if (field_type not in ("bitbox","annotation")) {
-      // forward unknown content to tablex (useful for pre/post)
-      cells.push(field)
-      continue
-    }
+  let _cells = ();
+  let idx = 0;
 
-    if (field_type == "annotation") {
-      let (side, level, args, body) = field;
-      let y = int(current_row)
-      let x = if (side == left) {
-        pre.len() - level - 1
-      } else {
-        pre.len() + bits + level
-      }
-      cells.push(cellx(
-        x:x,
-        y:y,
-        ..args
-      )[#box(height:100%)[#body]])
-      continue
-    }
+  for field in data_fields {
+    assert_data_field(field)
+    let len = if (field.size == auto) { row_width - calc.rem(idx, row_width); } else { field.size }
 
-    let (size, content, fill, ..) = field;
-    let remaining_cols = bits - col_count;
-    col_count = calc.rem(col_count + size, bits);
-    // if no size was specified
-    if size == none {
-      size = remaining_cols
-      content = content + sym.star
-    }
+    while len > 0 {
+      let rem_space = row_width - calc.rem(idx, row_width);
+      let cell_size = calc.min(len, rem_space);
+      
+      _cells.push((
+        type: "data-cell",
+        len: cell_size,
+        x: calc.rem(idx,row_width) + pre_size,
+        y: int(idx/row_width) + 1,  // +1 because of the bitheader 
+        content: field.content,
+        fill: field.fill,
+      ))
 
-    computed_offsets.push(if (bitheader == "smart-firstline") { current_offset } else { calc.rem(current_offset,bits) } );
-    current_offset += size;
-    if (compute_bounds) {
-      let offset = calc.rem(current_offset - 1,bits)
-      if (computed_offsets.last() != offset) {
-        computed_offsets.push(offset)
-      }
-    }
-    
-    if size > bits and remaining_cols == bits and calc.rem(size, bits) == 0 {
-      let x = int(bits - remaining_cols + pre.len())
-      let y = int(current_row)
-      content = content + " (" + str(size) + " Bit)"
-      cells.push(bfcell(int(bits),fill:fill, height: rowheight * size/bits, x:x, y:y)[#content])
-      current_row += 1
-      size = 0
-    }
+      field.content = "..."
 
-    while size > 0 {
-      let width = calc.min(size, remaining_cols);
-      let x = int(pre.len() + bits - remaining_cols)
-      let y = int(current_row)
-      if (size >= remaining_cols) {
-        current_row += 1
-      }
-      size -= remaining_cols
-      remaining_cols = bits
-      cells.push(bfcell(int(width),fill:fill, height: rowheight, x:x, y:y)[#content])
+      // prepare for next cell
+      idx += cell_size;
+      len -= cell_size;
     }
-  
   }
-  
-  computed_offsets.push(bits - 1);
 
+  // map data-cell to tablex-dict-type cell
+  return _cells.map(c => {
+    cellx(
+      x: c.x,
+      y: c.y,
+      colspan: c.len,
+      inset: 0pt,
+      fill: c.fill,
+    )[
+      #box(height: 2.5em, width: 100%, stroke: 1pt + black)[#c.content]  // ToDo: make height changeable again.
+    ]
+  })
+}
+
+#let get_aligned_header_label(num, excludes) = {
   let bitheader_font_size = 9pt;
-  let bh_num_text(num) = {
-    let alignment = if (bitheader in ("all","bounds")) {center} 
-    else {
-      if (msb_first) {
-        if (num == 0) {end} else if (num == (bits - 1)) { start } else { center }
-      } else { 
-        if (num == (bits - 1)) {end} else if (num == 0) { start } else { center }
-      }
+  let alignment = if (bitheader in ("all","bounds")) {center} 
+  else {
+    if (msb_first) {
+      if (num == 0) {end} else if (num == (bits - 1)) { start } else { center }
+    } else { 
+      if (num == (bits - 1)) {end} else if (num == 0) { start } else { center }
     }
-
-    align(alignment, text(bitheader_font_size)[#num]);
   }
 
+  align(alignment, text(bitheader_font_size)[#num]);
+}
 
-  let _bitheader = if ( bitheader == "all" ) {
+#let calc_offsets(field_meta_data, bits_per_row, only_first_row: false, bounds: false) = {
+  // compute offsets for bitheader
+  let _offsets = field_meta_data.map(f => { 
+    if (bounds) {
+      (f.start, f.end)
+    } else {
+      f.start
+    }
+  }).flatten()
+
+  if (only_first_row) { 
+    _offsets = _offsets.filter(value => value < bits_per_row)
+  } else { 
+    _offsets = _offsets.map(value => calc.rem(value,bits_per_row))
+  }
+  
+  _offsets.push(bits_per_row - 1);
+  return _offsets
+}
+
+#let convert_bitheader_to_table_cells(bitheader, metadata) = {
+  let bitheader_font_size = 9pt;
+  let bh_num_text(num) = text(9pt)[#num]
+  let computed_offsets = calc_offsets(metadata.field_data, metadata.bits_per_row)
+  let bits = metadata.bits_per_row
+  let msb_first = metadata.msb
+
+  if ((bitheader == "bounds") or ( type(bitheader) == dictionary and bitheader.at("numbers",default:none) == "bounds" )) {
+    computed_offsets = calc_offsets(metadata.field_data, metadata.bits_per_row, only_first_row: false, bounds:true)
+  }
+
+  let _bitheader =  if ( bitheader == "all" ) {
     // Show all numbers from 0 to total bits.
     range(bits).map(i => bh_num_text(i))
   } else if ( bitheader in ("smart","smart-firstline","bounds")) {
@@ -199,17 +187,115 @@
 
   // revers bit order
   if msb_first == true {
-    _bitheader = _bitheader.rev()
+    return _bitheader.rev()
   }
-  let _bitheader = ([],)*pre.len() + _bitheader + ([],)*post.len()
 
+  return _bitheader
+}
+
+#let convert_annotations_to_table_cells(annotations, pre, post, bits) = {
+  let _cells = ()
+  // Calculate needed pre/post columns
+  if (pre == auto or post == auto) {
+    let left_max_level = 0
+    let right_max_level = 0
+    for field in fields.pos() {
+      if (type(field) == dictionary and field.at("type",default:none) == "annotation") {
+        let (side, level, ..) = field;
+        if (side == left) {
+          left_max_level = calc.max(left_max_level,level)
+        } else {
+          right_max_level = calc.max(right_max_level,level)
+        }
+      }
+    }
+    if (pre == auto) { pre = (auto,)*(left_max_level+1)}
+    if (post == auto) { post = (auto,)*(right_max_level+1)}
+  }
+
+  // calculate cells
+  // let current_row = if (bitheader != none) { 1 } else { 0 };
+  let current_row_counter = (1,1)
+
+  for (idx, field) in annotations.enumerate() {
+    let (side, level, args, body) = field;
+    let current_row = if (side == left) { 
+      let tmp = current_row_counter.at(0)
+      current_row_counter.at(0) += 1;
+      tmp;
+    } else {
+      let tmp = current_row_counter.at(1)
+      current_row_counter.at(1) += 1;
+      tmp;
+    }
+    let y = int(current_row)
+    let x = if (side == left) {
+      pre.len() - level - 1
+    } else {
+      pre.len() + bits + level
+    }
+
+    _cells.push((
+      type: "annotation-cell",
+      x:x,
+      y:y,
+      label: body,
+      args: args,
+    ))
+    
+  }
+  return _cells.map(c => cellx(
+    x:c.x,
+    y:c.y,
+    ..(c.args),
+  )[#box(height:100%)[#c.label]])
+
+}
+
+#let bytefield(
+  bits: 32, 
+  rowheight: 2.5em, 
+  bitheader: auto, 
+  msb_first: false,
+  pre: (auto,),
+  post: (auto,),
+  ..fields
+) = {
+  // Define default behavior - show 
+  if (bitheader == auto) { bitheader = "smart"}
+  
+  // filter data cells 
+  let data_fields = fields.pos().filter(f => f.type == "bitbox")
+  let annotations = fields.pos().filter(f => f.type == "annotation")
+  // collect metadata into an dictionary
+  let meta = (
+    bits_per_row: bits,
+    msb: msb_first, // if msb_first { "big" } else { "little" }
+    pre: (
+      len: pre.len()
+    ),
+    post: (
+      len: post.len(),
+    ),
+    field_data: calc_field_bounds(data_fields)
+  )
+
+  // convert 
+  let data_cells = convert_data_fields_to_table_cells(data_fields, meta);
+  let annotation_cells = convert_annotations_to_table_cells(annotations, pre, post, bits);
+
+  let _bitheader = convert_bitheader_to_table_cells(bitheader, meta);
+  let _bitheader = ([],)*pre.len() + _bitheader + ([],)*post.len()
+  
+  // wrap inside a box
   box(width: 100%)[
     #gridx(
       columns: pre + range(bits).map(i => 1fr) + post,
       align: center + horizon,
       inset: (x:0pt, y: 4pt),
       .._bitheader,
-      ..cells,
+      ..data_cells,
+      ..annotation_cells,
     )
   ]
 }
@@ -221,7 +307,7 @@
   fill: fill,
   stroke: stroke,
   content: content,
-  var: false, 
+  // var: false, 
   show_size: false,
 )
 
@@ -238,7 +324,8 @@
 #let bits(len, ..args) = bitbox(len, ..args)
 #let byte(..args) = bitbox(8, ..args)
 #let bytes(len, ..args) = bitbox(len * 8, ..args)
-#let padding(..args) = bitbox(none, ..args)
+
+#let padding(..args) = bitbox(auto, ..args)
 #let flag(..args,text) = bitbox(1,..args,flagtext(text))
 
 #let note(side,rowspan:1,level:0,content) = {
@@ -279,71 +366,3 @@
 // Rotating text for flags
 #let flagtext(text) = align(center,rotate(270deg,text))
 
-// Common network protocols
-#let ipv4 = bytefield(
-  bits(4)[Version], bits(4)[TTL], bytes(1)[TOS], bytes(2)[Total Length],
-  bytes(2)[Identification], bits(3)[Flags], bits(13)[Fragment Offset],
-  bytes(1)[TTL], bytes(1)[Protocol], bytes(2)[Header Checksum],
-  bytes(4)[Source Address],
-  bytes(4)[Destination Address],
-  bytes(3)[Options], bytes(1)[Padding]
-)
-
-#let ipv6 = bytefield(
-  bits(4)[Version], bytes(1)[Traffic Class], bits(20)[Flowlabel],
-  bytes(2)[Payload Length], bytes(1)[Next Header], bytes(1)[Hop Limit],
-  bytes(128/8)[Source Address],
-  bytes(128/8)[Destination Address],
-)
-
-#let icmp = bytefield(
-  header: (0,8,16,31),
-  byte[Type], byte[Code], bytes(2)[Checksum],
-  bytes(2)[Identifier], bytes(2)[Sequence Number],
-  padding[Optional Data ]
-)
-
-#let icmpv6 = bytefield(
-  header: (0,8,16,31),
-  byte[Type], byte[Code], bytes(2)[Checksum],
-  padding[Internet Header + 64 bits of Original Data Datagram  ]
-)
-
-#let dns = bytefield(
-  bytes(2)[Identification], bytes(2)[Flags],
-  bytes(2)[Number of Questions], bytes(2)[Number of answer RRs],
-  bytes(2)[Number of authority RRs], bytes(2)[Number of additional RRs],
-  bytes(8)[Questions],
-  bytes(8)[Answers (variable number of resource records) ],
-  bytes(8)[Authority (variable number of resource records) ],
-  bytes(8)[Additional information (variable number of resource records) ],
-)
-
-#let tcp = bytefield(
-  bytes(2)[Source Port], bytes(2)[ Destinatino Port],
-  bytes(4)[Sequence Number],
-  bytes(4)[Acknowledgment Number],
-  bits(4)[Data Offset],bits(6)[Reserved], bits(6)[Flags], bytes(2)[Window],
-  bytes(2)[Checksum], bytes(2)[Urgent Pointer],
-  bytes(3)[Options], byte[Padding],
-  padding[...DATA...]
-)
-
-
-
-#let tcp_detailed = bytefield(
-  bytes(2)[Source Port], bytes(2)[ Destinatino Port],
-  bytes(4)[Sequence Number],
-  bytes(4)[Acknowledgment Number],
-  bits(4)[Data Offset],bits(6)[Reserved], bit[#flagtext("URG")], bit[#flagtext("ACK")], bit[#flagtext("PSH")], bit[#flagtext("RST")], bit[#flagtext("SYN")], bit[#flagtext("FIN")], bytes(2)[Window],
-  bytes(2)[Checksum], bytes(2)[Urgent Pointer],
-  bytes(3)[Options], byte[Padding],
-  padding[...DATA...]
-)
-
-#let udp = bytefield(
-  bitheader: (0,16,31),
-  bytes(2)[Source Port], bytes(2)[ Destinatino Port],
-  bytes(2)[Length], bytes(2)[Checksum],
-  padding[...DATA...]
-)
