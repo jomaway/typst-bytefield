@@ -102,7 +102,7 @@ Show start bit of each bitbox with `bitheader: "bounds"`.
 Select `msb_first: true` for a reversed bit order. 
 #example(```typst
 #bytefield(
-    bits: 16,
+    bits: 32,
     msb_first: true,
     bitheader: "smart",
     byte[MSB],

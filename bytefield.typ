@@ -82,77 +82,52 @@
   })
 }
 
-#let get_aligned_header_label(num, excludes) = {
-  let bitheader_font_size = 9pt;
-  let alignment = if (bitheader in ("all","bounds")) {center} 
-  else {
-    if (msb_first) {
-      if (num == 0) {end} else if (num == (bits - 1)) { start } else { center }
-    } else { 
-      if (num == (bits - 1)) {end} else if (num == 0) { start } else { center }
-    }
-  }
+#let header_cell(num, align: center) = (
+  type: "header-cell",
+  label: str(num),
+  x: num,
+  y: 0,
+  align: align,
+)
 
-  align(alignment, text(bitheader_font_size)[#num]);
-}
-
-#let calc_offsets(field_meta_data, bits_per_row, only_first_row: false, bounds: false) = {
-  // compute offsets for bitheader
-  let _offsets = field_meta_data.map(f => { 
-    if (bounds) {
-      (f.start, f.end)
-    } else {
-      f.start
-    }
-  }).flatten()
-
-  if (only_first_row) { 
-    _offsets = _offsets.filter(value => value < bits_per_row)
-  } else { 
-    _offsets = _offsets.map(value => calc.rem(value,bits_per_row))
-  }
-  
-  _offsets.push(bits_per_row - 1);
-  return _offsets
-}
 
 #let convert_bitheader_to_table_cells(bitheader, metadata) = {
   let bitheader_font_size = 9pt;
-  let bh_num_text(num) = text(9pt)[#num]
-  let computed_offsets = calc_offsets(metadata.field_data, metadata.bits_per_row)
-  let bits = metadata.bits_per_row
   let msb_first = metadata.msb
 
-  if ((bitheader == "bounds") or ( type(bitheader) == dictionary and bitheader.at("numbers",default:none) == "bounds" )) {
-    computed_offsets = calc_offsets(metadata.field_data, metadata.bits_per_row, only_first_row: false, bounds:true)
+  let _cells = ()
+  //let _cells = range(metadata.bits_per_row).map(_ => none);
+  if (bitheader == auto){
+    // auto shows all offsets in the first row.
+    bitheader == "smart"
   }
 
-  let _bitheader =  if ( bitheader == "all" ) {
-    // Show all numbers from 0 to total bits.
-    range(bits).map(i => bh_num_text(i))
-  } else if ( bitheader in ("smart","smart-firstline","bounds")) {
-    // Show nums aligned with given fields
-    if msb_first == true {
-      computed_offsets = computed_offsets.map(i => bits - i - 1);
+  let header_type = type(bitheader);
+  if (header_type == none) {
+    // don't show any bitheader at all.
+    return () // quick path just return an empty array.
+  } else if (header_type == int) {
+    // show all multiples of the given value
+    _cells  = range(metadata.bits_per_row, step: bitheader).map(value => { header_cell(value) }) 
+  } else if (header_type == array) {
+    // show header numbers from array
+    _cells = bitheader.map(value => header_cell(value))
+  } else if (header_type == str) {
+    // string
+    if (bitheader == "bounds") {
+      _cells = metadata.field_data.map(f => (f.start, f.end)).flatten().filter(value => value < metadata.bits_per_row).map(value => { header_cell(value) })
+    } else if (bitheader == "smart") {
+      _cells = metadata.field_data.map(f => f.start).filter(value => value < metadata.bits_per_row).map(value => { header_cell(value) })
+    } else if (bitheader == "all") {
+      _cells = range(metadata.bits_per_row -1).map(value => {header_cell(value)})
     }
-    range(bits).map(i => if i in computed_offsets { bh_num_text(i) } else {none})
-  } else if ( type(bitheader) == array ) {
-    // show given numbers from array
-    range(bits).map(i => if i in bitheader { bh_num_text(i) } else {none})
-  } else if ( type(bitheader) == int ) {
-    // if an int is given show all multiples of this number
-    let val = bitheader;
-    range(bits).map(i =>
-      if calc.rem(i,val) == 0 or i == (bits - 1) { bh_num_text(i) } 
-      else { none })
-  } else if ( bitheader == none ) {
-    range(bits).map(_ => []);
-  } else if (type(bitheader) == dictionary) {
+    // Add last one in all cases
+    _cells.push(header_cell(metadata.bits_per_row -1))
+
+  } else if (header_type == dictionary) {
+    // custom dict
     let numbers = bitheader.at("numbers",default:none) 
-    if msb_first == true {
-      computed_offsets = computed_offsets.map(i => bits - i - 1);
-    }
-    range(bits).map(i => [
+    return  range(metadata.bits_per_row).map(i => [
       #set align(start + bottom)
       #let h_text = bitheader.at(str(i),default: "");
       #style(styles => {
@@ -169,7 +144,7 @@
             v(-0.5em)
             align(center, text(bitheader_font_size)[#i])
           } else if (numbers in ("smart","smart-firstline","bounds")) {
-            if (i in computed_offsets) {
+            if (i in _cells.map(c => c.x)) {
               v(-0.5em)
               align(center, text(bitheader_font_size)[#i])
             }
@@ -182,16 +157,19 @@
         ]  
       })
     ])
-  } else {
-     panic("bitheader must be an integer,array, none, 'all' or 'smart'")
   }
 
   // revers bit order
   if msb_first == true {
-    return _bitheader.rev()
-  }
+    _cells = _cells.map(c => {
+      c.x = (metadata.bits_per_row -1) - c.x ;
+      c
+    })
+  }  
 
-  return _bitheader
+  return _cells.map(c => {
+    cellx(x: c.x + metadata.pre.levels , y: c.y)[#text(bitheader_font_size,c.label)]
+  })
 }
 
 #let convert_annotations_to_table_cells(annotations, pre, post, bits) = {
@@ -264,8 +242,6 @@
   post: auto,
   ..fields
 ) = {
-  // Define default behavior - show 
-  if (bitheader == auto) { bitheader = "smart"}
   // filter data cells 
   let data_fields = fields.pos().filter(f => f.type == "bitbox")
   let annotations = fields.pos().filter(f => f.type == "annotation")
