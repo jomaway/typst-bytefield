@@ -4,23 +4,21 @@
 
 #import "@preview/tablex:0.0.6": tablex, cellx, gridx
 #import "@preview/oxifmt:0.2.0": strfmt
+
 #set text(font: "IBM Plex Mono")
 
-#let bfcell(
-  len, // lenght of the fields in bits 
-  content, 
-  fill: none, // color to fill the field
-  height: auto, // height of the field
-) = cellx(colspan: len, fill: fill, inset: 0pt)[#box(height: height, width: 100%, stroke: 1pt + black)[#content]]
-
+#let assert_data_field(field) = {
+  assert(type(field) == dictionary, message: strfmt("expected field to be a dictionary, found {}", type(field)));
+  assert(type(field.size) == int or field.size == auto, message: strfmt("expected auto or integer for parameter size, found {} ", type(field.size)))
+}
 
 #let calc_field_bounds(data_fields) = {
   let bounds = ();
   let idx = 0;
 
   for (i,field) in data_fields.enumerate() {
-    assert(type(field.size) == int or field.size == auto, message: strfmt("expected auto or integer for parameter size, found {} ", type(field.size)))
-    field.size = if (field.size == auto) { 32 - calc.rem(idx, 32) } else { field.size }
+    assert_data_field(field)
+    field.size = if (field.size == auto) { 32 - calc.rem(idx, 32) } else { field.size }  // 32 is a workaround and causes errors. will be fixed soon.
     let start = idx;
     idx += field.size;
 
@@ -41,8 +39,7 @@
   let idx = 0;
 
   for field in data_fields {
-    assert(type(field) == dictionary, message: strfmt("expected field to be a dictionary, found {}", type(field)));
-    assert(type(field.size) == int or field.size == auto, message: strfmt("expected auto or integer for parameter size, found {} ", type(field.size)))
+    assert_data_field(field)
     let len = if (field.size == auto) { row_width - calc.rem(idx, row_width); } else { field.size }
 
     while len > 0 {
@@ -78,7 +75,6 @@
   })
 }
 
-
 #let bytefield(
   bits: 32, 
   rowheight: 2.5em, 
@@ -86,11 +82,6 @@
   msb_first: false,
   ..fields
 ) = {
-  // state variables
-  let col_count = 0
-  let cells = ()
-  let row_width = bits
-
   // Define default behavior - show 
   if (bitheader == auto) { bitheader = "smart"}
 
@@ -98,44 +89,13 @@
   // filter data cells 
   let data_fields = fields.pos().filter(f => f.type == "bitbox")
 
-  // let meta_data = calc_field_bounds(data_fields);
-
+  // convert 
   let data_cells = convert_data_fields_to_table_cells(data_fields, row_width: bits);
 
-
-  // calculate cells
-  let current_offset = 0;
-  let computed_offsets = ();
-  for (idx, field) in fields.pos().enumerate() {
-    let (size, content, fill, ..) = field;
-    let remaining_cols = bits - col_count;
-    // if no size was specified
-    if (size == auto) { size = remaining_cols }
-    col_count = calc.rem(col_count + size, bits);
-    
-    if size == none {
-      size = remaining_cols
-      content = content + sym.star
-    }
-
-    computed_offsets.push(if (bitheader == "smart-firstline") { current_offset } else { calc.rem(current_offset,bits) } );
-    current_offset += size;
-    
-    // if size > bits and remaining_cols == bits and calc.rem(size, bits) == 0 {
-    //   content = content + " (" + str(size) + " Bit)"
-    //   cells.push(bfcell(int(bits),fill:fill, height: rowheight * size/bits)[#content])
-    //   size = 0
-    // }
-
-    // while size > 0 {
-    //   let width = calc.min(size, remaining_cols);
-    //   size -= remaining_cols
-    //   remaining_cols = bits
-    //   cells.push(bfcell(int(width),fill:fill, height: rowheight,)[#content])
-    // }
-  
-  }
-  
+  // compute offsets for bitheader
+  let computed_offsets = calc_field_bounds(data_fields).map(f => {
+    if (bitheader == "smart-firstline") { f.start } else { calc.rem(f.start,bits) }
+  })
   computed_offsets.push(bits - 1);
 
   let bitheader_font_size = 9pt;
@@ -151,7 +111,6 @@
 
     align(alignment, text(bitheader_font_size)[#num]);
   }
-
 
   let _bitheader = if ( bitheader == "all" ) {
     // Show all numbers from 0 to total bits.
