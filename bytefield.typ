@@ -196,24 +196,7 @@
 
 #let convert_annotations_to_table_cells(annotations, pre, post, bits) = {
   let _cells = ()
-  // Calculate needed pre/post columns
-  if (pre == auto or post == auto) {
-    let left_max_level = 0
-    let right_max_level = 0
-    for field in fields.pos() {
-      if (type(field) == dictionary and field.at("type",default:none) == "annotation") {
-        let (side, level, ..) = field;
-        if (side == left) {
-          left_max_level = calc.max(left_max_level,level)
-        } else {
-          right_max_level = calc.max(right_max_level,level)
-        }
-      }
-    }
-    if (pre == auto) { pre = (auto,)*(left_max_level+1)}
-    if (post == auto) { post = (auto,)*(right_max_level+1)}
-  }
-
+  
   // calculate cells
   // let current_row = if (bitheader != none) { 1 } else { 0 };
   let current_row_counter = (1,1)
@@ -253,13 +236,35 @@
 
 }
 
+#let calc_annotation_meta(annotations) = {
+  let pre = auto
+  let post = auto
+  // Calculate needed pre/post columns
+  if (pre == auto or post == auto) {
+    let left_max_level = 0
+    let right_max_level = 0
+    for field in annotations {
+      let (side, level, ..) = field;
+      if (side == left) {
+        left_max_level = calc.max(left_max_level,level)
+      } else {
+        right_max_level = calc.max(right_max_level,level)
+      }
+    }
+    if (pre == auto) { pre = (auto,)*(left_max_level+1)}
+    if (post == auto) { post = (auto,)*(right_max_level+1)}
+  }
+
+  return (pre, post)
+}
+
 #let bytefield(
   bits: 32, 
   rowheight: 2.5em, 
   bitheader: auto, 
   msb_first: false,
-  pre: (auto,),
-  post: (auto,),
+  pre: auto,
+  post: auto,
   ..fields
 ) = {
   // Define default behavior - show 
@@ -269,6 +274,7 @@
   let data_fields = fields.pos().filter(f => f.type == "bitbox")
   let annotations = fields.pos().filter(f => f.type == "annotation")
   // collect metadata into an dictionary
+  (pre, post) = calc_annotation_meta(annotations);
   let meta = (
     bits_per_row: bits,
     msb: msb_first, // if msb_first { "big" } else { "little" }
