@@ -36,8 +36,8 @@
 
 #let convert_data_fields_to_table_cells(data_fields, metadata) = {
   let row_width = metadata.bits_per_row;
-  let pre_size = metadata.pre.len;
-  let post_size = metadata.post.len;
+  let pre_size = metadata.pre.levels;
+  let post_size = metadata.post.levels;
 
   let _cells = ();
   let idx = 0;
@@ -238,26 +238,21 @@
 
 }
 
-#let calc_annotation_meta(annotations) = {
-  let pre = auto
-  let post = auto
-  // Calculate needed pre/post columns
-  if (pre == auto or post == auto) {
-    let left_max_level = 0
-    let right_max_level = 0
-    for field in annotations {
-      let (side, level, ..) = field;
-      if (side == left) {
-        left_max_level = calc.max(left_max_level,level)
-      } else {
-        right_max_level = calc.max(right_max_level,level)
-      }
+#let calc_annotation_levels(annotations) = {
+  let left_max_level = 0
+  let right_max_level = 0
+  for field in annotations {
+    let (side, level, ..) = field;
+    if (side == left) {
+      left_max_level = calc.max(left_max_level,level)
+    } else {
+      right_max_level = calc.max(right_max_level,level)
     }
-    if (pre == auto) { pre = (auto,)*(left_max_level+1)}
-    if (post == auto) { post = (auto,)*(right_max_level+1)}
   }
-
-  return (pre, post)
+  return (
+    pre: (levels: left_max_level +1),
+    post: (levels: right_max_level +1),
+  )
 }
 
 #let bytefield(
@@ -271,36 +266,37 @@
 ) = {
   // Define default behavior - show 
   if (bitheader == auto) { bitheader = "smart"}
-  
   // filter data cells 
   let data_fields = fields.pos().filter(f => f.type == "bitbox")
   let annotations = fields.pos().filter(f => f.type == "annotation")
   // collect metadata into an dictionary
-  (pre, post) = calc_annotation_meta(annotations);
   let meta = (
     bits_per_row: bits,
     msb: msb_first, // if msb_first { "big" } else { "little" }
-    aside: (pre: pre.len(), post: post.len()),
-    pre:(
-      len: pre.len()
-    ),
-    post: (
-      len: post.len(),
-    ),
-    field_data: calc_field_bounds(data_fields)
+    field_data: calc_field_bounds(data_fields),
+    ..calc_annotation_levels(annotations),
   )
+  // convert auto pre and post columns 
+  if (pre == auto) {
+    pre = (auto,)*meta.pre.levels
+  }
+  if (post == auto) {
+    post = (auto,)*meta.post.levels
+  }
 
   // convert 
   let data_cells = convert_data_fields_to_table_cells(data_fields, meta);
   let annotation_cells = convert_annotations_to_table_cells(annotations, pre, post, bits);
 
   let _bitheader = convert_bitheader_to_table_cells(bitheader, meta);
-  let _bitheader = ([],)*pre.len() + _bitheader + ([],)*post.len()
+  let _bitheader = ([],)*meta.pre.levels + _bitheader + ([],)*meta.post.levels
   
+  
+
   // wrap inside a box
   box(width: 100%)[
     #gridx(
-      columns: pre + range(bits).map(i => 1fr) + post,
+      columns:  pre + range(bits).map(i => 1fr) + post,
       align: center + horizon,
       inset: (x:0pt, y: 4pt),
       .._bitheader,
@@ -309,6 +305,7 @@
     )
   ]
 }
+
 
 // Low level API
 #let bitbox(length_in_bits, content, fill: none, stroke: auto) = (
