@@ -82,10 +82,10 @@
   })
 }
 
-#let header_cell(num, align: center) = (
+#let header_cell(num, pos: auto,  align: center) = (
   type: "header-cell",
   label: str(num),
-  x: num,
+  x: if (pos == auto) {num} else { pos },
   y: 0,
   align: align,
 )
@@ -96,6 +96,7 @@
   let msb_first = metadata.msb
 
   let _cells = ()
+  let _values = ()
   //let _cells = range(metadata.bits_per_row).map(_ => none);
   if (bitheader == auto){
     // auto shows all offsets in the first row.
@@ -108,23 +109,54 @@
     return () // quick path just return an empty array.
   } else if (header_type == int) {
     // show all multiples of the given value
-    _cells  = range(metadata.bits_per_row, step: bitheader).map(value => { header_cell(value) }) 
+    _cells  = range(metadata.bits_per_row, step: bitheader)
   } else if (header_type == array) {
     // show header numbers from array
-    _cells = bitheader.map(value => header_cell(value))
+    _cells = bitheader
   } else if (header_type == str) {
     // string
     if (bitheader == "bounds") {
-      _cells = metadata.field_data.map(f => (f.start, f.end)).flatten().filter(value => value < metadata.bits_per_row).map(value => { header_cell(value) })
+      if msb_first {
+        _cells = metadata.field_data.map(f => (f.start, f.end)).flatten().filter(value => value < metadata.bits_per_row).map(value => { value = (metadata.bits_per_row -1) - value; value })
+      } else {
+        _cells = metadata.field_data.map(f => (f.start, f.end)).flatten().filter(value => value < metadata.bits_per_row)
+      }
+      
     } else if (bitheader == "smart") {
-      _cells = metadata.field_data.map(f => f.start).filter(value => value < metadata.bits_per_row).map(value => { header_cell(value) })
+      if msb_first {
+        _cells = metadata.field_data.map(f => f.start).filter(value => value < metadata.bits_per_row).map(value => { value = (metadata.bits_per_row -1) - value; value })
+      } else {
+        _cells = metadata.field_data.map(f => f.start).filter(value => value < metadata.bits_per_row)
+      }
     } else if (bitheader == "all") {
-      _cells = range(metadata.bits_per_row -1).map(value => {header_cell(value)})
+      _cells = range(metadata.bits_per_row)
     }
-    // Add last one in all cases
-    _cells.push(header_cell(metadata.bits_per_row -1))
+    
+  }  
 
-  } else if (header_type == dictionary) {
+  if (header_type != dictionary) {
+    // Add last one in all cases
+    if (_cells.find(c => c == metadata.bits_per_row - 1) == none) {
+      _cells.push(metadata.bits_per_row -1)
+    }
+    // Add first one in any case 
+    if (_cells.find(c => c == 0) == none) {
+      _cells.push(0)
+    }
+
+    if msb_first == true {
+      // reverse bit order
+      _cells = _cells.map(value => header_cell(value, pos: (metadata.bits_per_row -1) - value))
+    } else {
+      _cells = _cells.map(value => { header_cell(value) })
+    }
+
+    return _cells.map(c => {
+      cellx(x: c.x + metadata.pre.levels , y: c.y)[#text(bitheader_font_size,c.label)]
+    })
+  }
+  
+  if (header_type == dictionary) {
     // custom dict
     let numbers = bitheader.at("numbers",default:none) 
     return  range(metadata.bits_per_row).map(i => [
@@ -158,18 +190,6 @@
       })
     ])
   }
-
-  // revers bit order
-  if msb_first == true {
-    _cells = _cells.map(c => {
-      c.x = (metadata.bits_per_row -1) - c.x ;
-      c
-    })
-  }  
-
-  return _cells.map(c => {
-    cellx(x: c.x + metadata.pre.levels , y: c.y)[#text(bitheader_font_size,c.label)]
-  })
 }
 
 #let convert_annotations_to_table_cells(annotations, pre, post, bits) = {
@@ -252,6 +272,7 @@
     field_data: calc_field_bounds(data_fields),
     ..calc_annotation_levels(annotations),
   )
+  // return meta.field_data
   // convert auto pre and post columns 
   if (pre == auto) {
     pre = (auto,)*meta.pre.levels
