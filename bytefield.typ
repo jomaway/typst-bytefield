@@ -131,9 +131,9 @@
     // string
     if (bitheader == "bounds") {
       if msb_first {
-        _cells = metadata.field_data.map(f => (f.start, f.end)).flatten().filter(value => value < metadata.bits_per_row).map(value => { value = (metadata.bits_per_row -1) - value; value })
+        _cells = metadata.field_data.map(f => if f.start == f.end { (f.start,) } else {(f.start, f.end)}).flatten().filter(value => value < metadata.bits_per_row).map(value => { value = (metadata.bits_per_row -1) - value; value })
       } else {
-        _cells = metadata.field_data.map(f => (f.start, f.end)).flatten().filter(value => value < metadata.bits_per_row)
+        _cells = metadata.field_data.map(f => if f.start == f.end { (f.start,) } else {(f.start, f.end)}).flatten().filter(value => value < metadata.bits_per_row)
       }
       
     } else if (bitheader == "smart") {
@@ -145,7 +145,6 @@
     } else if (bitheader == "all") {
       _cells = range(metadata.bits_per_row)
     }
-    
   }  
 
   if (header_type != dictionary) {
