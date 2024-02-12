@@ -5,15 +5,6 @@
 #import "@preview/tablex:0.0.6": tablex, cellx, gridx
 #set text(font: "IBM Plex Mono")
 
-// dictionary is missing functionality to set a value if it does not contain it.
-#let set_default(dict, defaults) = {
-  for (key,value) in defaults {
-    value = dict.at(key,default:value)
-    dict.insert(key,value)
-  }
-  return dict
-}
-
 // internal cells
 #let bfcell(
   len, // lenght of the fields in bits 
@@ -46,28 +37,38 @@
 #let config_calc_offsets(config, (idx,field)) = {
   let (size, ..) = field
 
-  if (size == none) {
-    size = config.bits
-  }
-
   let start = if config.offsets.len() == 0 { 0 } else  {
     let (start,end) = config.offsets.values().last()
     end + 1
   }
-  let end = start + size - 1
 
-  let rowstart = if config.rows.len() == 0 { 0 } else {
-    let (_,rowend) = config.rows.values().last()
-    let (_,colend) = config.columns.values().last()
-    if colend == config.bits - 1 {
-      rowend += 1
+  let (colstart,rowstart) = if config.rows.len() == 0 { (0,0) } else {
+    let (_,prev_rowend) = config.rows.values().last()
+    let (_,prev_colend) = config.columns.values().last()
+    let colstart = prev_colend + 1
+    let rowstart = prev_rowend
+    if colstart ==  config.bits {
+      rowstart += 1
+      colstart = 0
     }
-    rowend
+    (colstart,rowstart)
+  }
+
+  if (size == none) {
+    //we take remaining row
+    size = config.bits - colstart
+  } else if (colstart == 0 and calc.rem(size,config.bits) == 0) {
+    //SPECIAL CASE
+    //if we fit exactly into multiple rows,
+    //we only take up a single rows, rest is handled in cell drawing 
+    size = config.bits
   }
 
   let end = start + size - 1
+
+  let end = start + size - 1
   config.offsets.insert(str(idx),(start,end))
-  config.rows.insert(str(idx),(rowstart,rowstart+int((size - 1)/config.bits)))
+  config.rows.insert(str(idx),(rowstart,rowstart+int((colstart + size - 1)/config.bits)))
   config.columns.insert(str(idx),(calc.rem(start,config.bits),calc.rem(end,config.bits)))
   return config
 }
@@ -90,7 +91,7 @@
 
 // Calculate bitheader offsets
 #let config_calc_offsets_bitheader(config, (idx,field)) = {
-  let start = if config.offsets.len() == 0 { 0 } else {
+  let start = if config.rows.len() == 0 { 0 } else {
     let (_,rowend) = config.rows.values().last()
     rowend + 1
   }
@@ -154,25 +155,28 @@
 }
 
 #let cell_bitheader(config, (idx,field)) = {
-  let (msb,numbers,labels,ticks,fontsize, ..) = field
+  let (msb,autofill,numbers,labels,ticks,angle,marker,fontsize) = field
 
   let msb_first = (msb == left)
 
-  let computed_offsets = for (start,end) in config.columns.values() {
-    if numbers == "bounds" {
-      (start,end)
-    } else {
-      (start,)
+  for (start,end) in config.columns.values() {
+    if autofill == "bounds" {
+      numbers.push(start)
+      numbers.push(end)
+    } else if autofill == "smart" {
+      numbers.push(start)
     }
   }
-  computed_offsets.push(config.bits - 1)
+  if autofill == "smart" {
+    numbers.push(config.bits - 1)
+  }
 
   if msb_first == true {
     computed_offsets = computed_offsets.map(i => bits - i - 1);
   }
 
   let bh_num_text(num) = {
-    let alignment = if (numbers in ("all","bounds")) {center} 
+    let alignment = if (autofill in ("all","bounds")) {center} 
     else {
       if (msb_first) {
         if (num == 0) {end} else if (num == (config.bits - 1)) { start } else { center }
@@ -184,56 +188,57 @@
     align(alignment, text(fontsize)[#num]);
   }
 
-  let _bitheader = if ( numbers == "all" ) {
-    // Show all numbers from 0 to total bits.
-    range(config.bits).map(i => bh_num_text(i))
-  } else if ( numbers in ("smart","smart-firstline","bounds")) {
-    // Show nums aligned with given fields
-    range(config.bits).map(i => if i in computed_offsets { bh_num_text(i) } else {none})
-  } else if ( type(numbers) == array ) {
-    // show given numbers from array
-    range(config.bits).map(i => if i in numbers { bh_num_text(i) } else {none})
-  } else if ( type(numbers) == int ) {
-    // if an int is given show all multiples of this number
-    let val = numbers;
-    range(config.bits).map(i =>
-      if calc.rem(i,val) == 0 or i == (bits - 1) { bh_num_text(i) } 
-      else { none })
-  } else if ( numbers == none ) {
-    range(config.bits).map(_ => []);
+  let _bitheader = if labels == (:) {
+    if ( autofill == "all" ) {
+      // Show all numbers from 0 to total bits.
+      range(config.bits).map(i => bh_num_text(i))
+    } else if ( autofill in ("smart","smart-firstline","bounds")) {
+      // Show nums aligned with given fields
+      range(config.bits).map(i => if i in numbers { bh_num_text(i) } else {none})
+    } else if ( numbers.len() > 1  ) {
+      // show given numbers from array
+      range(config.bits).map(i => if i in numbers { bh_num_text(i) } else {none})
+    } else if ( numbers.len() == 1 ) {
+      // if an int is given show all multiples of this number
+      let val = numbers.first()
+      range(config.bits).map(i =>
+        if calc.rem(i,val) == 0 or i == (config.bits - 1) { bh_num_text(i) } 
+        else { none })
+    } else if ( numbers == () ) {
+      range(config.bits).map(_ => []);
+    }
   } else {
+    // we have numbers and labels
     range(config.bits).map(i => [
       #set align(start + bottom)
-      #let h_text = bitheader.at(str(i),default: "");
+      #let h_text = labels.at(str(i),default: "");
       #style(styles => {
         let size = measure(h_text, styles).width
         return [
-          #box(height: size,inset:(left: 50%))[
-          #if (h_text != "" and bitheader.at("marker", default: auto) != none){ place(bottom, line(end:(0pt, 5pt))) }
-          #rotate(bitheader.at("angle", default: -60deg), origin: left, h_text)
+          #box(height: size, width:100%, inset:(left: 50%))[
+          #if (h_text != "" and marker != none){ place(bottom, line(end:(0pt, 5pt))) }
+          #rotate(angle, origin: left, box(width:size,h_text))
           ]
-          #if (type(numbers) == bool and numbers and h_text != "") {
-              v(-0.5em)
-              align(center, text(bitheader_font_size)[#i])
-          } else if (numbers == "all") {
+          #if (autofill == "all") {
             v(-0.5em)
-            align(center, text(bitheader_font_size)[#i])
-          } else if (numbers in ("smart","smart-firstline","bounds")) {
-            if (i in computed_offsets) {
+            align(center, text(fontsize)[#i])
+          } else if (autofill in ("smart","smart-firstline","bounds")) {
+            if (i in numbers) {
               v(-0.5em)
-              align(center, text(bitheader_font_size)[#i])
+              align(center, text(fontsize)[#i])
             }
-          } else if (type(numbers) == array) {
-            if (i in array) {
+          } else if (autofill == true)  {
+            if (i in numbers) {
               v(-0.5em)
-              align(center, text(bitheader_font_size)[#i])
+              align(center, text(fontsize)[#i])
             }
           }
         ]  
       })
     ])
   }
-  return ([],)*config.pre.len() + _bitheader + ([],)*config.post.len()
+  let (row,_) = config.rows.at(str(idx))
+  _bitheader.enumerate().map(((i,c))=>cellx(x:config.pre.len()+i,y:row,c))
 }
 
 // construct arguments
@@ -264,7 +269,7 @@
   let (args, fields) = (args.named(), args.pos())
 
   // default values
-  args = set_default(args,(
+  args = (
     bits: 32,
     rowheight: 2.5em,
     offsets: (:),
@@ -273,7 +278,8 @@
     annotated_rows: (:),
     pre: (),
     post: (),
-  ))
+    ..args
+  )
 
   // args pass generates missing arguments
   let config = config_pass(args, fields,
@@ -292,6 +298,7 @@
     annotation : (cell_annotation,),
   )
 
+  // return fields
   box(width: 100%)[
     #gridx(
       columns: config.pre + range(config.bits).map(i => 1fr) + config.post,
@@ -325,18 +332,52 @@
 
 #let bitheader(
   msb: right,
-  numbers: "smart",
+  autofill: none,
+  numbers: (),
   labels: (:),
   ticks: auto,
   fontsize: 9pt,
-) = (
-  type: "bitheader",
-  msb: msb,
-  numbers: numbers,
-  labels:labels,
-  ticks:ticks,
-  fontsize:fontsize,
-)
+  angle: -60deg,
+  marker: stroke(),
+  ..args
+) = {
+  let _numbers = ()
+  let _labels = (:)
+  let last = 0
+  let step = 1
+  for arg in args.pos() {
+    if type(arg) == int {
+      numbers.push(arg)
+      last = arg
+      step = arg
+    } else if type(arg) in (str,bool) {
+      autofill = arg
+    } else if type(arg) == content { 
+      labels.insert(str(last),arg)
+      last += step
+    }else if type(arg) in (left, right) {
+      msb = arg
+    } else if type(arg) == angle {
+      angle = arg
+    } else if type(arg) == stroke {
+      marker = arg
+    } 
+    if type(arg) == length {
+      fontsize = arg
+    }
+  }
+  (
+    type: "bitheader",
+    msb: msb,
+    autofill: autofill,
+    numbers: numbers,
+    labels:labels,
+    ticks:ticks,
+    fontsize:fontsize,
+    angle: angle,
+    marker: marker,
+  )
+}
 
 // High level API
 #let bit(..args) = bitbox(1, ..args)

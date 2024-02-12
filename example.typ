@@ -7,6 +7,7 @@
   align(horizon,sourcecode(source)),
   align(horizon,eval(source.text, mode:"markup", scope: (
     "bytefield" : bf.bytefield,
+    "bitheader" : bf.bitheader,
     "byte" : bf.byte,
     "bytes" : bf.bytes,
     "bit" : bf.bit,
@@ -33,6 +34,7 @@
 
 #example(```typst
 #bytefield(
+  bitheader(),
   bytes(3,
     fill: red.lighten(30%)
   )[Test],
@@ -55,7 +57,7 @@ Show all bit headers with `bitheader: "all"`
 #bytefield(
     bits:16,
     msb_first: true,
-    bitheader: "all",
+    bitheader("all"),
     ..range(16).map(
       i => bit[#flagtext[B#i]]
     ).rev(),
@@ -69,9 +71,9 @@ Show start and end bit of each bitbox with `bitheader: "smart"`.
 #example(```typst
 #bytefield(
   bits: 16,
+  bitheader("smart"),
   // same as
-  // bitheader: (0,2,7,8,13,15),
-  bitheader: "smart",
+  // bitheader(0,2,7,8,13,15),
   bits(8)[opcode],
   bits(5)[rd],
   bits(5)[rs1],
@@ -87,7 +89,7 @@ Show start bit of each bitbox with `bitheader: "bounds"`.
 #example(```typst
 #bytefield(
   bits: 16,
-  bitheader: "bounds",
+  bitheader("bounds"),
   bits(8)[opcode],
   bits(5)[rd],
   bits(5)[rs1],
@@ -118,7 +120,7 @@ Pass an `array` to specify each number.
 #example(```typst
 #bytefield(
     bits:16,
-    bitheader: (0,5,6,7,8,12,15),
+    bitheader(0,5,6,7,8,12,15),
     bits(6)[First],
     bits(2)[Duo],
     bits(5)[Five],
@@ -131,7 +133,7 @@ Pass an `integer` to show all multiples of this number.
 #example(```typst
 #bytefield(
     bits:16,
-    bitheader: 3,
+    bitheader(3),
     bits(6)[First],
     bits(2)[Duo],
     bits(5)[Five],
@@ -145,15 +147,15 @@ Pass an `dictionary` as bitheader. Example:
 #example(
 ```typst
 #bytefield(
-  bitheader: (
-    "0": "LSB_starting_at_bit_0", 
-    "5": "test", 
-    "9": "next_field_at_bit_9", 
-    "15":"MSB", 
+  bits: 16,
+  bitheader(
+    0, [LSB_starting_at_bit_0], 
+    5, [test], 
+    9, [next_field_at_bit_9], 
+    15,[MSB], 
     angle: -40deg,
     marker: auto // or none
   ),
-  bits: 16,
   bit[F],
   byte[Start],
   bytes(2,
@@ -176,16 +178,16 @@ or simply `true` to show the index for each specified label.
 
 #example(```typst
 #bytefield(
-  bitheader: (
-    "0": "LSB_starting_at_bit_0", 
-    "5": "test", 
-    "9": "next_field_at_bit_9", 
-    "15":"MSB", 
-    numbers: true,
+  bits: 16,
+  bitheader(
+    0, [LSB_starting_at_bit], 
+    5, [tes], 
+    9, [next_field_at_bit], 
+    15,[MS], 
+    autofill: true,
     angle: -40deg,
     marker: auto // or none
   ),
-  bits: 16,
   bit[F],
   byte[Start],
   bytes(2,
@@ -201,16 +203,16 @@ or simply `true` to show the index for each specified label.
 
 #example(```typst
 #bytefield(
-  bitheader: (
-    "0": "LSB_starting_at_bit_0", 
-    "5": "test", 
-    "9": "next_field_at_bit_9", 
-    "15":"MSB", 
-    numbers: "bounds",
+  bits: 16,
+  bitheader(
+    0, [LSB_starting_at_bit], 
+    5, [tes], 
+    9, [next_field_at_bit], 
+    15,[MS], 
+    autofill: "bounds",
     angle: -40deg,
     marker: auto // or none
   ),
-  bits: 16,
   bit[F],
   byte[Start],
   bytes(2,
