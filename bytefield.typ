@@ -7,6 +7,21 @@
 
 #set text(font: "IBM Plex Mono")
 
+// state 
+#let __default_row_height = state("bf-row-height", 2.5em);
+
+#let bf-config(
+  row_height: 2.5em,
+  content
+  ) = {
+  __default_row_height.update(row_height);
+  content
+}
+
+#let _get_row_height(loc) = {
+  __default_row_height.at(loc)
+}
+
 #let assert_data_field(field) = {
   assert(type(field) == dictionary, message: strfmt("expected field to be a dictionary, found {}", type(field)));
   assert(type(field.size) == int or field.size == auto, message: strfmt("expected auto or integer for parameter size, found {} ", type(field.size)))
@@ -77,7 +92,7 @@
       inset: 0pt,
       fill: c.fill,
     )[
-      #box(height: 2.5em, width: 100%, stroke: c.stroke)[#c.content]  // ToDo: make height changeable again.
+      #locate(loc => box(height: _get_row_height(loc), width: 100%, stroke: c.stroke)[#c.content])
     ]
   })
 }
@@ -89,7 +104,6 @@
   y: 0,
   align: align,
 )
-
 
 #let convert_bitheader_to_table_cells(bitheader, metadata) = {
   let bitheader_font_size = 9pt;
@@ -255,7 +269,6 @@
 
 #let bytefield(
   bits: 32, 
-  rowheight: 2.5em, 
   bitheader: auto, 
   msb_first: false,
   pre: auto,
