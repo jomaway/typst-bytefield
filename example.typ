@@ -115,12 +115,99 @@ Select `msb_first: true` for a reversed bit order.
 
 == Custom bit header
 
-Pass an `array` to specify each number.
 
 #example(```typst
 #bytefield(
     bits:16,
-    bitheader(0,5,6,7,8,12,15),
+    bitheader(), //draw all bitheaders by default
+    bits(6)[First],
+    bits(2)[Duo],
+    bits(5)[Five],
+    bits(3)[Last],
+)
+```)
+
+Pass an `array` to specify each number.
+#example(```typst
+#bytefield(
+    bits:16,
+    bitheader(0,5,6,7,8,12,15), //draw only specified
+    bits(6)[First],
+    bits(2)[Duo],
+    bits(5)[Five],
+    bits(3)[Last],
+)
+```)
+#example(```typst
+#bytefield(
+    bits:16,
+    bitheader("bounds"), //draw only bounds
+    bits(6)[First],
+    bits(2)[Duo],
+    bits(5)[Five],
+    bits(3)[Last],
+)
+```)
+
+#example(```typst
+#bytefield(
+    bits:16,
+    bitheader("smart",1,2,3,4,5), //draw smarts and additional
+    bits(6)[First],
+    bits(2)[Duo],
+    bits(5)[Five],
+    bits(3)[Last],
+)
+```)
+
+#example(```typst
+#bytefield(
+    bits:16,
+    bitheader(0,[start],15,[end]), //draw labels
+    bits(6)[First],
+    bits(2)[Duo],
+    bits(5)[Five],
+    bits(3)[Last],
+)
+```)
+
+#example(```typst
+#bytefield(
+    bits:16,
+    bitheader(0,[start],15,[end], true), //draw labels and numbers
+    bits(6)[First],
+    bits(2)[Duo],
+    bits(5)[Five],
+    bits(3)[Last],
+)
+```)
+
+#example(```typst
+#bytefield(
+    bits:16,
+    bitheader(0,[start],15,[end], "smart"), //draw labels and smart
+    bits(6)[First],
+    bits(2)[Duo],
+    bits(5)[Five],
+    bits(3)[Last],
+)
+```)
+
+#example(```typst
+#bytefield(
+    bits:16,
+    bitheader(4), //draw multiples
+    bits(6)[First],
+    bits(2)[Duo],
+    bits(5)[Five],
+    bits(3)[Last],
+)
+```)
+
+#example(```typst
+#bytefield(
+    bits:16,
+    bitheader(4,[a],[b],[c],true), //draw multiples and labels
     bits(6)[First],
     bits(2)[Duo],
     bits(5)[Five],
@@ -225,6 +312,7 @@ or simply `true` to show the index for each specified label.
   bit[T],
 )
 ```)
+
 
 == Annotations
 

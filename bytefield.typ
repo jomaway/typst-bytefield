@@ -332,7 +332,7 @@
 
 #let bitheader(
   msb: right,
-  autofill: none,
+  autofill: auto,
   numbers: (),
   labels: (:),
   ticks: auto,
@@ -354,6 +354,7 @@
       autofill = arg
     } else if type(arg) == content { 
       labels.insert(str(last),arg)
+      numbers.push(last)
       last += step
     }else if type(arg) in (left, right) {
       msb = arg
@@ -365,6 +366,9 @@
     if type(arg) == length {
       fontsize = arg
     }
+  }
+  if (autofill == auto and numbers == ()) {
+    autofill = "all"
   }
   (
     type: "bitheader",
