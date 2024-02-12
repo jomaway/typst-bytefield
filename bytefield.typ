@@ -2,7 +2,7 @@
 // Feel free to contribute with any features you think are missing.
 // Still a WIP - alpha stage and a bit hacky at the moment
 
-#import "@preview/tablex:0.0.6": tablex, cellx, gridx
+#import "@preview/tablex:0.0.8": tablex, cellx, gridx
 #import "@preview/oxifmt:0.2.0": strfmt
 
 #set text(font: "IBM Plex Mono")
