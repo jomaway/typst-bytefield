@@ -3,13 +3,11 @@
 // Still a WIP - alpha stage and a bit hacky at the moment
 
 #import "@preview/tablex:0.0.8": tablex, cellx, gridx, hlinex, vlinex
-#import "@preview/oxifmt:0.2.0": strfmt
+#import "lib/utils.typ": *
+#import "lib/asserts.typ": *
+#import "lib/states.typ": *
 
 #set text(font: "IBM Plex Mono")
-
-// state 
-#let __default_row_height = state("bf-row-height", 2.5em);
-#let __default_header_font_size = state("bf-header-font-size", 9pt);
 
 #let bf-config(
   row_height: 2.5em,
@@ -19,52 +17,6 @@
   __default_row_height.update(row_height);
   __default_header_font_size.update(header_font_size)
   content
-}
-
-#let _get_row_height(loc) = {
-  __default_row_height.at(loc)
-}
-
-#let _get_header_font_size(loc) = {
-  __default_header_font_size.at(loc)
-}
-
-
-#let assert_field(field) = {
-  assert.eq(type(field),dictionary, message: strfmt("expected field to be a dictionary, found {}", type(field)));
-  assert.ne(field.at("type", default: none), none, message: "Could not find field.type")
-}
-
-#let _get_field_type(field) = {
-  assert_field(field);
-  return field.at("type", default: none);
-}
-
-#let assert_data_field(field) = {
-  assert_field(field);
-  assert.eq(_get_field_type(field), "bitbox", message: strfmt("expected field.type to be 'bitbox', found {}",_get_field_type(field)));
-  assert(type(field.size) == int or field.size == auto, message: strfmt("expected auto or integer for parameter size, found {} ", type(field.size)))
-}
-
-#let assert_annotation(field) = {
-  assert_field(field);
-  assert.eq(_get_field_type(field), "annotation", message: strfmt("expected field.type to be 'annotation', found {}",_get_field_type(field)));
-
-}
-
-// Getters 
-#let _get_index_of_prev_bitfield(idx, fields) = {
-  let res = fields.rev().find(f => f.bf-idx < idx and f.type == "bitbox")
-  if res != none { res.bf-idx  } else { none }
-}
-
-#let _get_index_of_next_bitfield(idx, fields) = {
-  let res = fields.find(f => f.bf-idx > idx and f.type == "bitbox")
-  if res != none { res.bf-idx } else { none }
-}
-
-#let _get_field_from_index(fields, idx) = {
-  return fields.filter(f => f.bf-idx == idx)
 }
 
 // Calculations
@@ -275,8 +227,6 @@
   }
 }
 
-
-
 #let convert_annotations_to_table_cells(annotations, meta) = {
   let _cells = ()
   let pre_level_count = meta.annotations.pre.levels
@@ -339,7 +289,7 @@
 }
 
 
-
+// bytefield
 #let bytefield(
   bits: 32, 
   bitheader: auto, 
@@ -357,12 +307,8 @@
 
   // filter data cells 
   let data_fields = _fields.filter(f => f.type == "bitbox")
-  let aside_notes = _fields.filter(f => f.type == "annotation")
-
-  aside_notes = aside_notes.map(a => {
-    assert_annotation(a);
-    a.insert("anchor",_get_index_of_next_bitfield(a.bf-idx, data_fields))
-    a
+  let note_fields = _fields.filter(f => f.type == "annotation").map(a => {
+    _set_anchor(a, _get_index_of_next_bitfield(a.bf-idx, data_fields))
   })
 
   // collect metadata into an dictionary
@@ -372,7 +318,7 @@
       msb: msb_first, // if msb_first { "big" } else { "little" }
     ),
     field_data: calc_field_bounds(data_fields),
-    annotations: calc_annotation_levels(aside_notes),
+    annotations: calc_annotation_levels(note_fields),
   )
 
   // convert auto pre and post columns 
@@ -385,12 +331,9 @@
 
   // convert 
   let data_cells = convert_data_fields_to_table_cells(data_fields, meta);
-
-  let annotation_cells = convert_annotations_to_table_cells(aside_notes, meta);
+  let annotation_cells = convert_annotations_to_table_cells(note_fields, meta);
   let _bitheader = convert_bitheader_to_table_cells(bitheader, meta);
   let _bitheader = ([],)*meta.annotations.pre.levels + _bitheader + ([],)*meta.annotations.post.levels
-  
-  
 
   // wrap inside a box
   box(width: 100%)[
