@@ -9,17 +9,24 @@
 
 // state 
 #let __default_row_height = state("bf-row-height", 2.5em);
+#let __default_header_font_size = state("bf-header-font-size", 9pt);
 
 #let bf-config(
   row_height: 2.5em,
+  header_font_size: 9pt,
   content
   ) = {
   __default_row_height.update(row_height);
+  __default_header_font_size.update(header_font_size)
   content
 }
 
 #let _get_row_height(loc) = {
   __default_row_height.at(loc)
+}
+
+#let _get_header_font_size(loc) = {
+  __default_header_font_size.at(loc)
 }
 
 #let assert_data_field(field) = {
@@ -189,8 +196,12 @@
     }
 
     return _cells.map(c => {
-      cellx(x: c.x + metadata.pre.levels , y: c.y)[#text(bitheader_font_size,c.label)]
-    })
+      
+        cellx(x: c.x + metadata.pre.levels , y: c.y)[
+          #locate(loc => {
+            text(_get_header_font_size(loc),c.label)
+          })]
+      })
   }
   
   if (header_type == dictionary) {
