@@ -32,12 +32,42 @@
 
 #let assert_field(field) = {
   assert.eq(type(field),dictionary, message: strfmt("expected field to be a dictionary, found {}", type(field)));
+  assert.ne(field.at("type", default: none), none, message: "Could not find field.type")
+}
+
+#let _get_field_type(field) = {
+  assert_field(field);
+  return field.at("type", default: none);
 }
 
 #let assert_data_field(field) = {
   assert_field(field);
+  assert.eq(_get_field_type(field), "bitbox", message: strfmt("expected field.type to be 'bitbox', found {}",_get_field_type(field)));
   assert(type(field.size) == int or field.size == auto, message: strfmt("expected auto or integer for parameter size, found {} ", type(field.size)))
 }
+
+#let assert_annotation(field) = {
+  assert_field(field);
+  assert.eq(_get_field_type(field), "annotation", message: strfmt("expected field.type to be 'annotation', found {}",_get_field_type(field)));
+
+}
+
+// Getters 
+#let _get_index_of_prev_bitfield(idx, fields) = {
+  let res = fields.rev().find(f => f.bf-idx < idx and f.type == "bitbox")
+  if res != none { res.bf-idx  } else { none }
+}
+
+#let _get_index_of_next_bitfield(idx, fields) = {
+  let res = fields.find(f => f.bf-idx > idx and f.type == "bitbox")
+  if res != none { res.bf-idx } else { none }
+}
+
+#let _get_field_from_index(fields, idx) = {
+  return fields.filter(f => f.bf-idx == idx)
+}
+
+// Calculations
 
 #let calc_field_bounds(data_fields) = {
   let bounds = ();
@@ -51,7 +81,8 @@
 
     bounds.push((
       type: "field-meta-data",
-      index: i,
+      bf-idx: field.bf-idx,
+      //index: i,
       size: field.size,
       start: start,
       end: idx -1,
@@ -63,8 +94,8 @@
 
 #let convert_data_fields_to_table_cells(data_fields, metadata) = {
   let row_width = metadata.bits_per_row;
-  let pre_size = metadata.pre.levels;
-  let post_size = metadata.post.levels;
+  let pre_size = metadata.annotations.pre.levels;
+  let post_size = metadata.annotations.post.levels;
 
   let _cells = ();
   let idx = 0;
@@ -142,7 +173,7 @@
 
 #let convert_bitheader_to_table_cells(bitheader, metadata) = {
   let bitheader_font_size = 9pt;
-  let msb_first = metadata.msb
+  let msb_first = metadata.header_data.msb
 
   let _cells = ()
   let _values = ()
@@ -201,7 +232,7 @@
 
     return _cells.map(c => {
       
-        cellx(x: c.x + metadata.pre.levels , y: c.y)[
+        cellx(x: c.x + metadata.annotations.pre.levels , y: c.y)[
           #locate(loc => {
             text(_get_header_font_size(loc),c.label)
           })]
@@ -244,42 +275,44 @@
   }
 }
 
-#let convert_annotations_to_table_cells(annotations, pre, post, bits) = {
+
+
+#let convert_annotations_to_table_cells(annotations, meta) = {
   let _cells = ()
+  let pre_level_count = meta.annotations.pre.levels
+  let post_level_count = meta.annotations.pre.levels
+  let bits = meta.bits_per_row
+  let row_width = meta.bits_per_row
+  let field_data = meta.field_data
 
   // calculate cells
-  // let current_row = if (bitheader != none) { 1 } else { 0 };
-  let current_row_counter = (1,1)
 
-  for field in annotations {
-    let (side, level, args, body) = field;
-
-    let current_row = if (side == left) { 
-      let tmp = current_row_counter.at(0)
-      if ( level == 0 ) {current_row_counter.at(0) += 1;}
-      tmp;
+  for annotation in annotations {
+    let (bf-idx, side, level, args, body) = annotation;
+    let anchor_field = field_data.find(f => f.bf-idx == annotation.anchor) // _get_field_from_index(field_data, annotation.anchor);
+    let row = 1;
+   
+    if anchor_field != none {
+       let anchor_start = anchor_field.start
+       row = int(anchor_start/row_width) + 1
     } else {
-      let tmp = current_row_counter.at(1)
-      if ( level == 0 ) {current_row_counter.at(1) += 1;}
-      tmp;
-    }
-    
-    let y = int(current_row)
-    let x = if (side == left) {
-      pre.len() - level - 1
-    } else {
-      pre.len() + bits + level
+      // if no anchor could be found, fail silently
+      continue
     }
 
     _cells.push((
       type: "annotation-cell",
-      x:x,
-      y:y,
+      x: if (side == left) {
+        pre_level_count - level - 1
+      } else {
+        pre_level_count + row_width + level
+      },
+      y: int(row),
       label: body,
       args: args,
-    ))
-    
+    )) 
   }
+
   return _cells.map(c => cellx(
     x:c.x,
     y:c.y,
@@ -305,6 +338,8 @@
   )
 }
 
+
+
 #let bytefield(
   bits: 32, 
   bitheader: auto, 
@@ -316,36 +351,50 @@
   // Index all fields
   let _fields = fields.pos().enumerate().map(((idx, f)) => {
     assert_field(f);
-    f.insert("idx", idx);
+    f.insert("bf-idx", idx);
     f
   })
 
   // filter data cells 
-  let data_fields = fields.pos().filter(f => f.type == "bitbox")
-  let annotations = fields.pos().filter(f => f.type == "annotation")
+  let data_fields = _fields.filter(f => f.type == "bitbox")
+  let aside_notes = _fields.filter(f => f.type == "annotation")
+
+  aside_notes = aside_notes.map(a => {
+    assert_annotation(a);
+    a.insert("anchor",_get_index_of_next_bitfield(a.bf-idx, data_fields))
+    // if (a.side == left) {
+    //   a.insert("anchor",_get_index_of_next_bitfield(a.bf-idx, data_fields))
+    // } else {
+    //   a.insert("anchor",_get_index_of_prev_bitfield(a.bf-idx, data_fields))
+    // }
+    a
+  })
+
   // collect metadata into an dictionary
   let meta = (
     bits_per_row: bits,
-    msb: msb_first, // if msb_first { "big" } else { "little" }
+    header_data: (
+      msb: msb_first, // if msb_first { "big" } else { "little" }
+    ),
     field_data: calc_field_bounds(data_fields),
-    ..calc_annotation_levels(annotations),
+    annotations: calc_annotation_levels(aside_notes),
   )
-  // return meta.field_data
+
   // convert auto pre and post columns 
   if (pre == auto) {
-    pre = (auto,)*meta.pre.levels
+    pre = (auto,)*meta.annotations.pre.levels
   }
   if (post == auto) {
-    post = (auto,)*meta.post.levels
+    post = (auto,)*meta.annotations.post.levels
   }
 
 
   // convert 
   let data_cells = convert_data_fields_to_table_cells(data_fields, meta);
-  let annotation_cells = convert_annotations_to_table_cells(annotations, pre, post, bits);
 
+  let annotation_cells = convert_annotations_to_table_cells(aside_notes, meta);
   let _bitheader = convert_bitheader_to_table_cells(bitheader, meta);
-  let _bitheader = ([],)*meta.pre.levels + _bitheader + ([],)*meta.post.levels
+  let _bitheader = ([],)*meta.annotations.pre.levels + _bitheader + ([],)*meta.annotations.post.levels
   
   
 

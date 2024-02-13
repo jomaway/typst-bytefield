@@ -264,7 +264,7 @@ and an optional `level` for the nesting level.
   group(right,2)[group],
   bytes(4)[some thing],
 
-  note(left)[0x04],
+  // note(left)[0x04],
   group(right,2,level:1)[another group],
   bytes(4)[some other thing],
   note(left)[0x08],
