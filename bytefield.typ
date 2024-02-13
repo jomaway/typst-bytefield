@@ -362,11 +362,6 @@
   aside_notes = aside_notes.map(a => {
     assert_annotation(a);
     a.insert("anchor",_get_index_of_next_bitfield(a.bf-idx, data_fields))
-    // if (a.side == left) {
-    //   a.insert("anchor",_get_index_of_next_bitfield(a.bf-idx, data_fields))
-    // } else {
-    //   a.insert("anchor",_get_index_of_prev_bitfield(a.bf-idx, data_fields))
-    // }
     a
   })
 
@@ -387,7 +382,6 @@
   if (post == auto) {
     post = (auto,)*meta.annotations.post.levels
   }
-
 
   // convert 
   let data_cells = convert_data_fields_to_table_cells(data_fields, meta);
