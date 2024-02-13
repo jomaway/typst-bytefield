@@ -373,7 +373,6 @@
   fill: fill,
   stroke: stroke,
   content: content,
-  show_size: false,
 )
 
 #let annotation(side, level:0, ..args, body) = (
