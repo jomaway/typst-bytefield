@@ -83,8 +83,8 @@
 
       _cells.push((
         type: "data-cell",
-        prev_slice = slice_idx > 0,
-        next_slice: (len - cell_size) > 0,
+        prev_slice: slice_idx > 0,          // indicates if this cell has previous cells which belong to the same field.
+        next_slice: (len - cell_size) > 0,  // indicates if this cell has following cells which belong to the same field.
         len: cell_size,
         x: calc.rem(idx,row_width) + pre_size,
         y: int(idx/row_width) + 1,  // +1 because of the bitheader 
@@ -331,8 +331,6 @@
     #gridx(
       columns:  pre + range(bits).map(i => 1fr) + post,
       align: center + horizon,
-      map-vlines: v => (..v, stroke: 0.7pt),
-      map-hlines: h => (..h, stroke: 0.7pt),
       inset: (x:0pt, y: 4pt),
       .._bitheader,
       ..data_cells,
