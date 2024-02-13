@@ -29,8 +29,13 @@
   __default_header_font_size.at(loc)
 }
 
+
+#let assert_field(field) = {
+  assert.eq(type(field),dictionary, message: strfmt("expected field to be a dictionary, found {}", type(field)));
+}
+
 #let assert_data_field(field) = {
-  assert(type(field) == dictionary, message: strfmt("expected field to be a dictionary, found {}", type(field)));
+  assert_field(field);
   assert(type(field.size) == int or field.size == auto, message: strfmt("expected auto or integer for parameter size, found {} ", type(field.size)))
 }
 
@@ -308,6 +313,13 @@
   post: auto,
   ..fields
 ) = {
+  // Index all fields
+  let _fields = fields.pos().enumerate().map(((idx, f)) => {
+    assert_field(f);
+    f.insert("idx", idx);
+    f
+  })
+
   // filter data cells 
   let data_fields = fields.pos().filter(f => f.type == "bitbox")
   let annotations = fields.pos().filter(f => f.type == "annotation")
