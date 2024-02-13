@@ -118,12 +118,11 @@
       inset: 0pt,
       fill: c.fill,
     )[
-      #locate(loc => box(
-        height: _get_row_height(loc), 
+      #box(
+        height: 100%, 
         width: 100%,
         stroke: c.stroke,
         )[#c.content]  // debug output: #c.content (#c.x,#c.y) sl:#c.slice_idx, #c.next_slice
-      )
     ]
   })
 }
@@ -328,6 +327,7 @@
     post = (auto,)*meta.post.levels
   }
 
+
   // convert 
   let data_cells = convert_data_fields_to_table_cells(data_fields, meta);
   let annotation_cells = convert_annotations_to_table_cells(annotations, pre, post, bits);
@@ -339,14 +339,17 @@
 
   // wrap inside a box
   box(width: 100%)[
-    #gridx(
-      columns:  pre + range(bits).map(i => 1fr) + post,
-      align: center + horizon,
-      inset: (x:0pt, y: 4pt),
-      .._bitheader,
-      ..data_cells,
-      ..annotation_cells,
-    )
+    #locate(loc => {
+      gridx(
+        columns:  pre + range(bits).map(i => 1fr) + post,
+        rows: (auto, _get_row_height(loc)),
+        align: center + horizon,
+        inset: (x:0pt, y: 4pt),
+        .._bitheader,
+        ..data_cells,
+        ..annotation_cells,
+      )
+    })
   ]
 }
 
