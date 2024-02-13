@@ -2,7 +2,7 @@
 // Feel free to contribute with any features you think are missing.
 // Still a WIP - alpha stage and a bit hacky at the moment
 
-#import "@preview/tablex:0.0.8": tablex, cellx, gridx
+#import "@preview/tablex:0.0.8": tablex, cellx, gridx, hlinex, vlinex
 #import "@preview/oxifmt:0.2.0": strfmt
 
 #set text(font: "IBM Plex Mono")
@@ -60,19 +60,37 @@
   for field in data_fields {
     assert_data_field(field)
     let len = if (field.size == auto) { row_width - calc.rem(idx, row_width); } else { field.size }
+    let slice_idx = 0;
 
     while len > 0 {
       let rem_space = row_width - calc.rem(idx, row_width);
       let cell_size = calc.min(len, rem_space);
       
+      // calc stroke
+      let _default_stroke = (1pt + black)
+      let _stroke = (
+        top: _default_stroke,
+        bottom: _default_stroke,
+        rest: _default_stroke,
+      )
+      
+      if (len - cell_size) > 0 {
+        _stroke.at("bottom") = field.fill
+      }
+      if (slice_idx > 0){
+        _stroke.at("top") = none
+      }
+
       _cells.push((
         type: "data-cell",
+        prev_slice = slice_idx > 0,
+        next_slice: (len - cell_size) > 0,
         len: cell_size,
         x: calc.rem(idx,row_width) + pre_size,
         y: int(idx/row_width) + 1,  // +1 because of the bitheader 
         content: field.content,
         fill: field.fill,
-        stroke: (0.7pt + black) // prepare for multirow fields without strokes in between.
+        stroke: _stroke,  // prepare for multirow fields without strokes in between.
       ))
 
       field.content = "..."
@@ -80,6 +98,7 @@
       // prepare for next cell
       idx += cell_size;
       len -= cell_size;
+      slice_idx += 1;
     }
   }
 
@@ -92,7 +111,12 @@
       inset: 0pt,
       fill: c.fill,
     )[
-      #locate(loc => box(height: _get_row_height(loc), width: 100%, stroke: c.stroke)[#c.content])
+      #locate(loc => box(
+        height: _get_row_height(loc), 
+        width: 100%,
+        stroke: c.stroke,
+        )[#c.content]  // debug output: #c.content (#c.x,#c.y) sl:#c.slice_idx, #c.next_slice
+      )
     ]
   })
 }
@@ -307,6 +331,8 @@
     #gridx(
       columns:  pre + range(bits).map(i => 1fr) + post,
       align: center + horizon,
+      map-vlines: v => (..v, stroke: 0.7pt),
+      map-hlines: h => (..h, stroke: 0.7pt),
       inset: (x:0pt, y: 4pt),
       .._bitheader,
       ..data_cells,
