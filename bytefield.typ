@@ -6,6 +6,7 @@
 #import "lib/utils.typ": *
 #import "lib/asserts.typ": *
 #import "lib/states.typ": *
+#import "lib/api.typ": *
 
 #set text(font: "IBM Plex Mono")
 
@@ -334,9 +335,11 @@
     }
   })
 
+  // ToDO: Fix bitheader stuff. 
   let bitheader = convert_bitheader_to_table_cells(meta.header.data, cells.filter(c => c.at("bf-cell-type", default: none) == "data-cell"), meta);
   let bitheader = ([],)*meta.cols.pre + bitheader + ([],)*meta.cols.post
 
+  // TODO: new grid with subgrids.
   let table = locate(loc => {
       gridx(
         columns:  meta.side.left.cols + range(meta.cols.main).map(i => 1fr) + meta.side.right.cols,
@@ -379,116 +382,5 @@
   let cells = generate_cells(meta, _fields)
   let table = generate_table(meta, cells)
   return table
-
-  // filter data cells 
-  let data_fields = _fields.filter(f => f.type == "bitbox")
-  let note_fields = _fields.filter(f => f.type == "annotation").map(a => {
-    _set_anchor(a, _get_index_of_next_bitfield(a.bf-idx, data_fields))
-  })
-
-  // collect metadata into an dictionary
-  let meta = (
-    bits_per_row: bits,
-    header_data: (
-      msb: msb_first, // if msb_first { "big" } else { "little" }
-    ),
-    field_data: calc_field_bounds(data_fields),
-    annotations: calc_annotation_levels(note_fields),
-  )
-
-  // convert auto pre and post columns 
-  if (pre == auto) {
-    pre = (auto,)*meta.annotations.pre.levels
-  }
-  if (post == auto) {
-    post = (auto,)*meta.annotations.post.levels
-  }
-
-  // convert 
-  let data_cells = convert_data_fields_to_table_cells(data_fields, meta);
-  let annotation_cells = convert_annotations_to_table_cells(note_fields, meta);
-  let _bitheader = convert_bitheader_to_table_cells(bitheader, meta);
-  let _bitheader = ([],)*meta.annotations.pre.levels + _bitheader + ([],)*meta.annotations.post.levels
-
-  // wrap inside a box
-  box(width: 100%)[
-    #locate(loc => {
-      gridx(
-        columns:  pre + range(bits).map(i => 1fr) + post,
-        rows: (auto, _get_row_height(loc)),
-        align: center + horizon,
-        inset: (x:0pt, y: 4pt),
-        .._bitheader,
-        ..data_cells,
-        ..annotation_cells,
-      )
-    })
-  ]
 }
-
-
-// Low level API
-#let bitbox(length_in_bits, content, fill: none, stroke: auto) = (
-  type: "bitbox",
-  size: length_in_bits,   // length of the field 
-  fill: fill,
-  stroke: stroke,
-  content: content,
-)
-
-#let annotation(side, level:0, ..args, body) = (
-  type: "annotation",
-  side: side,
-  level: level,
-  args: args,
-  body: body
-)
-
-// High level API
-#let bit(..args) = bitbox(1, ..args)
-#let bits(len, ..args) = bitbox(len, ..args)
-#let byte(..args) = bitbox(8, ..args)
-#let bytes(len, ..args) = bitbox(len * 8, ..args)
-#let flag(..args,text) = bitbox(1,..args,flagtext(text))
-#let padding(..args) = bitbox(auto, ..args)
-
-#let flagtext(text) = align(center,rotate(270deg,text)) // Rotating text for flags
-
-#let note(side,rowspan:1,level:0,content) = {
-  let _align = if (side == left) { right } else { left }
-  annotation(side,level:level,rowspan:rowspan,inset:5pt,align:_align+horizon,content)
-}
-
-#let group(side,rowspan,level:0,content) = {
-  let _align  = none
-  let _first  = none
-  let _second = none
-
-  if (side == left) {
-    _align  = right
-    _first  = box(height:100%,content)
-    _second = box(height:100%,inset:(right:5pt),layout(size => {math.lr("{",size:size.height)}))
-  } else {
-    _align  = left
-    _first  = box(height:100%,inset:(left:5pt),layout(size => {math.lr("}",size:size.height)}))
-    _second = box(height:100%,content)
-  }
-
-  annotation(
-    side,
-    level:level,
-    rowspan:rowspan,
-    align:_align+horizon,
-    inset:0pt,
-    grid(
-        columns:2,
-        gutter:5pt,
-        _first,
-        _second
-      )
-    )
-}
-
-
-
 
