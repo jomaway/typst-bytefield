@@ -19,100 +19,11 @@
   content
 }
 
-// Calculations
-
-#let calc_field_bounds(data_fields) = {
-  let bounds = ();
-  let idx = 0;
-
-  for (i,field) in data_fields.enumerate() {
-    assert_data_field(field)
-    field.size = if (field.size == auto) { 32 - calc.rem(idx, 32) } else { field.size }  // 32 is a workaround and causes errors. will be fixed soon.
-    let start = idx;
-    idx += field.size;
-
-    bounds.push((
-      type: "field-meta-data",
-      bf-idx: field.bf-idx,
-      //index: i,
-      size: field.size,
-      start: start,
-      end: idx -1,
-    ));
-  }
-
-  return bounds
-}
-
-#let convert_data_fields_to_table_cells(data_fields, metadata) = {
-  let row_width = metadata.bits_per_row;
-  let pre_size = metadata.annotations.pre.levels;
-  let post_size = metadata.annotations.post.levels;
-
-  let _cells = ();
-  let idx = 0;
-
-  for field in data_fields {
-    assert_data_field(field)
-    let len = if (field.size == auto) { row_width - calc.rem(idx, row_width); } else { field.size }
-    let slice_idx = 0;
-
-    while len > 0 {
-      let rem_space = row_width - calc.rem(idx, row_width);
-      let cell_size = calc.min(len, rem_space);
-      
-      // calc stroke
-      let _default_stroke = (1pt + black)
-      let _stroke = (
-        top: _default_stroke,
-        bottom: _default_stroke,
-        rest: _default_stroke,
-      )
-      
-      if (len - cell_size) > 0 {
-        _stroke.at("bottom") = field.fill
-      }
-      if (slice_idx > 0){
-        _stroke.at("top") = none
-      }
-
-      _cells.push((
-        type: "data-cell",
-        prev_slice: slice_idx > 0,          // indicates if this cell has previous cells which belong to the same field.
-        next_slice: (len - cell_size) > 0,  // indicates if this cell has following cells which belong to the same field.
-        len: cell_size,
-        x: calc.rem(idx,row_width) + pre_size,
-        y: int(idx/row_width) + 1,  // +1 because of the bitheader 
-        content: field.content,
-        fill: field.fill,
-        stroke: _stroke,  // prepare for multirow fields without strokes in between.
-      ))
-
-      field.content = "..."
-
-      // prepare for next cell
-      idx += cell_size;
-      len -= cell_size;
-      slice_idx += 1;
-    }
-  }
-
-  // map data-cell to tablex-dict-type cell
-  return _cells.map(c => {
-    cellx(
-      x: c.x,
-      y: c.y,
-      colspan: c.len,
-      inset: 0pt,
-      fill: c.fill,
-    )[
-      #box(
-        height: 100%, 
-        width: 100%,
-        stroke: c.stroke,
-        )[#c.content]  // debug output: #c.content (#c.x,#c.y) sl:#c.slice_idx, #c.next_slice
-    ]
-  })
+// calculates the cell position, based on the start_bit and the column count.
+#let _get_cell_position(start, columns: 32, pre_cols: 1, header_rows: 1) = {
+  let x = calc.rem(start,columns) + pre_cols
+  let y = int(start/columns) + header_rows 
+  return (x,y)
 }
 
 #let header_cell(num, pos: auto,  align: center) = (
@@ -123,9 +34,10 @@
   align: align,
 )
 
-#let convert_bitheader_to_table_cells(bitheader, metadata) = {
+#let convert_bitheader_to_table_cells(bitheader, data_cells, meta) = {
   let bitheader_font_size = 9pt;
-  let msb_first = metadata.header_data.msb
+  let msb_first = meta.header.msb
+  let bpr = meta.cols.main
 
   let _cells = ()
   let _values = ()
@@ -141,50 +53,52 @@
     return () // quick path just return an empty array.
   } else if (header_type == int) {
     // show all multiples of the given value
-    _cells  = range(metadata.bits_per_row, step: bitheader)
+    _values  = range(meta.cols.main, step: bitheader)
   } else if (header_type == array) {
     // show header numbers from array
-    _cells = bitheader
+    _values = bitheader
   } else if (header_type == str) {
     // string
     if (bitheader == "bounds") {
+      _values = data_cells.map(f => if f.range.start == f.range.end { (f.range.start,) } else {(f.range.start, f.range.end)}).flatten()
       if msb_first {
-        _cells = metadata.field_data.map(f => if f.start == f.end { (f.start,) } else {(f.start, f.end)}).flatten().filter(value => value < metadata.bits_per_row).map(value => { value = (metadata.bits_per_row -1) - value; value })
+        _values = _cells.filter(value => value < bpr).map(value => { value = (bpr -1) - value; value })
       } else {
-        _cells = metadata.field_data.map(f => if f.start == f.end { (f.start,) } else {(f.start, f.end)}).flatten().filter(value => value < metadata.bits_per_row)
+        _values = _cells.filter(value => value < bpr)
       }
       
     } else if (bitheader == "smart") {
       if msb_first {
-        _cells = metadata.field_data.map(f => f.start).filter(value => value < metadata.bits_per_row).map(value => { value = (metadata.bits_per_row -1) - value; value })
+        _values = data_cells.map(f => f.range.start).filter(value => value < bpr).map(value => { value = (bpr -1) - value; value })
       } else {
-        _cells = metadata.field_data.map(f => f.start).filter(value => value < metadata.bits_per_row)
+        _values = data_cells.map(f => f.range.start).filter(value => value < bpr)
       }
     } else if (bitheader == "all") {
-      _cells = range(metadata.bits_per_row)
+      _values = range(bpr)
     }
   }  
 
   if (header_type != dictionary) {
+    _values = _values.dedup()
     // Add last one in all cases
-    if (_cells.find(c => c == metadata.bits_per_row - 1) == none) {
-      _cells.push(metadata.bits_per_row -1)
+    if (_values.find(c => c == bpr - 1) == none) {
+      _values.push(bpr -1)
     }
     // Add first one in any case 
-    if (_cells.find(c => c == 0) == none) {
-      _cells.push(0)
+    if (_values.find(c => c == 0) == none) {
+      _values.push(0)
     }
 
     if msb_first == true {
       // reverse bit order
-      _cells = _cells.map(value => header_cell(value, pos: (metadata.bits_per_row -1) - value))
+      _cells = _values.map(value => header_cell(value, pos: (bpr -1) - value))
     } else {
-      _cells = _cells.map(value => { header_cell(value) })
+      _cells = _values.map(value => { header_cell(value) })
     }
 
     return _cells.map(c => {
       
-        cellx(x: c.x + metadata.annotations.pre.levels , y: c.y)[
+        cellx(x: c.x + meta.cols.pre, y: c.y)[
           #locate(loc => {
             text(_get_header_font_size(loc),c.label)
           })]
@@ -194,7 +108,7 @@
   if (header_type == dictionary) {
     // custom dict
     let numbers = bitheader.at("numbers",default:none) 
-    return  range(metadata.bits_per_row).map(i => [
+    return  range(bpr).map(i => [
       #set align(start + bottom)
       #let h_text = bitheader.at(str(i),default: "");
       #style(styles => {
@@ -227,51 +141,7 @@
   }
 }
 
-#let convert_annotations_to_table_cells(annotations, meta) = {
-  let _cells = ()
-  let pre_level_count = meta.annotations.pre.levels
-  let post_level_count = meta.annotations.pre.levels
-  let bits = meta.bits_per_row
-  let row_width = meta.bits_per_row
-  let field_data = meta.field_data
-
-  // calculate cells
-
-  for annotation in annotations {
-    let (bf-idx, side, level, args, body) = annotation;
-    let anchor_field = field_data.find(f => f.bf-idx == annotation.anchor) // _get_field_from_index(field_data, annotation.anchor);
-    let row = 1;
-   
-    if anchor_field != none {
-       let anchor_start = anchor_field.start
-       row = int(anchor_start/row_width) + 1
-    } else {
-      // if no anchor could be found, fail silently
-      continue
-    }
-
-    _cells.push((
-      type: "annotation-cell",
-      x: if (side == left) {
-        pre_level_count - level - 1
-      } else {
-        pre_level_count + row_width + level
-      },
-      y: int(row),
-      label: body,
-      args: args,
-    )) 
-  }
-
-  return _cells.map(c => cellx(
-    x:c.x,
-    y:c.y,
-    ..(c.args),
-  )[#box(height:100%)[#c.label]])
-
-}
-
-#let calc_annotation_levels(annotations) = {
+#let _get_max_annotation_levels(annotations) = {
   let left_max_level = 0
   let right_max_level = 0
   for field in annotations {
@@ -283,10 +153,203 @@
     }
   }
   return (
-    pre: (levels: left_max_level +1),
-    post: (levels: right_max_level +1),
+    pre_levels: left_max_level +1,
+    post_levels:  right_max_level +1,
   )
 }
+
+
+#let generate_meta(args,fields) = {
+  // collect metadata into an dictionary
+
+  let (pre_levels, post_levels) = _get_max_annotation_levels(fields.filter(f => f.type == "annotation"))
+  let meta = (
+    cols: (
+      pre: pre_levels,
+      main: args.bpr,
+      post: post_levels,
+    ),
+    header: (
+      rows: 1,
+      msb: false,
+      data: args.bitheader,
+    ),
+    side: (
+      left: (
+        cols: if (args.side.left_cols == auto) { (auto,)*pre_levels } else { args.side.left_cols },
+      ),
+      right: (
+        cols: if (args.side.right_cols == auto) { (auto,)*post_levels } else { args.side.right_cols },
+      )
+    )
+  )
+  return meta;
+}
+
+
+#let generate_data_cells(data_fields, meta) = {
+  let bpr = meta.cols.main;
+
+  let _cells = ();
+  let idx = 0;
+
+  for field in data_fields {
+    assert_data_field(field)
+    let len = if (field.size == auto) { bpr - calc.rem(idx, bpr) } else { field.size }  
+    
+    // calc field bound range
+    let start = idx;
+    let end = (idx + len) - 1;
+    field.insert("range", ("start": start, "end": end))
+
+    let slice_idx = 0;
+
+    while len > 0 {
+      let rem_space = bpr - calc.rem(idx, bpr);
+      let cell_size = calc.min(len, rem_space);
+      
+      // calc stroke
+      let _default_stroke = (1pt + black)
+      let _stroke = (
+        top: _default_stroke,
+        bottom: _default_stroke,
+        rest: _default_stroke,
+      )
+      
+      if (len - cell_size) > 0 {
+        _stroke.at("bottom") = field.fill
+      }
+      if (slice_idx > 0){
+        _stroke.at("top") = none
+      }
+
+      _cells.push(
+        (
+          bf-cell-type: "data-cell",
+          field-index: field.bf-idx,
+          size: cell_size,
+          range: ("start": start, "end": end),
+          label: field.content,
+          cell-format: (
+            fill: field.fill,
+            stroke: _stroke,
+          ),
+          cell-position: (
+            x: calc.rem(idx,bpr) + meta.cols.pre,
+            y: int(idx/bpr) + meta.header.rows,
+          ),
+          slice-index: slice_idx,
+          has_prev_slice: slice_idx > 0,
+          has_next_slice: (len - cell_size) > 0,
+        )
+      )
+
+      field.content = "..."
+
+      // prepare for next cell
+      idx += cell_size;
+      len -= cell_size;
+      slice_idx += 1;
+    }
+  }
+  return _cells
+}
+
+#let generate_note_cells(fields, data_cells, meta) = {
+  let note_fields = fields.filter(f => f.type == "annotation").map(a => {
+    _set_anchor(a, _get_index_of_next_bitfield(a.bf-idx, fields))
+  })
+  let _cells = ()
+  let bpr = meta.cols.main
+  //let note_fields = fields.filter(f => f.type == "annotation");
+
+  for annotation in note_fields {
+    let (side, level, args, body) = annotation;
+    let anchor_field = data_cells.find(f => f.field-index == annotation.anchor) // _get_field_from_index(field_data, annotation.anchor);
+    let row = meta.header.rows;
+   
+    if anchor_field != none {
+       let anchor_start = anchor_field.range.start
+       row = int(anchor_start/bpr) + meta.header.rows
+    } else {
+      // if no anchor could be found, fail silently
+      continue
+    }
+
+    _cells.push((
+      bf-cell-type: "note-cell",
+      field-index: annotation.bf-idx,
+      x: if (side == left) {
+        meta.cols.pre - level - 1
+      } else {
+        meta.cols.pre + bpr + level
+      },
+      y: int(row),
+      label: body,
+      args: args,
+    )) 
+  }
+  return _cells
+}
+
+#let generate_cells(meta, fields) = {
+  // data fields 
+  let data_fields = fields.filter(f => f.type == "bitbox")
+  let data_cells = generate_data_cells(data_fields, meta);
+  // note fields
+  let note_fields = fields.filter(f => f.type == "annotation").map(a => {
+    _set_anchor(a, _get_index_of_next_bitfield(a.bf-idx, data_fields))
+  })
+  let note_cells = generate_note_cells(fields, data_cells, meta);
+  return (data_cells, note_cells).flatten()
+}
+
+#let map_data_cells_to_tablex_cells(cell) = {
+  cellx(
+    x: cell.cell-position.x,
+    y: cell.cell-position.y,
+    colspan: cell.size,
+    inset: 0pt,
+    fill: cell.cell-format.fill,
+  )[
+    #box(
+      height: 100%, 
+      width: 100%,
+      stroke: cell.cell-format.stroke,
+      )[#cell.label]  // debug output: #c.content (#c.x,#c.y) sl:#c.slice_idx, #c.next_slice
+  ]
+}
+
+#let map_note_cells_to_tablex_cells(cell) = {
+  cellx(x:cell.x,y:cell.y,..(cell.args),)[#box(height:100%)[#cell.label]]
+}
+
+#let generate_table(meta, cells) = {
+  let cells = cells.map(c => {
+    let cell_type = c.at("bf-cell-type", default: none)
+    if (cell_type == "data-cell") {
+      map_data_cells_to_tablex_cells(c)
+    } else if (cell_type == "note-cell") {
+      map_note_cells_to_tablex_cells(c)
+    }
+  })
+
+  let bitheader = convert_bitheader_to_table_cells(meta.header.data, cells.filter(c => c.at("bf-cell-type", default: none) == "data-cell"), meta);
+  let bitheader = ([],)*meta.cols.pre + bitheader + ([],)*meta.cols.post
+
+  let table = locate(loc => {
+      gridx(
+        columns:  meta.side.left.cols + range(meta.cols.main).map(i => 1fr) + meta.side.right.cols,
+        rows: (auto, _get_row_height(loc)),
+        align: center + horizon,
+        inset: (x:0pt, y: 4pt),
+        ..bitheader,
+        ..cells
+      )
+    })
+  return table
+}
+
 
 
 // bytefield
@@ -304,6 +367,18 @@
     f.insert("bf-idx", idx);
     f
   })
+
+  let args = (
+    bpr: bits,
+    msb: msb_first,
+    bitheader: bitheader,
+    side: (left_cols: pre, right_cols: post)
+  )
+
+  let meta = generate_meta(args, _fields)
+  let cells = generate_cells(meta, _fields)
+  let table = generate_table(meta, cells)
+  return table
 
   // filter data cells 
   let data_fields = _fields.filter(f => f.type == "bitbox")

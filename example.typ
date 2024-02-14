@@ -4,11 +4,11 @@
 
 #set text(font: "Rubik", weight: 300);
 
-#let example(columns:1,source) = box(grid(
+#let example(columns:1,source) = block(grid(
   columns:columns,
   gutter: 5pt,
   align(horizon,sourcecode(source)),
-  align(horizon,eval(source.text, mode:"markup", scope: (
+  box(align(horizon,eval(source.text, mode:"markup", scope: (
     "bytefield" : bf.bytefield,
     "byte" : bf.byte,
     "bytes" : bf.bytes,
@@ -26,7 +26,7 @@
     "tcp": common.tcp,
     "tcp_detailed": common.tcp_detailed,
     "udp": common.udp,
-  )))
+  ))))
 ))
 
 = Bytefield
