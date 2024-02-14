@@ -16,8 +16,6 @@
   body: body
 )
 
-
-
 // High level API - for users 
 #let bit(..args) = bitbox(1, ..args)
 #let bits(len, ..args) = bitbox(len, ..args)

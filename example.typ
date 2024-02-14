@@ -8,7 +8,7 @@
   columns:columns,
   gutter: 5pt,
   align(horizon,sourcecode(source)),
-  box(align(horizon,eval(source.text, mode:"markup", scope: (
+  (align(horizon,eval(source.text, mode:"markup", scope: (
     "bytefield" : bf.bytefield,
     "byte" : bf.byte,
     "bytes" : bf.bytes,
@@ -34,6 +34,7 @@
 
 #example(```typst
 #bytefield(
+  note(left)[NL0],
   bytes(3,
     fill: red.lighten(30%)
   )[Test],
