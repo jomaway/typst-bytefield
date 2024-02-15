@@ -32,6 +32,62 @@
   return meta;
 }
 
+#let generate_header_field(fields, meta) = {
+    // This is a bit of a mess and needs a refactor after the new bitheader user api is defined. 
+
+    let data_fields = fields.filter(f => f.field-type == "data-field")
+    let msb = meta.header.msb
+    let bpr = meta.cols.main
+    let bitheader = meta.header.data
+    let _values = ()
+
+    if (bitheader == auto){
+      // auto shows all offsets in the first row.
+      bitheader = range(meta.cols.main, step: int(bpr/4)) + ((meta.cols.main -1),)
+    }
+
+    let header_type = type(bitheader);
+    if (header_type == none) {
+      // don't show any bitheader at all.
+      return () // quick path just return an empty array.
+    } else if (header_type == int) {
+      // show all multiples of the given value
+      _values  = range(meta.cols.main, step: bitheader)
+    } else if (header_type == array) {
+      // show header numbers from array
+      _values = bitheader
+    } else if (header_type == str) {
+      // string
+      if (bitheader == "bounds") {
+        _values = data_fields.map(f => if f.data.range.start == f.data.range.end { (f.data.range.start,) } else {(f.data.range.start, f.data.range.end)}).flatten()
+        
+      } else if (bitheader == "smart") {
+        if msb {
+          _values = data_fields.map(f => f.data.range.start).filter(value => value < bpr).map(value => { value = (bpr -1) - value; value })
+        } else {
+          _values = data_fields.map(f => f.data.range.start).filter(value => value < bpr)
+        }
+      } else if (bitheader == "all") {
+        _values = range(bpr)
+      }
+    } 
+
+    let labels_from_values(values) = {
+      values = values.map(val => (str(val): "") )
+      values.join()
+    }
+
+    let labels = labels_from_values(_values) 
+
+    let bh = header-field(
+      end: bpr, 
+      msb: msb, 
+      labels: if (header_type == dictionary) { labels + bitheader.at("data", default: (:)) } else { labels },
+    )
+
+    return bh
+}
+
 #let generate_bf-fields(fields, meta) = {
 
   // This part must be changed if the user low level api changes.
@@ -64,6 +120,7 @@
       f
     })
   }
+  fields.push(generate_header_field(fields, meta))
 
   return fields 
 }
@@ -170,107 +227,26 @@
 }
 
 #let generate_header_cells(fields, meta) = {
-  let data_fields = fields.filter(f => f.field-type == "data-field")
-  let msb = meta.header.msb
+  let header_fields = fields.filter(f => f.field-type == "header-field")
   let bpr = meta.cols.main
-  let bitheader = meta.header.data
 
   let _cells = ()
-  let _values = ()
-  //let _cells = range(metadata.bits_per_row).map(_ => none);
-  if (bitheader == auto){
-    // auto shows all offsets in the first row.
-    bitheader = "smart"
+
+  for header in header_fields {
+    // Todo: Maybe this can be improved
+    let cell = header.data.at("labels", default: (:)).pairs().map(((num,text)) => (num: int(num), text: text)).filter(((num,_)) => num < header.data.range.end).dedup().map(((num, text)) => {
+      if header.data.msb {
+        header_cell(num, label: text, pos: (bpr -1) - num, meta)
+      } else {
+        header_cell(num, label: text, meta)
+      }
+    })
+
+    _cells.push(cell)
+
   }
 
-  let header_type = type(bitheader);
-  if (header_type == none) {
-    // don't show any bitheader at all.
-    return () // quick path just return an empty array.
-  } else if (header_type == int) {
-    // show all multiples of the given value
-    _values  = range(meta.cols.main, step: bitheader)
-  } else if (header_type == array) {
-    // show header numbers from array
-    _values = bitheader
-  } else if (header_type == str) {
-    // string
-    if (bitheader == "bounds") {
-      _values = data_fields.map(f => if f.data.range.start == f.data.range.end { (f.data.range.start,) } else {(f.data.range.start, f.data.range.end)}).flatten()
-      if msb {
-        _values = _cells.filter(value => value < bpr).map(value => { value = (bpr -1) - value; value })
-      } else {
-        _values = _cells.filter(value => value < bpr)
-      }
-      
-    } else if (bitheader == "smart") {
-      if msb {
-        _values = data_fields.map(f => f.data.range.start).filter(value => value < bpr).map(value => { value = (bpr -1) - value; value })
-      } else {
-        _values = data_fields.map(f => f.data.range.start).filter(value => value < bpr)
-      }
-    } else if (bitheader == "all") {
-      _values = range(bpr)
-    }
-  }  
-
-  if (header_type != dictionary) {
-    _values = _values.dedup()
-    // Add last one in all cases
-    if (_values.find(c => c == bpr - 1) == none) {
-      _values.push(bpr -1)
-    }
-    // Add first one in any case 
-    if (_values.find(c => c == 0) == none) {
-      _values.push(0)
-    }
-
-    if msb == true {
-      // reverse bit order
-      _cells = _values.map(value => header_cell(value, pos: (bpr -1) - value, meta))
-    } else {
-      _cells = _values.map(value => { header_cell(value, meta) })
-    }
-
-  }
   return _cells
-
-
-  // TODO: refactor bitheader type
-  // if (header_type == dictionary) {
-  //   // custom dict
-  //   let numbers = bitheader.at("numbers",default:none) 
-  //   return  range(bpr).map(i => [
-  //     #set align(start + bottom)
-  //     #let h_text = bitheader.at(str(i),default: "");
-  //     #style(styles => {
-  //       let size = measure(h_text, styles).width
-  //       return [
-  //         #box(height: size,inset:(left: 50%))[
-  //         #if (h_text != "" and bitheader.at("marker", default: auto) != none){ place(bottom, line(end:(0pt, 5pt))) }
-  //         #rotate(bitheader.at("angle", default: -60deg), origin: left, h_text)
-  //         ]
-  //         #if (type(numbers) == bool and numbers and h_text != "") {
-  //             v(-0.5em)
-  //             align(center, text(bitheader_font_size)[#i])
-  //         } else if (numbers == "all") {
-  //           v(-0.5em)
-  //           align(center, text(bitheader_font_size)[#i])
-  //         } else if (numbers in ("smart","smart-firstline","bounds")) {
-  //           if (i in _cells.map(c => c.x)) {
-  //             v(-0.5em)
-  //             align(center, text(bitheader_font_size)[#i])
-  //           }
-  //         } else if (type(numbers) == array) {
-  //           if (i in array) {
-  //             v(-0.5em)
-  //             align(center, text(bitheader_font_size)[#i])
-  //           }
-  //         }
-  //       ]  
-  //     })
-  //   ])
-  // }
 }
 
 #let generate_cells(meta, fields) = {
@@ -287,22 +263,46 @@
 #let map_cells(cells) = {
   cells.map(c => {
     let cell_type = c.at("cell-type", default: none)
-    if (cell_type == "header-cell") { c.label = locate(loc => text(_get_header_font_size(loc))[#c.label]) }
-    cellx(
+
+    let body = if (cell_type == "header-cell") {
+      let label_text = c.label.text
+      let label_num = c.label.num
+      locate(loc => {
+        style(styles => {
+          set text(_get_header_font_size(loc))
+          set align(center + bottom)
+          let size = measure(label_text, styles).width
+          stack(dir: ttb, spacing: 4pt,
+            if is-not-empty(label_text) {
+              box(height: size, inset: (left: 50%, rest: 0pt))[
+                #set align(start)
+                #rotate(c.format.at("angle", default: -60deg), origin: left, label_text)
+              ]
+            },
+            if (is-not-empty(label_text) and c.format.at("marker", default: auto) != none){ line(end:(0pt, 5pt)) },
+            label_num,
+          )
+          
+        })
+      }) 
+    } else {
+      box(
+        height: 100%,
+        width: if (cell_type == "data-cell") { 100% } else {auto},
+        stroke: c.format.at("stroke", default: none),
+        c.label
+      )
+    }
+
+    return cellx(
       x: c.position.x,
       y: c.position.y,
       colspan: c.span.cols,
       rowspan: c.span.rows,
       inset: c.format.at("inset", default: 0pt),
-      fill: c.format.at("fill", default: none)
-    )[
-      #box(
-        height: 100%, 
-        width: if (cell_type == "data-cell") { 100% } else {auto},
-        stroke: c.format.at("stroke", default: none),
-        c.label
-      )  // debug output: #c.content (#c.x,#c.y) sl:#c.slice_idx, #c.next_slice
-    ]
+      fill: c.format.at("fill", default: none),
+      body
+    )
   })
 }
 

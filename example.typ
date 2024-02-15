@@ -5,30 +5,32 @@
 
 #set text(font: "Rubik", weight: 300);
 
-#let example(columns:1,source) = block(grid(
-  columns:columns,
-  gutter: 5pt,
-  box(align(horizon,sourcecode(source))),
-  box(align(horizon,eval(source.text, mode:"markup", scope: (
-    "bytefield" : bf.bytefield,
-    "byte" : bf.byte,
-    "bytes" : bf.bytes,
-    "bit" : bf.bit,
-    "bits" : bf.bits,
-    "padding" : bf.padding,
-    "flagtext" : bf.flagtext,
-    "note" : bf.note,
-    "group" : bf.group,
-    "ipv4" : common.ipv4,
-    "ipv6": common.ipv6,
-    "icmp": common.icmp,
-    "icmpv6": common.icmpv6,
-    "dns": common.dns,
-    "tcp": common.tcp,
-    "tcp_detailed": common.tcp_detailed,
-    "udp": common.udp,
-  ))))
-))
+#let example(columns:1,source) = block(
+  grid(
+    columns:columns,
+    gutter: 5pt,
+    box(align(horizon,sourcecode(source))),
+    box(align(horizon,eval(source.text, mode:"markup", scope: (
+      "bytefield" : bf.bytefield,
+      "byte" : bf.byte,
+      "bytes" : bf.bytes,
+      "bit" : bf.bit,
+      "bits" : bf.bits,
+      "padding" : bf.padding,
+      "flagtext" : bf.flagtext,
+      "note" : bf.note,
+      "group" : bf.group,
+      "ipv4" : common.ipv4,
+      "ipv6": common.ipv6,
+      "icmp": common.icmp,
+      "icmpv6": common.icmpv6,
+      "dns": common.dns,
+      "tcp": common.tcp,
+      "tcp_detailed": common.tcp_detailed,
+      "udp": common.udp,
+    ))))
+  )
+)
 
 = Bytefield
 == Colored Example
@@ -153,10 +155,12 @@ Pass an `dictionary` as bitheader. Example:
 ```typst
 #bytefield(
   bitheader: (
-    "0": "LSB_starting_at_bit_0", 
-    "5": "test", 
-    "9": "next_field_at_bit_9", 
-    "15":"MSB", 
+    data: (
+      "0": "LSB_starting_at_bit_0", 
+      "5": "test", 
+      "9": "next_field_at_bit_9", 
+      "15":"MSB", 
+    ),
     angle: -40deg,
     marker: auto // or none
   ),
@@ -184,10 +188,12 @@ or simply `true` to show the index for each specified label.
 #example(```typst
 #bytefield(
   bitheader: (
-    "0": "LSB_starting_at_bit_0", 
-    "5": "test", 
-    "9": "next_field_at_bit_9", 
-    "15":"MSB", 
+    data: (
+      "0": "LSB_starting_at_bit_0", 
+      "5": "test", 
+      "9": "next_field_at_bit_9", 
+      "15":"MSB", 
+    ),
     numbers: true,
     angle: -40deg,
     marker: auto // or none
@@ -209,10 +215,12 @@ or simply `true` to show the index for each specified label.
 #example(```typst
 #bytefield(
   bitheader: (
-    "0": "LSB_starting_at_bit_0", 
-    "5": "test", 
-    "9": "next_field_at_bit_9", 
-    "15":"MSB", 
+    data: (
+      "0": "LSB_starting_at_bit_0", 
+      "5": "test", 
+      "9": "next_field_at_bit_9", 
+      "15":"MSB", 
+    ),
     numbers: "bounds",
     angle: -40deg,
     marker: auto // or none

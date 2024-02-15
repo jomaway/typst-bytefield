@@ -55,3 +55,14 @@
     post_levels:  right_max_level +1,
   )
 }
+
+
+#let is-empty(string) = {
+  assert.eq(type(string), str, message: "expected string, found " + type(string))
+  string == none or string == ""
+}
+
+#let is-not-empty(string) = {
+  assert.eq(type(string), str, message: "expected string, found " + type(string))
+  string != none and string != ""
+}
