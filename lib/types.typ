@@ -32,8 +32,23 @@
   )
 )
 
+#let bf-cell(type, grid, x, y, label, idx ,format: auto) = (
+  bf-type: "bf-cell",
+  cell-type: type,
+  cell-index: idx,  // cell index is a tuple (field-index, slice-index)
+  has-next-slice: false,  // indicates if a cell follows which belongs to the same field.
+  position: (
+    grid: grid,
+    x: x,
+    y: y,
+  ), 
+  label: label,
+  format: format,  // fill, stroke, align, inset, ...
+  data: none,
+)
 
 #let header_cell(num, pos: auto, align: center) = (
+  bf-type: "bf-cell",
   bf-cell-type: "header-cell",
   label: str(num),
   x: if (pos == auto) {num} else { pos },
@@ -43,6 +58,7 @@
 
 #let data_cell() = {
   (
+    bf-type: "bf-cell",
     bf-cell-type: "data-cell",
     field-index: field.bf-idx,
     size: cell_size,
@@ -64,6 +80,7 @@
 
 #let note_cell() = {
   (
+    bf-type: "bf-cell",
     bf-cell-type: "note-cell",
     field-index: annotation.bf-idx,
     anchor: annotation.anchor,
