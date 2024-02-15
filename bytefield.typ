@@ -61,36 +61,18 @@
     } else if is-note-field(f) {
       // index, anchor, side, level:0, label, format: none
       let anchor = _get_index_of_next_data_field(f.field-index, _fields)
-      note-field(f.field-index, anchor, f.data.side, level: f.data.level, f.data.body)
+      note-field(f.field-index, anchor, f.data.side, level: f.data.level, f.data.body, rowspan: f.data.rowspan, format: f.data.args)
     } else {
       // pass through
       f
     })
   }
 
-  // _fields = _fields.map(f => {
-  //   if (is-data-field(f)) {
-  //     // index, size, start, end, label, format: none
-  //     let size = if (f.data.size == auto) { bpr - calc.rem(range_idx, bpr) } else { f.data.size }  
-  //     let start = range_idx;
-  //     range_idx += size;
-  //     let end = range_idx - 1;
-  //     let _format = (fill: f.data.fill, stroke: f.data.stroke)
-  //     data-field(f.field-index, size, start, end, f.data.content, format: _format)
-  //   } else if is-note-field(f) {
-  //     // index, anchor, side, level:0, label, format: none
-  //     let anchor = _get_index_of_next_data_field(f.field-index, _fields)
-  //     note-field(f.field-index, anchor, f.data.side, level: f.data.level, f.data.body)
-  //   } else {
-  //     // pass through
-  //     f
-  //   }
-  // })
-
   return fields 
 }
 
-#let generate_data_cells(data_fields, meta) = {
+#let generate_data_cells(fields, meta) = {
+  let data_fields = fields.filter(f => f.field-type == "data-field")
   let bpr = meta.cols.main;
 
   let _cells = ();
@@ -142,7 +124,7 @@
         )
       )
 
-      field.content = "..."
+      field.data.label = "..."
 
       // prepare for next cell
       idx += cell_size;
@@ -153,7 +135,7 @@
   return _cells
 }
 
-#let generate_note_cells(fields, data_fields, meta) = {
+#let generate_note_cells(fields, meta) = {
   let note_fields = fields.filter(f => f.field-type == "note-field")
   let _cells = ()
   let bpr = meta.cols.main
@@ -163,7 +145,7 @@
     let level = field.data.level
     let label = field.data.label
 
-    let anchor_field = data_fields.find(f => f.field-index == field.data.anchor) // _get_field_from_index(field_data, annotation.anchor);
+    let anchor_field = fields.find(f => f.field-index == field.data.anchor) // _get_field_from_index(field_data, annotation.anchor);
     let row = meta.header.rows;
    
     if anchor_field != none {
@@ -185,13 +167,15 @@
       },
       y: int(row),
       label: label,
-      args: none,
+      format: field.data.format,
+      rowspan: field.data.rowspan,
     )) 
   }
   return _cells
 }
 
-#let generate_header_cells(data_fields, meta) = {
+#let generate_header_cells(fields, meta) = {
+  let data_fields = fields.filter(f => f.field-type == "data-field")
   let msb = meta.header.msb
   let bpr = meta.cols.main
   let bitheader = meta.header.data
@@ -295,14 +279,12 @@
 }
 
 #let generate_cells(meta, fields) = {
-  // data fields 
-  let data_fields = fields.filter(f => f.field-type == "data-field")
-  let data_cells = generate_data_cells(data_fields, meta);
-  // note fields
-  let note_fields = fields.filter(f => f.field-type == "note-field")
-  let note_cells = generate_note_cells(fields, data_fields, meta);
-  // bitheader cells
-  let header_cells = generate_header_cells(data_fields, meta);
+  // data 
+  let data_cells = generate_data_cells(fields, meta);
+  // notes
+  let note_cells = generate_note_cells(fields, meta);
+  // bitheader 
+  let header_cells = generate_header_cells(fields, meta);
 
   return (header_cells, data_cells, note_cells).flatten()
 }
@@ -324,7 +306,7 @@
 }
 
 #let map_note_cells_to_tablex_cells(cell) = {
-  cellx(x:cell.x,y:cell.y,..(cell.args),)[#box(height:100%)[#cell.label]]
+  cellx(x:cell.x,y:cell.y, rowspan: cell.rowspan, ..(cell.format),)[#box(height:100%)[#cell.label]]
 }
 
 #let map_header_cells_to_tablex_cells(cell, meta) = {
@@ -346,7 +328,6 @@
       map_header_cells_to_tablex_cells(c, meta)
     }
   })
-
   // TODO: new grid with subgrids.
   let table = locate(loc => {
       gridx(
@@ -383,7 +364,6 @@
   let meta = generate_meta(args, fields.pos())
   let fields = generate_bf-fields(fields.pos(), meta)
   let cells = generate_cells(meta, fields)
-
   let table = generate_table(meta, cells)
   return table
 }

@@ -34,7 +34,7 @@
 
 #example(```typst
 #bytefield(
-  note(left)[NL0],
+  note(left)[Testing],
   bytes(3,
     fill: red.lighten(30%)
   )[Test],
@@ -42,7 +42,9 @@
   bits(24,
     fill: green.lighten(30%)
   )[Fill],
+  group(right,3)[Addr],
   bytes(12)[Addr],
+  note(left)[Last row],
   padding(
     fill: purple.lighten(40%)
   )[Padding],

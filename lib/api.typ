@@ -8,11 +8,12 @@
   content: content,
 )
 
-#let annotation(side, level:0, ..args, body) = (
+#let annotation(side, level:0, rowspan: 1, ..args, body) = (
   type: "annotation",
   side: side,
   level: level,
-  args: args,
+  rowspan: rowspan,
+  args: args,  // Todo change this!
   body: body
 )
 

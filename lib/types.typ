@@ -2,14 +2,14 @@
 #let bf-field(index, type, data) = (
   bf-type: "bf-field",
   field-index: index,
-  field-type: type, // none means is not set - to be valid must contain ("data" | "annotation")
+  field-type: type, 
   data: data, 
 )
 
 #let data-field(index, size, start, end, label, format: none) = (
   bf-type: "bf-field",
   field-index: index,
-  field-type: "data-field", // none means is not set - to be valid must contain ("data" | "annotation")
+  field-type: "data-field", 
   data: (
     size: size,
     range: ("start": start, "end": end),
@@ -18,16 +18,17 @@
   )
 )
 
-#let note-field(index, anchor, side, level:0, label, format: none) = (
+#let note-field(index, anchor, side, level:0, label, format: none, rowspan: 1) = (
   bf-type: "bf-field",
   field-index: index,
-  field-type: "note-field", // none means is not set - to be valid must contain ("data" | "annotation")
+  field-type: "note-field", 
   data: (
     anchor: anchor,
     side: side,
     level: level,
     label: label,
-    label_format: format,  // TODO
+    format: format,  // TODO
+    rowspan: rowspan,
   )
 )
 
