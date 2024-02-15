@@ -26,13 +26,17 @@
   return table
 }
 
-// Low level API - for internal - might change 
-#let bitbox(length_in_bits, content, fill: none, stroke: auto) = (
+// -------------
+// Low level API - for internal - will be changed soon
+// -------------
+#let bitbox(size, fill: none, body) = (
   type: "bitbox",
-  size: length_in_bits,   // length of the field 
-  fill: fill,
-  stroke: stroke,
-  content: content,
+  size: size,   // length of the field in bits
+  format: (
+    fill: fill,
+    stroke: stroke,
+  ),
+  body: body
 )
 
 #let annotation(side, level:0, rowspan: 1, ..args, body) = (
@@ -40,11 +44,13 @@
   side: side,
   level: level,
   rowspan: rowspan,
-  args: args,  // Todo change this!
+  format: args.named(),
   body: body
 )
 
+// -------------
 // High level API - for users 
+// -------------
 #let bit(..args) = bitbox(1, ..args)
 #let bits(len, ..args) = bitbox(len, ..args)
 #let byte(..args) = bitbox(8, ..args)

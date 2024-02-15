@@ -8,8 +8,8 @@
 #let example(columns:1,source) = block(grid(
   columns:columns,
   gutter: 5pt,
-  align(horizon,sourcecode(source)),
-  (align(horizon,eval(source.text, mode:"markup", scope: (
+  box(align(horizon,sourcecode(source))),
+  box(align(horizon,eval(source.text, mode:"markup", scope: (
     "bytefield" : bf.bytefield,
     "byte" : bf.byte,
     "bytes" : bf.bytes,
@@ -261,7 +261,7 @@ and an optional `level` for the nesting level.
 #bytefield(
   bits:32,
   pre: (1cm,auto),
-  post: (auto,1cm),
+  post: (auto,1.8cm),
 
   note(left, rowspan:3, level:1)[
     #flagtext[spanning_3_rows]

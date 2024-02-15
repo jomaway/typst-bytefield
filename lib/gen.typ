@@ -54,12 +54,11 @@
       let start = range_idx;
       range_idx += size;
       let end = range_idx - 1;
-      let _format = (fill: f.data.fill, stroke: f.data.stroke)
-      data-field(f.field-index, size, start, end, f.data.content, format: _format)
+      data-field(f.field-index, size, start, end, f.data.body, format: f.data.format)
     } else if is-note-field(f) {
       // index, anchor, side, level:0, label, format: none
       let anchor = _get_index_of_next_data_field(f.field-index, _fields)
-      note-field(f.field-index, anchor, f.data.side, level: f.data.level, f.data.body, rowspan: f.data.rowspan, format: f.data.args.named())
+      note-field(f.field-index, anchor, f.data.side, level: f.data.level, f.data.body, rowspan: f.data.rowspan, format: f.data.format)
     } else {
       // pass through
       f
