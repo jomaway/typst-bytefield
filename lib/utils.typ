@@ -25,6 +25,11 @@
   field.at("field-type", default: none) == "note-field"
 }
 
+#let is-header-field(field) = {
+  assert_bf-field(field);
+  field.at("field-type", default: none) == "header-field"
+}
+
 // Return the index of the next data-field
 #let _get_index_of_next_data_field(idx, fields) = {
   let res = fields.find(f => f.field-index > idx and is-data-field(f))
@@ -63,6 +68,10 @@
 }
 
 #let is-not-empty(string) = {
-  assert.eq(type(string), str, message: "expected string, found " + type(string))
-  string != none and string != ""
+  // assert.eq(type(string), str, message: strfmt("expected string, found {}",type(string)))
+  if (type(string) == str) {
+    return string != none and string != ""
+  } else if (type(string) == content) {
+    return string != []
+  }
 }

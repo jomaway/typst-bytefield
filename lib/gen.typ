@@ -34,7 +34,6 @@
 
 #let generate_header_field(fields, meta) = {
     // This is a bit of a mess and needs a refactor after the new bitheader user api is defined. 
-
     let data_fields = fields.filter(f => f.field-type == "data-field")
     let msb = meta.header.msb
     let bpr = meta.cols.main
@@ -88,13 +87,28 @@
     return bh
 }
 
+#let _generate_labels_from_values(values) = {
+  values = values.map(val => (str(val): "") )
+  values.join()
+}
+
+#let _get_header_autofill_values(autofill, fields, meta) = {
+  if (autofill == "bounds") {
+    return fields.filter(f => f.field-type == "data-field").map(f => if f.data.range.start == f.data.range.end { (f.data.range.start,) } else {(f.data.range.start, f.data.range.end)}).flatten()
+  } else if (autofill == "all") {
+    return range(meta.cols.main)
+  } else {
+    return fields.filter(f => f.field-type == "data-field").map(f => f.data.range.start).filter(value => value < meta.cols.main).flatten()
+  }
+}
+
 #let generate_bf-fields(fields, meta) = {
 
   // This part must be changed if the user low level api changes.
   let _fields = fields.enumerate().map(((idx, f)) => {
     assert.eq(type(f),dictionary, message: strfmt("expected field to be a dictionary, found {}", type(f)));
     assert.ne(f.at("type", default: none), none, message: "Could not find field.type")
-    let type = if(f.type == "bitbox") { "data-field" } else if (f.type == "annotation") { "note-field" } else { "unknown" }
+    let type = if(f.type == "bitbox") { "data-field" } else if (f.type == "annotation") { "note-field" } else if (f.type == "bitheader") { "header-field" } else { "unknown" }
     bf-field(type, idx, data:f)
   })
 
@@ -103,24 +117,57 @@
   let range_idx = 0;
   let fields = ();
 
-  for f in _fields {
-    fields.push(if (is-data-field(f)) {
-      // index, size, start, end, label, format: none
-      let size = if (f.data.size == auto) { bpr - calc.rem(range_idx, bpr) } else { f.data.size }  
-      let start = range_idx;
-      range_idx += size;
-      let end = range_idx - 1;
-      data-field(f.field-index, size, start, end, f.data.body, format: f.data.format)
-    } else if is-note-field(f) {
-      // index, anchor, side, level:0, label, format: none
-      let anchor = _get_index_of_next_data_field(f.field-index, _fields)
-      note-field(f.field-index, anchor, f.data.side, level: f.data.level, f.data.body, rowspan: f.data.rowspan, format: f.data.format)
-    } else {
-      // pass through
-      f
-    })
+  for f in _fields.filter(f => is-data-field(f)) {
+    let size = if (f.data.size == auto) { bpr - calc.rem(range_idx, bpr) } else { f.data.size }  
+    let start = range_idx;
+    range_idx += size;
+    let end = range_idx - 1;
+    fields.push(data-field(f.field-index, size, start, end, f.data.body, format: f.data.format))
   }
-  fields.push(generate_header_field(fields, meta))
+
+  for f in _fields.filter(f => is-note-field(f)) {
+    let anchor = _get_index_of_next_data_field(f.field-index, _fields)
+    fields.push(note-field(f.field-index, anchor, f.data.side, level: f.data.level, f.data.body, rowspan: f.data.rowspan, format: f.data.format))
+  }
+
+  for f in _fields.filter(f => is-header-field(f)) {
+    let autofill_values = _get_header_autofill_values(f.data.autofill, fields, meta);
+    let labels = _generate_labels_from_values(autofill_values);
+    labels += f.data.at("labels", default: (:))
+    
+    fields.push(header-field(
+      end: bpr, 
+      msb: f.data.msb == left,
+      labels: labels,
+    ))
+  }
+
+
+  // for f in _fields {
+  //   fields.push(if (is-data-field(f)) {
+  //     // index, size, start, end, label, format: none
+  //     let size = if (f.data.size == auto) { bpr - calc.rem(range_idx, bpr) } else { f.data.size }  
+  //     let start = range_idx;
+  //     range_idx += size;
+  //     let end = range_idx - 1;
+  //     data-field(f.field-index, size, start, end, f.data.body, format: f.data.format)
+  //   } else if is-note-field(f) {
+  //     // index, anchor, side, level:0, label, format: none
+  //     let anchor = _get_index_of_next_data_field(f.field-index, _fields)
+  //     note-field(f.field-index, anchor, f.data.side, level: f.data.level, f.data.body, rowspan: f.data.rowspan, format: f.data.format)
+  //   } else if is-header-field(f) {
+  //     let autofill = f.data.autofill
+  //     header-field(
+  //       end: bpr, 
+  //       msb: f.data.msb == left,
+  //       labels: f.data.at("labels", default: (:)),
+  //     )
+  //   }
+  //   else {
+  //     // pass through
+  //     f
+  //   })
+  // }
 
   return fields 
 }

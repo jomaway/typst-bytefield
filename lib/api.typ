@@ -48,6 +48,61 @@
   body: body
 )
 
+#let bitheader(
+  msb: right,
+  autofill: auto,
+  numbers: (),
+  labels: (:),
+  ticks: auto,
+  fontsize: 9pt,
+  angle: -60deg,
+  marker: stroke(),
+  ..args
+) = {
+  // let _numbers = ()
+  let _labels = (:)
+  let _numbers = ()
+  let last = 0
+  let step = 1
+  for arg in args.pos() {
+    if type(arg) == int {
+      _numbers.push(arg)
+      last = arg
+      step = arg
+    } else if type(arg) in (str,bool) {
+      autofill = arg
+    } else if type(arg) == content { 
+      labels.insert(str(last),arg)
+      _numbers.push(last)
+      last += step
+    }else if type(arg) in (left, right) {
+      msb = arg
+    } else if type(arg) == angle {
+      angle = arg
+    } else if type(arg) == stroke {
+      marker = arg
+    } 
+    if type(arg) == length {
+      fontsize = arg
+    }
+  }
+  if (autofill == auto and numbers == true) {
+    autofill = "all"
+  }
+  
+  return (
+    type: "bitheader",
+    msb: msb,
+    autofill: autofill,
+    numbers: numbers,
+    labels:labels,
+    ticks:ticks,
+    fontsize:fontsize,
+    angle: angle,
+    marker: marker,
+  )
+}
+
 // -------------
 // High level API - for users 
 // -------------
