@@ -1,36 +1,34 @@
 
-#let bf-field(index, type, data) = (
+#let bf-field(type, index, data: none) = (
   bf-type: "bf-field",
-  field-index: index,
   field-type: type, 
+  field-index: index,
   data: data, 
 )
 
-#let data-field(index, size, start, end, label, format: none) = (
-  bf-type: "bf-field",
-  field-index: index,
-  field-type: "data-field", 
-  data: (
-    size: size,
-    range: ("start": start, "end": end),
-    label: label,
-    label_format: format,
+#let data-field(index, size, start, end, label, format: none) = {
+  bf-field("data-field", index,
+    data: (
+      size: size,
+      range: ("start": start, "end": end),
+      label: label,
+      label_format: format,
+    )
   )
-)
+}
 
-#let note-field(index, anchor, side, level:0, label, format: none, rowspan: 1) = (
-  bf-type: "bf-field",
-  field-index: index,
-  field-type: "note-field", 
-  data: (
-    anchor: anchor,
-    side: side,
-    level: level,
-    label: label,
-    format: format,  // TODO
-    rowspan: rowspan,
+#let note-field(index, anchor, side, level:0, label, format: none, rowspan: 1) = {
+  bf-field("note-field", index,
+    data: (
+      anchor: anchor,
+      side: side,
+      level: level,
+      label: label,
+      format: format,  // TODO
+      rowspan: rowspan,
+    )
   )
-)
+}
 
 #let bf-cell(type, grid, x, y, label, idx ,format: auto) = (
   bf-type: "bf-cell",
@@ -55,43 +53,3 @@
   y: 0,
   align: align,
 )
-
-#let data_cell() = {
-  (
-    bf-type: "bf-cell",
-    bf-cell-type: "data-cell",
-    field-index: field.bf-idx,
-    size: cell_size,
-    range: ("start": start, "end": end),
-    label: field.content,
-    cell-format: (
-      fill: field.fill,
-      stroke: _stroke,
-    ),
-    cell-position: (
-      x: calc.rem(idx,bpr) + meta.cols.pre,
-      y: int(idx/bpr) + meta.header.rows,
-    ),
-    slice-index: slice_idx,
-    has_prev_slice: slice_idx > 0,
-    has_next_slice: (len - cell_size) > 0,
-  )
-}
-
-#let note_cell() = {
-  (
-    bf-type: "bf-cell",
-    bf-cell-type: "note-cell",
-    field-index: annotation.bf-idx,
-    anchor: annotation.anchor,
-    x: if (side == left) {
-      meta.cols.pre - level - 1
-    } else {
-      meta.cols.pre + bpr + level
-    },
-    y: int(row),
-    label: body,
-    args: args,
-  )
-}
-

@@ -42,7 +42,7 @@
   let _fields = fields.enumerate().map(((idx, f)) => {
     assert_field(f);
     let type = if(f.type == "bitbox") { "data-field" } else if (f.type == "annotation") { "note-field" } else { "unknown" }
-    bf-field(idx, type, f)
+    bf-field(type, idx, data:f)
   })
 
   let bpr = meta.cols.main 
