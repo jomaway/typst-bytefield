@@ -1,5 +1,6 @@
 #import "bytefield.typ" as bf
 #import "common.typ" as common
+
 #import "@preview/codelst:2.0.0": sourcecode
 
 #set text(font: "Rubik", weight: 300);
@@ -38,11 +39,13 @@
   bytes(3,
     fill: red.lighten(30%)
   )[Test],
+  note(right)[#set text(9pt); #sym.arrow.l This field \ breaks into 2 rows.],
   bytes(2)[Break],
+  note(left)[#set text(9pt); and continues \ here #sym.arrow],
   bits(24,
     fill: green.lighten(30%)
   )[Fill],
-  group(right,3)[Addr],
+  group(right,3)[spanning 3 rows],
   bytes(12)[Addr],
   note(left)[Last row],
   padding(

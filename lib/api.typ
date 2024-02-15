@@ -1,3 +1,30 @@
+#import "gen.typ": *
+
+// -------------
+//   bytefield
+// -------------
+#let bytefield(
+  bits: 32, 
+  bitheader: auto, 
+  msb_first: false,
+  pre: auto,
+  post: auto,
+  ..fields
+) = {
+
+  let args = (
+    bpr: bits,
+    msb: msb_first,
+    bitheader: bitheader,
+    side: (left_cols: pre, right_cols: post)
+  )
+
+  let meta = generate_meta(args, fields.pos())
+  let fields = generate_bf-fields(fields.pos(), meta)
+  let cells = generate_cells(meta, fields)
+  let table = generate_table(meta, cells)
+  return table
+}
 
 // Low level API - for internal - might change 
 #let bitbox(length_in_bits, content, fill: none, stroke: auto) = (

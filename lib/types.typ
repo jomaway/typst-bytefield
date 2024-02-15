@@ -30,26 +30,35 @@
   )
 }
 
-#let bf-cell(type, grid, x, y, label, idx ,format: auto) = (
+#let bf-cell(type, grid: center, x: auto, y: auto, colspan:1, rowspan:1, label: none, cell-idx: (auto, auto) ,format: auto) = (
   bf-type: "bf-cell",
   cell-type: type,
-  cell-index: idx,  // cell index is a tuple (field-index, slice-index)
-  has-next-slice: false,  // indicates if a cell follows which belongs to the same field.
+  cell-index: cell-idx,  // cell index is a tuple (field-index, slice-index)
+  // has-next-slice: false,  // indicates if a cell follows which belongs to the same field.
   position: (
     grid: grid,
     x: x,
     y: y,
-  ), 
+  ),
+  span: (
+    rows: rowspan,
+    cols: colspan,
+  ),
   label: label,
   format: format,  // fill, stroke, align, inset, ...
   data: none,
 )
 
-#let header_cell(num, pos: auto, align: center) = (
-  bf-type: "bf-cell",
-  bf-cell-type: "header-cell",
-  label: str(num),
-  x: if (pos == auto) {num} else { pos },
-  y: 0,
-  align: align,
-)
+#let header_cell(num, pos: auto, align: center + horizon, meta) = {
+  bf-cell(
+    "header-cell",
+    cell-idx: none,
+    x: (if (pos == auto) {num} else { pos }) + meta.cols.pre,
+    y: 0,
+    label: str(num),
+    format: (
+      align: align,
+      inset: (x: 0pt, y: 6pt),
+    )
+  )
+}

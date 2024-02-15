@@ -8,6 +8,11 @@
   return dict
 }
 
+#let _get_field_type(field) = {
+  assert_bf-field(field);
+  return field.at("field-type", default: none);
+}
+
 // Check if a given field is a data-field
 #let is-data-field(field) = {
   assert_bf-field(field);
@@ -33,7 +38,7 @@
   return (x,y)
 }
 
-// Getters 
+
 #let _get_max_annotation_levels(annotations) = {
   let left_max_level = 0
   let right_max_level = 0
@@ -49,53 +54,4 @@
     pre_levels: left_max_level +1,
     post_levels:  right_max_level +1,
   )
-}
-
-#let _get_index_of_prev_bitfield(idx, fields) = {
-  let res = fields.rev().find(f => f.bf-idx < idx and f.type == "bitbox")
-  if res != none { res.bf-idx  } else { none }
-}
-
-#let _get_index_of_next_bitfield(idx, fields) = {
-  let res = fields.find(f => f.bf-idx > idx and f.type == "bitbox")
-  if res != none { res.bf-idx } else { none }
-}
-
-#let _get_field_from_index(fields, idx) = {
-  return fields.filter(f => f.bf-idx == idx)
-}
-
-#let _get_pre_cols_len(meta) = {
-  assert(type(meta.cols.pre) == int or type(meta.cols.pre) == array, message: "expected int or array, found {}")
-  if (type(meta.cols.pre) == int) {
-    return meta.cols.pre
-  } else if (type(meta.cols.pre) == array) {
-    return meta.cols.pre.len()
-  } 
-}
-
-#let _get_post_cols_len(meta) = {
-  assert(type(meta.cols.post) == int or type(meta.cols.post) == array, message: "expected int or array, found {}")
-  if (type(meta.cols.post) == int) {
-    return meta.cols.post
-  } else if (type(meta.cols.post) == array) {
-    return meta.cols.post.len()
-  } 
-}
-
-// warning: not yet implemented
-#let _get_pre_cols(meta) = {
-  return meta.args.pre
-}
-
-// warning: not yet implemented
-#let _get_post_cols(meta) = {
-  return meta.args.post
-}
-
-// ------------
-//   Setters
-// ------------
-#let _set_anchor(field,anchor_idx) = {
-  dict_insert_and_return(field, "anchor", anchor_idx)
 }
