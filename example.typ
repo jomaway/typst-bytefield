@@ -1,47 +1,58 @@
 #import "bytefield.typ" as bf
 #import "common.typ" as common
+
 #import "@preview/codelst:2.0.0": sourcecode
 
 #set text(font: "Rubik", weight: 300);
 
-#let example(columns:1,source) = box(grid(
-  columns:columns,
-  gutter: 5pt,
-  align(horizon,sourcecode(source)),
-  align(horizon,eval(source.text, mode:"markup", scope: (
-    "bytefield" : bf.bytefield,
-    "byte" : bf.byte,
-    "bytes" : bf.bytes,
-    "bit" : bf.bit,
-    "bits" : bf.bits,
-    "padding" : bf.padding,
-    "flagtext" : bf.flagtext,
-    "note" : bf.note,
-    "group" : bf.group,
-    "ipv4" : common.ipv4,
-    "ipv6": common.ipv6,
-    "icmp": common.icmp,
-    "icmpv6": common.icmpv6,
-    "dns": common.dns,
-    "tcp": common.tcp,
-    "tcp_detailed": common.tcp_detailed,
-    "udp": common.udp,
-  )))
-))
+#let example(columns:1,source) = block(
+  grid(
+    columns:columns,
+    gutter: 5pt,
+    box(align(horizon,sourcecode(source))),
+    box(align(horizon,eval(source.text, mode:"markup", scope: (
+      "bytefield" : bf.bytefield,
+      "byte" : bf.byte,
+      "bytes" : bf.bytes,
+      "bit" : bf.bit,
+      "bits" : bf.bits,
+      "padding" : bf.padding,
+      "flagtext" : bf.flagtext,
+      "note" : bf.note,
+      "group" : bf.group,
+      "bitheader": bf.bitheader,
+      "ipv4" : common.ipv4,
+      "ipv6": common.ipv6,
+      "icmp": common.icmp,
+      "icmpv6": common.icmpv6,
+      "dns": common.dns,
+      "tcp": common.tcp,
+      "tcp_detailed": common.tcp_detailed,
+      "udp": common.udp,
+    ))))
+  )
+)
 
 = Bytefield
 == Colored Example
 
 #example(```typst
 #bytefield(
+  bitheader("bounds", 2, [start], 7, [test], 31, [done]),
+  // bitheader(1, [start], 17, [test], 27, [done]),
+  note(left)[Testing],
   bytes(3,
     fill: red.lighten(30%)
   )[Test],
+  note(right)[#set text(9pt); #sym.arrow.l This field \ breaks into 2 rows.],
   bytes(2)[Break],
+  note(left)[#set text(9pt); and continues \ here #sym.arrow],
   bits(24,
     fill: green.lighten(30%)
   )[Fill],
+  group(right,3)[spanning 3 rows],
   bytes(12)[Addr],
+  note(left)[Last row],
   padding(
     fill: purple.lighten(40%)
   )[Padding],
@@ -55,8 +66,7 @@ Show all bit headers with `bitheader: "all"`
 #example(```typst
 #bytefield(
     bits:16,
-    msb_first: true,
-    bitheader: "all",
+    bitheader("all", msb: left),
     ..range(16).map(
       i => bit[#flagtext[B#i]]
     ).rev(),
@@ -69,10 +79,7 @@ Show start and end bit of each bitbox with `bitheader: "smart"`.
 
 #example(```typst
 #bytefield(
-  bits: 16,
-  // same as
-  // bitheader: (0,2,7,8,13,15),
-  bitheader: "smart",
+  bitheader("smart"),
   bits(8)[opcode],
   bits(5)[rd],
   bits(5)[rs1],
@@ -87,8 +94,7 @@ Show start bit of each bitbox with `bitheader: "bounds"`.
 
 #example(```typst
 #bytefield(
-  bits: 16,
-  bitheader: "bounds",
+  bitheader("bounds"),
   bits(8)[opcode],
   bits(5)[rd],
   bits(5)[rs1],
@@ -103,8 +109,7 @@ Select `msb_first: true` for a reversed bit order.
 #example(```typst
 #bytefield(
     bits: 32,
-    msb_first: true,
-    bitheader: "smart",
+    bitheader("bounds", msb:left),
     byte[MSB],
     bytes(2)[Two],
     bit[#flagtext("URG")],
@@ -119,7 +124,7 @@ Pass an `array` to specify each number.
 #example(```typst
 #bytefield(
     bits:16,
-    bitheader: (0,5,6,7,8,12,15),
+    bitheader(0,5,6,7,8,12,15),
     bits(6)[First],
     bits(2)[Duo],
     bits(5)[Five],
@@ -132,7 +137,7 @@ Pass an `integer` to show all multiples of this number.
 #example(```typst
 #bytefield(
     bits:16,
-    bitheader: 3,
+    bitheader(3),
     bits(6)[First],
     bits(2)[Duo],
     bits(5)[Five],
@@ -146,11 +151,11 @@ Pass an `dictionary` as bitheader. Example:
 #example(
 ```typst
 #bytefield(
-  bitheader: (
-    "0": "LSB_starting_at_bit_0", 
-    "5": "test", 
-    "9": "next_field_at_bit_9", 
-    "15":"MSB", 
+  bitheader(
+    0,[LSB_starting_at_bit_0], 
+    5, [test], 
+    9, [next_field_at_bit_9], 
+    15, [MSB], 
     angle: -40deg,
     marker: auto // or none
   ),
@@ -177,12 +182,12 @@ or simply `true` to show the index for each specified label.
 
 #example(```typst
 #bytefield(
-  bitheader: (
-    "0": "LSB_starting_at_bit_0", 
-    "5": "test", 
-    "9": "next_field_at_bit_9", 
-    "15":"MSB", 
-    numbers: true,
+  bitheader(
+    "bounds",
+    0,[LSB_starting_at_bit_0], 
+    5, [test], 
+    9, [next_field_at_bit_9], 
+    15, [MSB], 
     angle: -40deg,
     marker: auto // or none
   ),
@@ -202,13 +207,13 @@ or simply `true` to show the index for each specified label.
 
 #example(```typst
 #bytefield(
-  bitheader: (
-    "0": "LSB_starting_at_bit_0", 
-    "5": "test", 
-    "9": "next_field_at_bit_9", 
-    "15":"MSB", 
-    numbers: "bounds",
+  bitheader(
+    0,[LSB_starting_at_bit_0], 
+    5, [test], 
+    9, [next_field_at_bit_9], 
+    15, [MSB], 
     angle: -40deg,
+    numbers: false,
     marker: auto // or none
   ),
   bits: 16,
@@ -255,7 +260,7 @@ and an optional `level` for the nesting level.
 #bytefield(
   bits:32,
   pre: (1cm,auto),
-  post: (auto,1cm),
+  post: (auto,1.8cm),
 
   note(left, rowspan:3, level:1)[
     #flagtext[spanning_3_rows]
