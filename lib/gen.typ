@@ -134,40 +134,13 @@
     let autofill_values = _get_header_autofill_values(f.data.autofill, fields, meta);
     let labels = _generate_labels_from_values(autofill_values);
     labels += f.data.at("labels", default: (:))
-    
+
     fields.push(header-field(
       end: bpr, 
       msb: f.data.msb == left,
       labels: labels,
     ))
   }
-
-
-  // for f in _fields {
-  //   fields.push(if (is-data-field(f)) {
-  //     // index, size, start, end, label, format: none
-  //     let size = if (f.data.size == auto) { bpr - calc.rem(range_idx, bpr) } else { f.data.size }  
-  //     let start = range_idx;
-  //     range_idx += size;
-  //     let end = range_idx - 1;
-  //     data-field(f.field-index, size, start, end, f.data.body, format: f.data.format)
-  //   } else if is-note-field(f) {
-  //     // index, anchor, side, level:0, label, format: none
-  //     let anchor = _get_index_of_next_data_field(f.field-index, _fields)
-  //     note-field(f.field-index, anchor, f.data.side, level: f.data.level, f.data.body, rowspan: f.data.rowspan, format: f.data.format)
-  //   } else if is-header-field(f) {
-  //     let autofill = f.data.autofill
-  //     header-field(
-  //       end: bpr, 
-  //       msb: f.data.msb == left,
-  //       labels: f.data.at("labels", default: (:)),
-  //     )
-  //   }
-  //   else {
-  //     // pass through
-  //     f
-  //   })
-  // }
 
   return fields 
 }
