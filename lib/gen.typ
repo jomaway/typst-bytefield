@@ -46,8 +46,8 @@
     let _fields = fields.filter(f => f.field-type == "data-field").map(f => f.data.range.start).filter(value => value < meta.cols.main).flatten()
     _fields.push(meta.cols.main -1)
     return _fields.dedup()
-  } else if (autofill == "even") {
-    let _fields = range(meta.cols.main, step: int(meta.cols.main/4))
+  } else if (autofill == "bytes") {
+    let _fields = range(meta.cols.main, step: 8)
     _fields.push(meta.cols.main -1)
     return _fields.dedup()
   } else {

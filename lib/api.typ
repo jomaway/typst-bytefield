@@ -48,15 +48,15 @@
   msb: right,
   autofill: auto,
   numbers: auto,  // or none
-  labels: (:),
-  ticks: auto,
+  // labels: (:),
+  ticks: auto,     // not working
   fontsize: auto,  // not working 
   angle: auto,     // not working
   marker: auto,    // not working
   ..args
 ) = {
   // let _numbers = ()
-  let _labels = (:)
+  let labels = (:)
   let _numbers = ()
   let last = 0
   let step = 1
