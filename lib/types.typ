@@ -33,7 +33,7 @@
 }
 
 // header-field hold information about a complete header row. Usually this is the top level header.
-#let header-field(start: 0, end: 32, msb: false, numbers: true, labels: (:), ..args) = {
+#let header-field(start: 0, end: 32, msb: left, numbers: (), labels: (:), ..args) = {
   // header-field must have index 0.
   bf-field("header-field", none,
     data: (
@@ -41,12 +41,17 @@
       range: (start: start, end: end),
       // Defines the order of the bits. false: start - end, true: end - start
       msb: msb,
-      // Defines if the numbers should be shown.
+      // Defines which numbers should be shown. Possible none or array if numbers.
       numbers: numbers,
+      // Defines which labels should be shown. Dict of number and content.
       labels: labels,
+      // Defines the format of the bitheader.
       format: (
-        angle: 40deg,
-        text-size: auto, // connect to global setting
+        // Defines the angle of the labels 
+        angle: -60deg,
+        // Defines the text-size for both numbers and labels.
+        text-size: auto, //TODO: connect to global setting
+        // Defines if a marker should be shown
         marker: true, // false
       )
     )
@@ -73,7 +78,7 @@
   data: none,
 )
 
-#let header-cell(num, label: none, pos: auto, align: center + horizon, numbers: true, meta) = {
+#let header-cell(num, label: none, pos: auto, align: center + horizon, show-number: true, meta) = {
   bf-cell(
     "header-cell",
     cell-idx: none,
@@ -85,7 +90,8 @@
     ),
     format: (
       marker: auto,
-      numbers: numbers,
+      text-size: auto,
+      number: show-number,
       angle: -60deg,
       align: align,
       inset: (x: 0pt, y: 4pt),

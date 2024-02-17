@@ -5,8 +5,6 @@
 // -------------
 #let bytefield(
   bits: 32, 
-  bitheader: auto, 
-  msb_first: false,
   pre: auto,
   post: auto,
   ..fields
@@ -14,8 +12,6 @@
 
   let args = (
     bpr: bits,
-    msb: msb_first,
-    bitheader: bitheader,
     side: (left_cols: pre, right_cols: post)
   )
 
@@ -51,12 +47,12 @@
 #let bitheader(
   msb: right,
   autofill: auto,
-  numbers: true,
+  numbers: auto,  // or none
   labels: (:),
   ticks: auto,
-  fontsize: 9pt,
-  angle: -60deg,
-  marker: stroke(),
+  fontsize: auto,  // not working 
+  angle: auto,     // not working
+  marker: auto,    // not working
   ..args
 ) = {
   // let _numbers = ()
@@ -69,22 +65,14 @@
       _numbers.push(arg)
       last = arg
       step = arg
-    } else if type(arg) in (str,bool) {
+    } else if type(arg) == str {
       autofill = arg
     } else if type(arg) == content { 
       labels.insert(str(last),arg)
       _numbers.push(last)
       last += step
-    }else if type(arg) in (left, right) {
-      msb = arg
-    } else if type(arg) == angle {
-      angle = arg
-    } else if type(arg) == stroke {
-      marker = arg
-    } 
-    if type(arg) == length {
-      fontsize = arg
     }
+    if numbers != none { numbers = _numbers }
   }
   
   return (
@@ -112,9 +100,17 @@
 
 #let flagtext(text) = align(center,rotate(270deg,text)) // Rotating text for flags
 
-#let note(side,rowspan:1,level:0,content) = {
+#let note(side,rowspan:1,level:0, inset: 5pt, content) = {
   let _align = if (side == left) { right } else { left }
-  annotation(side,level:level,rowspan:rowspan,inset:5pt,align:_align+horizon,content)
+  annotation(side,level:level,rowspan:rowspan,inset:inset,align:_align+horizon,content)
+}
+
+#let section(start_addr, end_addr) = {
+  annotation(left, inset: (x:5pt, y:2pt), box(height:100%, [
+    #set text(0.8em, font: "Noto Mono", weight: 100)
+    #align(top + end)[#start_addr]
+    #align(bottom + end)[#end_addr]
+    ]))
 }
 
 #let group(side,rowspan,level:0,content) = {

@@ -7,7 +7,8 @@
 
 #let generate_meta(args,fields) = {
   // collect metadata into an dictionary
-
+  let bh = fields.find(f => f.type == "bitheader")
+  let msb = if (bh == none) {right} else { bh.msb }
   let (pre_levels, post_levels) = _get_max_annotation_levels(fields.filter(f => f.type == "annotation"))
   let meta = (
     cols: (
@@ -17,8 +18,7 @@
     ),
     header: (
       rows: 1,
-      msb: args.msb,
-      data: args.bitheader,
+      msb: msb,
     ),
     side: (
       left: (
@@ -46,10 +46,12 @@
     let _fields = fields.filter(f => f.field-type == "data-field").map(f => f.data.range.start).filter(value => value < meta.cols.main).flatten()
     _fields.push(meta.cols.main -1)
     return _fields.dedup()
-  } else {
+  } else if (autofill == "even") {
     let _fields = range(meta.cols.main, step: int(meta.cols.main/4))
     _fields.push(meta.cols.main -1)
     return _fields.dedup()
+  } else {
+    ()
   }
 }
 
@@ -84,17 +86,16 @@
   }
 
 
-  // header fields
+  // header fields  -- needs data fields already processed !!
   for f in _fields.filter(f => is-header-field(f)) {
     let autofill_values = _get_header_autofill_values(f.data.autofill, fields, meta);
-    let labels = _generate_labels_from_values(autofill_values);
-    labels += f.data.at("labels", default: (:))
-
+    let numbers = if f.data.numbers == none { () } else { f.data.numbers + autofill_values }
+    let labels = f.data.at("labels", default: (:))
     fields.push(header-field(
       end: bpr, 
       msb: f.data.msb == left,
+      numbers: numbers,
       labels: labels,
-      numbers: f.data.numbers
     ))
     break // workaround to only allow one bitheader till multiple bitheaders are supported.
   }
@@ -210,12 +211,17 @@
   let _cells = ()
 
   for header in header_fields {
-    // Todo: Maybe this can be improved
-    let cell = header.data.at("labels", default: (:)).pairs().map(((num,text)) => (num: int(num), text: text)).filter(((num,_)) => num < header.data.range.end).dedup().map(((num, text)) => {
+    let nums = header.data.at("numbers", default: ()) + header.data.at("labels").keys().map(k => int(k)) 
+    let cell = nums.filter(num => num < header.data.range.end).dedup().map(num =>{
+
+      let label = header.data.labels.at(str(num), default: "")
+
+      let show_number = num in header.data.numbers  //header.data.numbers != none and num in header.data.numbers
+
       if header.data.msb {
-        header-cell(num, label: text, numbers: header.data.numbers, pos: (bpr -1) - num, meta)
+        header-cell(num, label: label, show-number: show_number , pos: (bpr -1) - num, meta)
       } else {
-        header-cell(num, label: text, numbers: header.data.numbers, meta)
+        header-cell(num, label: label, show-number: show_number, meta)
       }
     })
 
@@ -257,7 +263,8 @@
               ]
             },
             if (is-not-empty(label_text) and c.format.at("marker", default: auto) != none){ line(end:(0pt, 5pt)) },
-            if c.format.numbers {box(inset: (top:3pt, rest: 0pt), label_num)},
+            if c.format.number {box(inset: (top:3pt, rest: 0pt), label_num)}, 
+            // if label_num != none {box(inset: (top:3pt, rest: 0pt), label_num)}, 
           )
           
         })

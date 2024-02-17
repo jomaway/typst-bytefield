@@ -5,6 +5,10 @@
 
 #set text(font: "Rubik", weight: 300);
 
+#show: bf.bf-config.with(
+  header_font_size: 7pt,
+  ) 
+
 #let example(columns:1,source) = block(
   grid(
     columns:columns,
@@ -20,6 +24,7 @@
       "flagtext" : bf.flagtext,
       "note" : bf.note,
       "group" : bf.group,
+      "section": bf.section,
       "bitheader": bf.bitheader,
       "ipv4" : common.ipv4,
       "ipv6": common.ipv6,
@@ -38,8 +43,8 @@
 
 #example(```typst
 #bytefield(
-  bitheader("bounds", 2, [start], 7, [test], 31, [done]),
   bitheader(1, [start], 17, [test], 27, [done]),
+  bitheader("bounds", 16, 2, [start], 7, [test], 31, [done]),
   note(left)[Testing],
   bytes(3,
     fill: red.lighten(30%)
@@ -51,13 +56,17 @@
     fill: green.lighten(30%)
   )[Fill],
   group(right,3)[spanning 3 rows],
-  bytes(12)[Addr],
+  bytes(12)[Multi Row],
   note(left)[Last row],
   padding(
     fill: purple.lighten(40%)
   )[Padding],
 )
 ```)
+
+#show: bf.bf-config.with(
+  header_font_size: 10pt,
+  ) 
 
 == Show all bits in the bitheader
 
@@ -137,7 +146,7 @@ Pass an `integer` to show all multiples of this number.
 #example(```typst
 #bytefield(
     bits:16,
-    bitheader(3),
+    bitheader(..range(16,step:3)),
     bits(6)[First],
     bits(2)[Duo],
     bits(5)[Five],
@@ -188,8 +197,6 @@ or simply `true` to show the index for each specified label.
     5, [test], 
     9, [next_field_at_bit_9], 
     15, [MSB], 
-    angle: -40deg,
-    marker: auto // or none
   ),
   bits: 16,
   bit[F],
@@ -212,9 +219,7 @@ or simply `true` to show the index for each specified label.
     5, [test], 
     9, [next_field_at_bit_9], 
     15, [MSB], 
-    angle: -40deg,
-    numbers: false,
-    marker: auto // or none
+    numbers: none,
   ),
   bits: 16,
   bit[F],
@@ -247,11 +252,10 @@ and an optional `level` for the nesting level.
 #bytefield(
   bits:32,
 
-  note(left)[0x00],
+  section("0x00","0x0F"),
   group(right,2)[group],
   bytes(4)[some thing],
-
-  note(left)[0x04],
+  section("0x10","0x1F"),
   bytes(4)[some other thing],
 )
 ```)
