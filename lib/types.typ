@@ -73,7 +73,7 @@
   data: none,
 )
 
-#let header_cell(num, label: none, pos: auto, align: center + horizon, meta) = {
+#let header-cell(num, label: none, pos: auto, align: center + horizon, numbers: true, meta) = {
   bf-cell(
     "header-cell",
     cell-idx: none,
@@ -85,6 +85,7 @@
     ),
     format: (
       marker: auto,
+      numbers: numbers,
       angle: -60deg,
       align: align,
       inset: (x: 0pt, y: 4pt),

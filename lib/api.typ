@@ -51,7 +51,7 @@
 #let bitheader(
   msb: right,
   autofill: auto,
-  numbers: (),
+  numbers: true,
   labels: (:),
   ticks: auto,
   fontsize: 9pt,
@@ -85,9 +85,6 @@
     if type(arg) == length {
       fontsize = arg
     }
-  }
-  if (autofill == auto and numbers == true) {
-    autofill = "all"
   }
   
   return (

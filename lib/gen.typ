@@ -32,61 +32,6 @@
   return meta;
 }
 
-#let generate_header_field(fields, meta) = {
-    // This is a bit of a mess and needs a refactor after the new bitheader user api is defined. 
-    let data_fields = fields.filter(f => f.field-type == "data-field")
-    let msb = meta.header.msb
-    let bpr = meta.cols.main
-    let bitheader = meta.header.data
-    let _values = ()
-
-    if (bitheader == auto){
-      // auto shows all offsets in the first row.
-      bitheader = range(meta.cols.main, step: int(bpr/4)) + ((meta.cols.main -1),)
-    }
-
-    let header_type = type(bitheader);
-    if (header_type == none) {
-      // don't show any bitheader at all.
-      return () // quick path just return an empty array.
-    } else if (header_type == int) {
-      // show all multiples of the given value
-      _values  = range(meta.cols.main, step: bitheader)
-    } else if (header_type == array) {
-      // show header numbers from array
-      _values = bitheader
-    } else if (header_type == str) {
-      // string
-      if (bitheader == "bounds") {
-        _values = data_fields.map(f => if f.data.range.start == f.data.range.end { (f.data.range.start,) } else {(f.data.range.start, f.data.range.end)}).flatten()
-        
-      } else if (bitheader == "smart") {
-        if msb {
-          _values = data_fields.map(f => f.data.range.start).filter(value => value < bpr).map(value => { value = (bpr -1) - value; value })
-        } else {
-          _values = data_fields.map(f => f.data.range.start).filter(value => value < bpr)
-        }
-      } else if (bitheader == "all") {
-        _values = range(bpr)
-      }
-    } 
-
-    let labels_from_values(values) = {
-      values = values.map(val => (str(val): "") )
-      values.join()
-    }
-
-    let labels = labels_from_values(_values) 
-
-    let bh = header-field(
-      end: bpr, 
-      msb: msb, 
-      labels: if (header_type == dictionary) { labels + bitheader.at("data", default: (:)) } else { labels },
-    )
-
-    return bh
-}
-
 #let _generate_labels_from_values(values) = {
   values = values.map(val => (str(val): "") )
   values.join()
@@ -97,8 +42,14 @@
     return fields.filter(f => f.field-type == "data-field").map(f => if f.data.range.start == f.data.range.end { (f.data.range.start,) } else {(f.data.range.start, f.data.range.end)}).flatten()
   } else if (autofill == "all") {
     return range(meta.cols.main)
+  } else if (autofill == "smart") {
+    let _fields = fields.filter(f => f.field-type == "data-field").map(f => f.data.range.start).filter(value => value < meta.cols.main).flatten()
+    _fields.push(meta.cols.main -1)
+    return _fields.dedup()
   } else {
-    return fields.filter(f => f.field-type == "data-field").map(f => f.data.range.start).filter(value => value < meta.cols.main).flatten()
+    let _fields = range(meta.cols.main, step: int(meta.cols.main/4))
+    _fields.push(meta.cols.main -1)
+    return _fields.dedup()
   }
 }
 
@@ -117,6 +68,7 @@
   let range_idx = 0;
   let fields = ();
 
+  // data fields
   for f in _fields.filter(f => is-data-field(f)) {
     let size = if (f.data.size == auto) { bpr - calc.rem(range_idx, bpr) } else { f.data.size }  
     let start = range_idx;
@@ -125,11 +77,13 @@
     fields.push(data-field(f.field-index, size, start, end, f.data.body, format: f.data.format))
   }
 
+  // note fields
   for f in _fields.filter(f => is-note-field(f)) {
     let anchor = _get_index_of_next_data_field(f.field-index, _fields)
     fields.push(note-field(f.field-index, anchor, f.data.side, level: f.data.level, f.data.body, rowspan: f.data.rowspan, format: f.data.format))
   }
 
+  // header fields
   for f in _fields.filter(f => is-header-field(f)) {
     let autofill_values = _get_header_autofill_values(f.data.autofill, fields, meta);
     let labels = _generate_labels_from_values(autofill_values);
@@ -139,6 +93,7 @@
       end: bpr, 
       msb: f.data.msb == left,
       labels: labels,
+      numbers: f.data.numbers
     ))
   }
 
@@ -256,9 +211,9 @@
     // Todo: Maybe this can be improved
     let cell = header.data.at("labels", default: (:)).pairs().map(((num,text)) => (num: int(num), text: text)).filter(((num,_)) => num < header.data.range.end).dedup().map(((num, text)) => {
       if header.data.msb {
-        header_cell(num, label: text, pos: (bpr -1) - num, meta)
+        header-cell(num, label: text, numbers: header.data.numbers, pos: (bpr -1) - num, meta)
       } else {
-        header_cell(num, label: text, meta)
+        header-cell(num, label: text, numbers: header.data.numbers, meta)
       }
     })
 
@@ -292,7 +247,7 @@
           set text(_get_header_font_size(loc))
           set align(center + bottom)
           let size = measure(label_text, styles).width
-          stack(dir: ttb, spacing: 4pt,
+          stack(dir: ttb, spacing: 0pt,
             if is-not-empty(label_text) {
               box(height: size, inset: (left: 50%, rest: 0pt))[
                 #set align(start)
@@ -300,7 +255,7 @@
               ]
             },
             if (is-not-empty(label_text) and c.format.at("marker", default: auto) != none){ line(end:(0pt, 5pt)) },
-            label_num,
+            if c.format.numbers {box(inset: (top:3pt, rest: 0pt), label_num)},
           )
           
         })
