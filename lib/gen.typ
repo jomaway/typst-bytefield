@@ -83,6 +83,7 @@
     fields.push(note-field(f.field-index, anchor, f.data.side, level: f.data.level, f.data.body, rowspan: f.data.rowspan, format: f.data.format))
   }
 
+
   // header fields
   for f in _fields.filter(f => is-header-field(f)) {
     let autofill_values = _get_header_autofill_values(f.data.autofill, fields, meta);
@@ -95,6 +96,7 @@
       labels: labels,
       numbers: f.data.numbers
     ))
+    break // workaround to only allow one bitheader till multiple bitheaders are supported.
   }
 
   return fields 

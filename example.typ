@@ -39,7 +39,7 @@
 #example(```typst
 #bytefield(
   bitheader("bounds", 2, [start], 7, [test], 31, [done]),
-  // bitheader(1, [start], 17, [test], 27, [done]),
+  bitheader(1, [start], 17, [test], 27, [done]),
   note(left)[Testing],
   bytes(3,
     fill: red.lighten(30%)
