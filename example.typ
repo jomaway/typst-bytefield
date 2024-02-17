@@ -5,8 +5,6 @@
 
 #set text(font: "Rubik", weight: 300);
 
-
-
 #let tag(value, fill: orange.lighten(45%)) = {
   box(
     inset: (x: 3pt, y: 0pt),
@@ -32,6 +30,7 @@
       "bit" : bit,
       "bits" : bits,
       "padding" : padding,
+      "flag": flag,
       "flagtext" : flagtext,
       "note" : note,
       "group" : group,
@@ -75,6 +74,10 @@
   group(right,3)[spanning 3 rows],
   bytes(12)[Multi Row],
   note(left)[Last row],
+  bits(4)[#text(8pt)[reserved]],
+  flag[#text(8pt)[SYN]],
+  flag(fill: orange.lighten(60%))[#text(8pt)[ACK]],
+  flag[#text(8pt)[BOB]],
   padding(
     fill: purple.lighten(40%)
   )[Padding],

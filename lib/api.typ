@@ -95,10 +95,10 @@
 #let bits(len, ..args) = bitbox(len, ..args)
 #let byte(..args) = bitbox(8, ..args)
 #let bytes(len, ..args) = bitbox(len * 8, ..args)
-#let flag(..args,text) = bitbox(1,..args,flagtext(text))
 #let padding(..args) = bitbox(auto, ..args)
 
 #let flagtext(text) = align(center,rotate(270deg,text)) // Rotating text for flags
+#let flag(text,..args) = bitbox(1,flagtext(text),..args)
 
 #let note(side,rowspan:1,level:0, inset: 5pt, content) = {
   let _align = if (side == left) { right } else { left }
