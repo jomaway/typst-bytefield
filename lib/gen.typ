@@ -103,6 +103,22 @@
   return fields 
 }
 
+#let is-multirow(field, bpr) = {
+  // if range.start is at the beginn of a new row
+  if (calc.rem(field.data.range.start, bpr) != 0) { return false }
+  // field size is multiple of bpr
+  if (calc.rem(field.data.size, bpr) != 0) { return false }
+  
+  return true
+}
+
+#let calc_row_wrapping(field, bpr, offset) = {
+  let rem_space = bpr - offset;
+  let rows = int(field.data.size/bpr);
+  return rows
+  if (offset > 0) { return rows + 1} else { rows }
+}
+
 #let generate_data_cells(fields, meta) = {
   let data_fields = fields.filter(f => f.field-type == "data-field")
   let bpr = meta.cols.main;
@@ -115,6 +131,9 @@
     let len = field.data.size
 
     let slice_idx = 0;
+    let should_span = is-multirow(field, bpr)
+    let current_offset = calc.rem(idx, bpr)
+    let num_of_wraps = calc_row_wrapping(field, bpr, current_offset)
 
     while len > 0 {
       let rem_space = bpr - calc.rem(idx, bpr);
@@ -135,32 +154,40 @@
         _stroke.at("top") = none
       }
 
-      let x = calc.rem(idx,bpr) + meta.cols.pre
-      let y = int(idx/bpr) + meta.header.rows
+      let cell_index = (field.field-index, slice_idx)
+      let x_pos = calc.rem(idx,bpr) + meta.cols.pre
+      let y_pos = int(idx/bpr) + meta.header.rows
+
       let cell_format = (
         fill: field.data.label_format.fill,
         stroke: _stroke,
       )
-      let cell_index = (field.field-index, slice_idx)
-      // new version.
+
+      // adjust label for breaking fields.
+      let middle = int(field.data.size / 2 / bpr)  // roughly calc the row where the label should be displayed
+      let label = if (should_span or middle == slice_idx) { field.data.label } else if (slice_idx < 2 and len < bpr) { "..." } else {none}
+      
+      // prepare for next cell
+      let tmp_size = if should_span {field.data.size} else {cell_size}
+      idx += tmp_size;
+      len -= tmp_size;
+      slice_idx += 1;
+
+      // add bf-cell to _cells
       _cells.push(
         //type, grid, x, y, colspan:1, rowspan:1, label, idx ,format: auto
         bf-cell("data-cell", 
-          x: calc.rem(idx,bpr) + meta.cols.pre, 
-          y: int(idx/bpr) + meta.header.rows, 
-          colspan: cell_size, 
-          label: field.data.label, 
-          cell-idx: (field.field-index, slice_idx), 
+          x: x_pos,
+          y: y_pos,
+          colspan: cell_size,
+          rowspan: if(should_span) { int(field.data.size/bpr)} else {1}, 
+          label: label, 
+          cell-idx: cell_index, 
           format: cell_format 
         )
       )
 
-      field.data.label = "..."
-
-      // prepare for next cell
-      idx += cell_size;
-      len -= cell_size;
-      slice_idx += 1;
+      
     }
   }
   return _cells
@@ -300,7 +327,6 @@
         rows: (auto, _get_row_height(loc)),
         align: center + horizon,
         inset: (x:0pt, y: 4pt),
-        // ..bitheader,
         ..cells
       )
     })
