@@ -173,8 +173,8 @@
 ///
 /// - start_addr (string, content):  The start address will be top aligned
 /// - end_addr (string, content): The end address will be bottom aligned
-#let section(start_addr, end_addr) = {
-  annotation(left, inset: (x:5pt, y:2pt), box(height:100%, [
+#let section(start_addr, end_addr, span: 1) = {
+  annotation(left, rowspan: span, inset: (x:5pt, y:2pt), box(height:100%, [
     #set text(0.8em, font: "Noto Mono", weight: 100)
     #align(top + end)[#start_addr]
     #align(bottom + end)[#end_addr]
