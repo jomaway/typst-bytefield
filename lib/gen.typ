@@ -112,12 +112,12 @@
   return true
 }
 
-#let calc_row_wrapping(field, bpr, offset) = {
-  let rem_space = bpr - offset;
-  let rows = int(field.data.size/bpr);
-  return rows
-  if (offset > 0) { return rows + 1} else { rows }
-}
+// #let calc_row_wrapping(field, bpr, offset) = {
+//   let rem_space = bpr - offset;
+//   let rows = int(field.data.size/bpr);
+//   return rows
+//   if (offset > 0) { return rows + 1} else { rows }
+// }
 
 #let generate_data_cells(fields, meta) = {
   let data_fields = fields.filter(f => f.field-type == "data-field")
@@ -133,7 +133,7 @@
     let slice_idx = 0;
     let should_span = is-multirow(field, bpr)
     let current_offset = calc.rem(idx, bpr)
-    let num_of_wraps = calc_row_wrapping(field, bpr, current_offset)
+    // let num_of_wraps = calc_row_wrapping(field, bpr, current_offset)
 
     while len > 0 {
       let rem_space = bpr - calc.rem(idx, bpr);
@@ -312,6 +312,7 @@
       rowspan: c.span.rows,
       inset: c.format.at("inset", default: 0pt),
       fill: c.format.at("fill", default: none),
+      align: c.format.at("align", default: center + horizon),
       body
     )
   })

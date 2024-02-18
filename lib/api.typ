@@ -1,8 +1,14 @@
 #import "gen.typ": *
 
-// -------------
-//   bytefield
-// -------------
+
+/// Create a new bytefield.
+///
+/// - bits (int): Number of bits which are shown per row.
+/// - pre (auto, int , relative , fraction , array): This is specifies the columns for annotations on the *left* side of the bytefield
+/// - post (auto, int , relative , fraction , array): This is specifies the columns for annotations on the *right* side of the bytefield
+///
+/// - ..fields (bitbox, annotation, bitheader): arbitrary number of data fields, annotations and headers which build the bytefield. 
+/// -> bytefield
 #let bytefield(
   bits: 32, 
   pre: auto,
@@ -25,6 +31,7 @@
 // -------------
 // Low level API - for internal - will be changed soon
 // -------------
+
 #let bitbox(size, fill: none, body) = (
   type: "bitbox",
   size: size,   // length of the field in bits
@@ -91,15 +98,31 @@
 // -------------
 // High level API - for users 
 // -------------
+/// Add a bit to the bytefield
 #let bit(..args) = bitbox(1, ..args)
+/// Add multiple bits to the bytefield
 #let bits(len, ..args) = bitbox(len, ..args)
+/// Add a byte to the bytefield
 #let byte(..args) = bitbox(8, ..args)
+/// Add multiple bytes to the bytefield
 #let bytes(len, ..args) = bitbox(len * 8, ..args)
+/// Add a field which extends to the end of the row
 #let padding(..args) = bitbox(auto, ..args)
-
+/// Rotating text for small flags
 #let flagtext(text) = align(center,rotate(270deg,text)) // Rotating text for flags
+/// Add a flag to the bytefield.
 #let flag(text,..args) = bitbox(1,flagtext(text),..args)
 
+/// Create a annotation
+///
+/// The note is always shown in the same row as the next data field which is specified. 
+///
+/// - side (left, right): Where the annotation should be displayed
+/// - level (int): Defines the nesting level of the note.
+/// - rowspan (int): Defines if the cell is spanned over multiple rows.
+/// - inset (length): Inset of the the annotation cell.
+/// - bracket (bool): Defines if a bracket will be shown for this note.
+/// - content (content): The content of the note.
 #let note(
   side,
   rowspan:1,
@@ -118,7 +141,7 @@
     _second = box(height:100%,inset:(right:0pt),layout(size => {math.lr("{",size:size.height)}))
   } else {
     _align  = left
-    _first  = box(height:100%,inset:(left:5pt),layout(size => {math.lr("}",size:size.height)}))
+    _first  = box(height:100%,inset:(left:0pt),layout(size => {math.lr("}",size:size.height)}))
     _second = box(height:100%,content)
   }
 
@@ -126,7 +149,7 @@
     side,
     level:level,
     rowspan:rowspan,
-    inset: if (bracket == false) { inset } else { 0pt },
+    inset: if (bracket == false) { inset } else { (x:2pt, y:1pt) },
     align:_align+horizon,
     if (bracket == false) { content } else {
       grid(
@@ -139,11 +162,17 @@
   )
 }
 
+/// Shows a note with a bracket and spans over multiple rows.
+///
+/// Basically just a shortcut for a note.
 #let group(side,rowspan,level:0, bracket:true,content) = {
   note(side,level:level,rowspan:rowspan,bracket: bracket,content)
 }
 
-
+/// Shows a special note with a start_addr (top aligned) and end_addr (bottom aligned) on the left of the associated row.
+///
+/// - start_addr (string, content):  The start address will be top aligned
+/// - end_addr (string, content): The end address will be bottom aligned
 #let section(start_addr, end_addr) = {
   annotation(left, inset: (x:5pt, y:2pt), box(height:100%, [
     #set text(0.8em, font: "Noto Mono", weight: 100)
