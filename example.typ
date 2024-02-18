@@ -1,5 +1,6 @@
-#import "bytefield.typ": *
-#import "common.typ" as common
+// #import "bytefield.typ": *
+// #import "common.typ" as common
+#import "@local/bytefield:0.0.4": *
 
 #import "@preview/codelst:2.0.0": sourcecode
 
@@ -309,59 +310,149 @@ It's not possible to only omit numbers for certain labels right now.
 )
 ```)
 
+#pagebreak()
+= Other use cases 
 
-// = Some predefined network protocols
+== Memory map 
 
-// == IPv4
-// #example(
-//   columns:(1fr,4fr),
-// ```typst
-// #ipv4
-// ```)
+Workaround with bits. Better support will follow.
 
-// == IPv6
-// #example(
-//   columns:(1fr,4fr),
-// ```typst
-// #ipv6
-// ```)
+#example(
+```typst
+#bytefield(
+  bits: 1,
+  group(right,4)[On Chip Memory],
+  section("0x2002 0000", "0x2002 1fff"),
+  bit[RX Descriptor Memory],
+  bit[],
+  section("0x2000 7fff", "0x2000 0000", span: 2),
+  bits(2)[Bootloader],
+  group(right,4)[ext. DDR3 RAM],
+  section("0x1fff ffff", "0x0000 0000", span: 4),
+  bits(4)[App],
+)
+```
+)
 
-// == ICMP
-// #example(
-//   columns:(1fr,4fr),
-// ```typst
-// #icmp
-// ```)
+#pagebreak()
+== Register definitions *!WIP*
 
-// == ICMPv6
-// #example(
-//   columns:(1fr,4fr),
-// ```typst
-// #icmpv6
-// ```)
+#show: bf-config.with(
+  row_height: 2cm,
+)
 
-// == DNS
-// #example(
-//   columns:(1fr,4fr),
-// ```typst
-// #dns
-// ```)
+#example(```typst 
+#let reg_field(body, size: 1, rw: "rw") = {
+  bits(size,
+    table(
+      columns: (1fr),
+      rows: (2fr, auto),
+      body,
+      rw
+    )
+  )
+}
 
-// == TCP
-// #example(
-//   columns:(1fr,4fr),
-// ```typst
-// #tcp
-// ```)
-// #example(
-//   columns:(1fr,4fr),
-// ```typst
-// #tcp_detailed
-// ```)
+#let reserved(size) = bits(size)[Reserved]
 
-// == UDP
-// #example(
-//   columns:(1fr,4fr),
-// ```typst
-// #udp
-// ```)
+#set text(8pt)
+#bytefield(
+  bits: 16,
+  msb: left,
+  bitheader("all", msb: left, once: false, repeat:true),
+  reserved(4),
+  reg_field(rw: "r")[PLL I2S RDY],
+  reg_field[PLL I2S ON],
+  reg_field(rw: "r")[PLL RDY],
+  reg_field[PLL ON],
+  reserved(4),
+  reg_field[CSS ON],
+  reg_field[HSE BYP],
+  reg_field(rw: "r")[HSE RDY],
+  reg_field[HSE ON],
+  // lower half
+  bitheader("all", msb: left, once: false, repeat:true),  // this line is not processed right now. Multiple bitheaders are not supported.
+  bits(16)[],  // placeholder to indicate that here should be a second header line.
+  reg_field(size:8, rw: "r")[HSICAL[7:0]],
+  reg_field(size:5)[HSITRIM[4:0]],
+  reg_field[Res.],
+  reg_field(rw: "r")[HSI RDY],
+  reg_field[HSION],
+)
+```)
+
+#pagebreak()
+#set text(12pt)
+== Network Protocols 
+
+#show: bf-config.with(
+  row_height: 2em,
+)
+
+=== IPv4 
+#example(```typst
+#bytefield(
+  bits(4)[Version], bits(4)[TTL], bytes(1)[TOS], bytes(2)[Total Length],
+  bytes(2)[Identification], bits(3)[Flags], bits(13)[Fragment Offset],
+  bytes(1)[TTL], bytes(1)[Protocol], bytes(2)[Header Checksum],
+  bytes(4)[Source Address],
+  bytes(4)[Destination Address],
+  bytes(3)[Options], bytes(1)[Padding]
+)
+```)
+
+== Some predefined network protocols
+
+=== IPv4
+#example(
+  columns:(1fr,4fr),
+```typst
+#ipv4
+```)
+
+=== IPv6
+#example(
+  columns:(1fr,4fr),
+```typst
+#ipv6
+```)
+
+=== ICMP
+#example(
+  columns:(1fr,4fr),
+```typst
+#icmp
+```)
+
+=== ICMPv6
+#example(
+  columns:(1fr,4fr),
+```typst
+#icmpv6
+```)
+
+=== DNS
+#example(
+  columns:(1fr,4fr),
+```typst
+#dns
+```)
+
+=== TCP
+#example(
+  columns:(1fr,4fr),
+```typst
+#tcp
+```)
+#example(
+  columns:(1fr,4fr),
+```typst
+#tcp_detailed
+```)
+
+=== UDP
+#example(
+  columns:(1fr,4fr),
+```typst
+#udp
+```)
