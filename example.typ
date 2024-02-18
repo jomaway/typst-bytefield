@@ -73,7 +73,7 @@
   )[Fill],
   group(right,3)[spanning 3 rows],
   bytes(12)[Multi Row],
-  note(left)[Last row],
+  note(left, bracket: true)[Last row],
   bits(4)[#text(8pt)[reserved]],
   flag[#text(8pt)[SYN]],
   flag(fill: orange.lighten(60%))[#text(8pt)[ACK]],
@@ -102,9 +102,11 @@ The helper `section` takes a `start_addr` and a `end_addr` as string values and 
 #bytefield(
   bits:32,
   pre: (1cm,auto),
-  post: (auto,1.8cm),
-
+  post: (auto,1.8cm, 1cm),
   note(left, rowspan:3, level:1)[
+    #flagtext[spanning_3_rows]
+  ],
+  group(right,3, level:2, bracket: false)[
     #flagtext[spanning_3_rows]
   ],
   note(left)[0x00],

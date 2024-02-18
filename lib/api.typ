@@ -100,20 +100,14 @@
 #let flagtext(text) = align(center,rotate(270deg,text)) // Rotating text for flags
 #let flag(text,..args) = bitbox(1,flagtext(text),..args)
 
-#let note(side,rowspan:1,level:0, inset: 5pt, content) = {
-  let _align = if (side == left) { right } else { left }
-  annotation(side,level:level,rowspan:rowspan,inset:inset,align:_align+horizon,content)
-}
-
-#let section(start_addr, end_addr) = {
-  annotation(left, inset: (x:5pt, y:2pt), box(height:100%, [
-    #set text(0.8em, font: "Noto Mono", weight: 100)
-    #align(top + end)[#start_addr]
-    #align(bottom + end)[#end_addr]
-    ]))
-}
-
-#let group(side,rowspan,level:0,content) = {
+#let note(
+  side,
+  rowspan:1,
+  level:0, 
+  inset: 5pt, 
+  bracket: false, 
+  content
+) = {
   let _align  = none
   let _first  = none
   let _second = none
@@ -121,7 +115,7 @@
   if (side == left) {
     _align  = right
     _first  = box(height:100%,content)
-    _second = box(height:100%,inset:(right:5pt),layout(size => {math.lr("{",size:size.height)}))
+    _second = box(height:100%,inset:(right:0pt),layout(size => {math.lr("{",size:size.height)}))
   } else {
     _align  = left
     _first  = box(height:100%,inset:(left:5pt),layout(size => {math.lr("}",size:size.height)}))
@@ -132,13 +126,29 @@
     side,
     level:level,
     rowspan:rowspan,
+    inset: if (bracket == false) { inset } else { 0pt },
     align:_align+horizon,
-    inset:0pt,
-    grid(
+    if (bracket == false) { content } else {
+      grid(
         columns:2,
-        gutter:5pt,
+        gutter: inset,
         _first,
         _second
       )
-    )
+    }
+  )
 }
+
+#let group(side,rowspan,level:0, bracket:true,content) = {
+  note(side,level:level,rowspan:rowspan,bracket: bracket,content)
+}
+
+
+#let section(start_addr, end_addr) = {
+  annotation(left, inset: (x:5pt, y:2pt), box(height:100%, [
+    #set text(0.8em, font: "Noto Mono", weight: 100)
+    #align(top + end)[#start_addr]
+    #align(bottom + end)[#end_addr]
+    ]))
+}
+
