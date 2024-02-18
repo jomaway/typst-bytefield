@@ -4,7 +4,11 @@ A simple way to create network protocol headers in typst.
 
 Using [tablex](https://github.com/PgBiel/typst-tablex) under the hood.
 
+
 ## Example
+
+![random colored bytefield example](bytefield_example.png)
+⚠️ This example is a **preview** what will be possible in the next version (v0.0.4) which will be ready soon. (🤞 hopefully)
 
 ![ipv4 example](ipv4-example.png)
 
@@ -27,10 +31,12 @@ To use this library through the Typst package manager (for Typst v0.6.0+), impor
 
 The package contains some of the most common network protocol headers: `ipv4`, `ipv6`, `icmp`, `icmpv6`, `dns`, `tcp`, `udp`.
 
-
 ## Features
 
-At the moment very limited features. Feel free to extend if you like.
+See [example.typ](example.typ) for a preview of the features in v.0.0.4. Some things might change so.
+
+### Features v0.0.3 
+At the moment very limited features. Next version will extend this. So this section will be removed soon.
 
 - Select the number of bits in one row. The default value is 32. `bytefield(bits: 32)`
 - Specify the shown bit numbers in the header through the `header` argument. Example: `bytefield(header: (0,8,16,31))` 
