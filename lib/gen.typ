@@ -112,13 +112,6 @@
   return true
 }
 
-// #let calc_row_wrapping(field, bpr, offset) = {
-//   let rem_space = bpr - offset;
-//   let rows = int(field.data.size/bpr);
-//   return rows
-//   if (offset > 0) { return rows + 1} else { rows }
-// }
-
 #let generate_data_cells(fields, meta) = {
   let data_fields = fields.filter(f => f.field-type == "data-field")
   let bpr = meta.cols.main;
@@ -147,7 +140,7 @@
         rest: _default_stroke,
       )
       
-      if (len - cell_size) > 0 {
+      if ((len - cell_size) > 0 and data_fields.last().field-index != field.field-index) {
         _stroke.at("bottom") = field.data.label_format.fill
       }
       if (slice_idx > 0){
@@ -290,8 +283,7 @@
               ]
             },
             if (is-not-empty(label_text) and c.format.at("marker", default: auto) != none){ line(end:(0pt, 5pt)) },
-            if c.format.number {box(inset: (top:3pt, rest: 0pt), label_num)}, 
-            // if label_num != none {box(inset: (top:3pt, rest: 0pt), label_num)}, 
+            if c.format.number {box(inset: (top:3pt, rest: 0pt), label_num)},  
           )
           
         })
