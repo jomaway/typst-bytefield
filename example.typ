@@ -73,7 +73,7 @@
   )[Fill],
   group(right,3)[spanning 3 rows],
   bytes(12)[Multi Row],
-  note(left, bracket: true)[Last row],
+  note(left, bracket: true)[Flags],
   bits(4)[#text(8pt)[reserved]],
   flag[#text(8pt)[SYN]],
   flag(fill: orange.lighten(60%))[#text(8pt)[ACK]],
@@ -81,7 +81,11 @@
   padding(
     fill: purple.lighten(40%)
   )[Padding],
-)
+  bytes(2)[Next], 
+  bytes(8, fill: yellow.lighten(60%))[Multi break],
+  note(right)[#emoji.checkmark Finish],
+  bytes(2)[End]
+, )
 ```)
 
 == Annotations
