@@ -8,6 +8,7 @@ Using [tablex](https://github.com/PgBiel/typst-tablex) under the hood.
 ## Example
 
 ![random colored bytefield example](bytefield_example.png)
+
 ⚠️ This example is a **preview** what will be possible in the next version (v0.0.4) which will be ready soon. (🤞 hopefully)
 
 ![ipv4 example](ipv4-example.png)
