@@ -23,7 +23,7 @@
   grid(
     columns:columns,
     gutter: 1em,
-    (align(horizon,eval(source.text, mode:"markup", scope: (
+    box(align(horizon,eval(source.text, mode:"markup", scope: (
       "bytefield" : bytefield,
       "byte" : byte,
       "bytes" : bytes,
@@ -183,7 +183,7 @@ Showing a text label for a number #positional
 #bytefield(
     bits:16,
     bitheader("all"),
-    ..range(32).map(i => flag[B#i])
+    ..range(16).map(i => flag[B#i])
 )
 ```)
 
@@ -191,7 +191,7 @@ Showing a text label for a number #positional
 #bytefield(
     bits:16,
     bitheader("all", msb: left),
-    ..range(32).map(i => flag[B#i]).rev(),
+    ..range(16).map(i => flag[B#i]).rev(),
 )
 ```)
 
@@ -334,8 +334,10 @@ Workaround with bits. Better support will follow.
 ```
 )
 
-#pagebreak()
 == Register definitions *!WIP*
+
+Register definitions such as shown can be defined with a bit of a hack for the header and two bytefields.
+This will be improved once rowheaders are implemented.
 
 #show: bf-config.with(
   row_height: 2cm,
@@ -359,7 +361,7 @@ Workaround with bits. Better support will follow.
 #bytefield(
   bits: 16,
   msb: left,
-  bitheader("all", msb: left, once: false, repeat:true),
+  bitheader(range: (16,32), ..range(16,32), msb: left),
   reserved(4),
   reg_field(rw: "r")[PLL I2S RDY],
   reg_field[PLL I2S ON],
@@ -370,9 +372,11 @@ Workaround with bits. Better support will follow.
   reg_field[HSE BYP],
   reg_field(rw: "r")[HSE RDY],
   reg_field[HSE ON],
-  // lower half
-  bitheader("all", msb: left, once: false, repeat:true),  // this line is not processed right now. Multiple bitheaders are not supported.
-  bits(16)[],  // placeholder to indicate that here should be a second header line.
+)
+#bytefield(
+  bits: 16,
+  msb: left,
+  bitheader("all", msb: left),
   reg_field(size:8, rw: "r")[HSICAL[7:0]],
   reg_field(size:5)[HSITRIM[4:0]],
   reg_field[Res.],
@@ -405,54 +409,54 @@ Workaround with bits. Better support will follow.
 
 === IPv4
 #example(
-  columns:(1fr,4fr),
+
 ```typst
 #ipv4
 ```)
 
 === IPv6
 #example(
-  columns:(1fr,4fr),
+
 ```typst
 #ipv6
 ```)
 
 === ICMP
 #example(
-  columns:(1fr,4fr),
+
 ```typst
 #icmp
 ```)
 
 === ICMPv6
 #example(
-  columns:(1fr,4fr),
+
 ```typst
 #icmpv6
 ```)
 
 === DNS
 #example(
-  columns:(1fr,4fr),
+
 ```typst
 #dns
 ```)
 
 === TCP
 #example(
-  columns:(1fr,4fr),
+
 ```typst
 #tcp
 ```)
 #example(
-  columns:(1fr,4fr),
+
 ```typst
 #tcp_detailed
 ```)
 
 === UDP
 #example(
-  columns:(1fr,4fr),
+
 ```typst
 #udp
 ```)
