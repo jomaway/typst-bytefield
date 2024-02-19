@@ -22,7 +22,7 @@
   grid(
     columns:columns,
     gutter: 5pt,
-    box(align(horizon,eval(source.text, mode:"markup", scope: (
+    (align(horizon,eval(source.text, mode:"markup", scope: (
       "bytefield" : bytefield,
       "byte" : byte,
       "bytes" : bytes,
@@ -59,7 +59,7 @@
 #bytefield(
   // Config the header
   bitheader(
-    msb:left,  // left | right  (default: right)
+    msb:right,  // left | right  (default: right)
     "bytes",    // adds every multiple of 8 to the header. 
     0, [start], // number with label
     5,          // number without label
@@ -182,7 +182,7 @@ Showing a text label for a number #positional
 #bytefield(
     bits:16,
     bitheader("all"),
-    ..range(16).map(i => flag[B#i]).rev(),
+    ..range(32).map(i => flag[B#i])
 )
 ```)
 
@@ -190,7 +190,7 @@ Showing a text label for a number #positional
 #bytefield(
     bits:16,
     bitheader("all", msb: left),
-    ..range(16).map(i => flag[B#i]).rev(),
+    ..range(32).map(i => flag[B#i]).rev(),
 )
 ```)
 

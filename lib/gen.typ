@@ -37,16 +37,18 @@
 /// helper to calc number values from autofill string arguments
 #let _get_header_autofill_values(autofill, fields, meta) = {
   if (autofill == "bounds") {
-    return fields.filter(f => f.field-type == "data-field").map(f => if f.data.range.start == f.data.range.end { (f.data.range.start,) } else {(f.data.range.start, f.data.range.end)}).flatten()
+    return fields.filter(f => is-data-field(f)).map(f => if f.data.range.start == f.data.range.end { (f.data.range.start,) } else {(f.data.range.start, f.data.range.end)}).flatten()
   } else if (autofill == "all") {
-    return range(meta.cols.main)
+    return range(meta.size)
   } else if (autofill == "smart") {
-    let _fields = fields.filter(f => f.field-type == "data-field").map(f => f.data.range.start).filter(value => value < meta.cols.main).flatten()
+    let _fields = fields.filter(f => is-data-field(f)).map(f => f.data.range.start).flatten() //.filter(value => value < meta.cols.main).flatten()
     _fields.push(meta.cols.main -1)
+    _fields.push(meta.size -1)
     return _fields.dedup()
   } else if (autofill == "bytes") {
-    let _fields = range(meta.cols.main, step: 8)
+    let _fields = range(meta.size, step: 8)
     _fields.push(meta.cols.main -1)
+    _fields.push(meta.size -1)
     return _fields.dedup()
   } else {
     ()
@@ -97,7 +99,8 @@
     let numbers = if f.data.numbers == none { () } else { f.data.numbers + autofill_values }
     let labels = f.data.at("labels", default: (:))
     fields.push(header-field(
-      end: bpr, // todo: this needs to be changed for multiple headers (rowheaders)
+      start: if f.data.range.start == auto { if f.data.msb == right { 0 } else { meta.size - bpr } } else { assert.eq(type(f.data.range.start),int); f.data.range.start },
+      end: if f.data.range.end == auto { if f.data.msb == right { bpr } else { meta.size } } else { assert.eq(type(f.data.range.end),int); f.data.range.end }, 
       msb: f.data.msb,
       numbers: numbers,
       labels: labels,
@@ -239,7 +242,7 @@
       let show_number = num in header.data.numbers  //header.data.numbers != none and num in header.data.numbers
 
       if header.data.msb == left {
-        header-cell(num, label: label, show-number: show_number, pos: (bpr -1) - num, meta, ..header.data.format) // TODO
+        header-cell(num, label: label, show-number: show_number, pos: (bpr - 1) - calc.rem(num,bpr) , meta, ..header.data.format) // TODO
       } else {
         header-cell(num, label: label, show-number: show_number, meta, ..header.data.format) // TODO
       }

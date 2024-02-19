@@ -33,7 +33,7 @@
 }
 
 // header-field hold information about a complete header row. Usually this is the top level header.
-#let header-field(start: 0, end: 32, msb: left, autofill: auto, numbers: (), labels: (:), ..args) = {
+#let header-field(start: auto, end: auto, msb: left, autofill: auto, numbers: (), labels: (:), ..args) = {
   // header-field must have index 0.
   bf-field("header-field", none,
     data: (
@@ -84,7 +84,7 @@
   bf-cell(
     "header-cell",
     cell-idx: none,
-    x: (if (pos == auto) {calc.rem(num, meta.cols.main)} else { pos }) + meta.cols.pre,   //NOTE: we could probably get rid of meta if we change to a subgrid solution.
+    x: (if (pos == auto) {calc.rem(num, meta.cols.main)} else { calc.rem(pos, meta.cols.main) }) + meta.cols.pre,   //NOTE: we could probably get rid of meta if we change to a subgrid solution.
     y: 0,
     label: (
       num: str(num),

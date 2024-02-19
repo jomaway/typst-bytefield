@@ -131,8 +131,10 @@
 ///
 #let bitheader(
   msb: right,
+  // Defines the range of numbers which should be shown.
+  range: (auto,auto),  // only for debugging will be removed later.
   autofill: auto,
-  numbers: auto,  // or none
+  numbers: auto,  
   ..args
 ) = {
   // let _numbers = ()
@@ -149,7 +151,6 @@
       autofill = arg
     } else if type(arg) == content { 
       labels.insert(str(last),arg)
-      _numbers.push(last)
       last += step
     }
     if numbers != none { numbers = _numbers }
@@ -162,7 +163,8 @@
   )
   
   return header-field(
-      end: auto, // todo: fix in types
+      start: range.at(0, default: auto),  // todo. fix this
+      end: range.at(1, default: auto),    // todo. fix this
       msb: msb,
       autofill: autofill,
       numbers: numbers,

@@ -79,6 +79,11 @@
   )
 }
 
+///
+#let is-header-cell(cell) = {
+  cell.at("cell-type", default: none) == "header-cell" 
+}
+
 /// Check if a string is empty
 #let is-empty(string) = {
   assert.eq(type(string), str, message: "expected string, found " + type(string))
