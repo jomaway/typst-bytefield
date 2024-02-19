@@ -1,5 +1,5 @@
 #import "gen.typ": *
-
+#import "types.typ": *
 
 /// Create a new bytefield.
 ///
@@ -22,84 +22,20 @@
   )
 
   let meta = generate_meta(args, fields.pos())
-  let fields = generate_bf-fields(fields.pos(), meta)
+  let fields = finalize_fields(fields.pos(), meta)
   let cells = generate_cells(meta, fields)
   let table = generate_table(meta, cells)
   return table
 }
 
-// -------------
-// Low level API - for internal - will be changed soon
-// -------------
-
-#let bitbox(size, fill: none, body) = (
-  type: "bitbox",
-  size: size,   // length of the field in bits
-  format: (
-    fill: fill,
-    stroke: stroke,
-  ),
-  body: body
-)
-
-#let annotation(side, level:0, rowspan: 1, ..args, body) = (
-  type: "annotation",
-  side: side,
-  level: level,
-  rowspan: rowspan,
-  format: args.named(),
-  body: body
-)
-
-#let bitheader(
-  msb: right,
-  autofill: auto,
-  numbers: auto,  // or none
-  // labels: (:),
-  ticks: auto,     // not working
-  text-size: auto,  // not working 
-  angle: -60deg,     // not working
-  marker: auto,    // not working
-  ..args
-) = {
-  // let _numbers = ()
-  let labels = (:)
-  let _numbers = ()
-  let last = 0
-  let step = 1
-  for arg in args.pos() {
-    if type(arg) == int {
-      _numbers.push(arg)
-      last = arg
-      step = arg
-    } else if type(arg) == str {
-      autofill = arg
-    } else if type(arg) == content { 
-      labels.insert(str(last),arg)
-      _numbers.push(last)
-      last += step
-    }
-    if numbers != none { numbers = _numbers }
-  }
-  
-  return (
-    type: "bitheader",
-    msb: msb,
-    autofill: autofill,
-    numbers: numbers,
-    labels:labels,
-    ticks:ticks,
-    format: (
-      text-size:text-size,
-      angle: angle,
-      marker: marker,
-    )
-  )
+/// Base for bit, bits, byte, bytes functions
+///
+/// This is just a base function which is used by the other functions and should not be called directly
+#let bitbox(size, fill: none, body) = {
+  data-field(none, size, none, none, body, format: (fill: fill))
 }
 
-// -------------
-// High level API - for users 
-// -------------
+
 /// Add a bit to the bytefield
 #let bit(..args) = bitbox(1, ..args)
 /// Add multiple bits to the bytefield
@@ -147,21 +83,21 @@
     _second = box(height:100%,content)
   }
 
-  annotation(
-    side,
-    level:level,
-    rowspan:rowspan,
+  let body = if (bracket == false) { content } else {
+    grid(
+      columns:2,
+      gutter: inset,
+      _first,
+      _second
+    )
+  }
+
+  let format = (
     inset: if (bracket == false) { inset } else { (x:2pt, y:1pt) },
     align:_align+horizon,
-    if (bracket == false) { content } else {
-      grid(
-        columns:2,
-        gutter: inset,
-        _first,
-        _second
-      )
-    }
   )
+
+  return note-field(none, none, side, level:level, body, format: format, rowspan: rowspan)
 }
 
 /// Shows a note with a bracket and spans over multiple rows.
@@ -176,10 +112,62 @@
 /// - start_addr (string, content):  The start address will be top aligned
 /// - end_addr (string, content): The end address will be bottom aligned
 #let section(start_addr, end_addr, span: 1) = {
-  annotation(left, rowspan: span, inset: (x:5pt, y:2pt), box(height:100%, [
-    #set text(0.8em, font: "Noto Mono", weight: 100)
-    #align(top + end)[#start_addr]
-    #align(bottom + end)[#end_addr]
+  note(
+    left, 
+    rowspan: span, 
+    inset: (x:5pt, y:2pt), 
+    box(height:100%, [
+      #set text(0.8em, font: "Noto Mono", weight: 100)
+      #align(top + end)[#start_addr]
+      #align(bottom + end)[#end_addr]
     ]))
 }
 
+/// Bitheader
+///
+/// - msb (left, right): 
+/// - autofill (string, auto):
+/// - numbers (auto, none): 
+/// - args (any): 
+///
+#let bitheader(
+  msb: right,
+  autofill: auto,
+  numbers: auto,  // or none
+  ..args
+) = {
+  // let _numbers = ()
+  let labels = (:)
+  let _numbers = ()
+  let last = 0
+  let step = 1
+  for arg in args.pos() {
+    if type(arg) == int {
+      _numbers.push(arg)
+      last = arg
+      step = arg
+    } else if type(arg) == str {
+      autofill = arg
+    } else if type(arg) == content { 
+      labels.insert(str(last),arg)
+      _numbers.push(last)
+      last += step
+    }
+    if numbers != none { numbers = _numbers }
+  }
+
+  let format = (
+    angle: args.named().at("angle", default: -60deg),
+    text-size: args.named().at("text-size",default: auto),
+    marker: args.named().at("marker", default: true),
+  )
+  
+  return header-field(
+      end: auto, // todo: fix in types
+      msb: msb,
+      autofill: autofill,
+      numbers: numbers,
+      labels: labels,
+      ..format
+    )
+}

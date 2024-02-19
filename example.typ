@@ -22,7 +22,6 @@
   grid(
     columns:columns,
     gutter: 5pt,
-    box(align(horizon,sourcecode(showrange: showlines,source))),
     box(align(horizon,eval(source.text, mode:"markup", scope: (
       "bytefield" : bytefield,
       "byte" : byte,
@@ -44,15 +43,18 @@
       "tcp": common.tcp,
       "tcp_detailed": common.tcp_detailed,
       "udp": common.udp,
-    ))))
+    )))),
+    box(align(horizon,sourcecode(showrange: showlines,source))),
   )
 )
 
-= Bytefield
+#set page(margin: 2cm)
 
-
+= Bytefield gallery
 
 == Colored Example
+
+#set text(9.5pt);
 
 #example(```typst
 #bytefield(
@@ -94,6 +96,7 @@
 )
 ```)
 
+#pagebreak()
 == Annotations
 
 Define annotations in columns left or right of the bitfields current row with the helpers `note` and `group`.
@@ -143,6 +146,7 @@ The helper `section` takes a `start_addr` and a `end_addr` as string values and 
 )
 ```)
 
+#pagebreak()
 = Headers [WIP]
 
 ! The new bitheader api is still a work in progress.
@@ -178,10 +182,16 @@ Showing a text label for a number #positional
 #example(```typst
 #bytefield(
     bits:16,
+    bitheader("all"),
+    ..range(16).map(i => bit[#flagtext[B#i]]).rev(),
+)
+```)
+
+#example(showlines: (3,3),```typst
+#bytefield(
+    bits:16,
     bitheader("all", msb: left),
-    ..range(16).map(
-      i => bit[#flagtext[B#i]]
-    ).rev(),
+    ..range(16).map(i => bit[#flagtext[B#i]]).rev(),
 )
 ```)
 

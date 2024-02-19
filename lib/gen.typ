@@ -4,13 +4,15 @@
 #import "states.typ": *
 
 #import "@preview/tablex:0.0.8": tablex, cellx, gridx
+
+/// generate metadata which is needed later on
 #let generate_meta(args,fields) = {
   // collect metadata into an dictionary
-  let bh = fields.find(f => f.type == "bitheader")
-  let msb = if (bh == none) {right} else { bh.msb }
-  let (pre_levels, post_levels) = _get_max_annotation_levels(fields.filter(f => f.type == "annotation"))
+  let bh = fields.find(f =>  is-header-field(f))
+  let msb = if (bh == none) {right} else { bh.data.msb }
+  let (pre_levels, post_levels) = _get_max_annotation_levels(fields.filter(f => if is-bf-field(f) { is-note-field(f) } else { f.type == "annotation" } ))
   let meta = (
-    size: fields.filter(f => f.type == "bitbox" /*is-data-field(f)*/).map(f => if (f.size == auto) { args.bpr } else { f.size } ).sum(),
+    size: fields.filter(f => if is-bf-field(f) { is-data-field(f) } else { f.type == "bitbox" } ).map(f => if (f.data.size == auto) { args.bpr } else { f.data.size } ).sum(),
     cols: (
       pre: pre_levels,
       main: args.bpr,
@@ -32,6 +34,7 @@
   return meta;
 }
 
+/// helper to calc number values from autofill string arguments
 #let _get_header_autofill_values(autofill, fields, meta) = {
   if (autofill == "bounds") {
     return fields.filter(f => f.field-type == "data-field").map(f => if f.data.range.start == f.data.range.end { (f.data.range.start,) } else {(f.data.range.start, f.data.range.end)}).flatten()
@@ -50,15 +53,19 @@
   }
 }
 
-#let generate_bf-fields(fields, meta) = {
+/// Index all fields
+#let index_fields(fields) = {
+  fields.enumerate().map(((idx, f)) => {
+    assert_bf-field(f)
+    dict_insert_and_return(f, "field-index", idx)
+  })
+}
+
+/// indexes all fields and add some additional field data
+#let finalize_fields(fields, meta) = {
 
   // This part must be changed if the user low level api changes.
-  let _fields = fields.enumerate().map(((idx, f)) => {
-    assert.eq(type(f),dictionary, message: strfmt("expected field to be a dictionary, found {}", type(f)));
-    assert.ne(f.at("type", default: none), none, message: "Could not find field.type")
-    let type = if(f.type == "bitbox") { "data-field" } else if (f.type == "annotation") { "note-field" } else if (f.type == "bitheader") { "header-field" } else { "unknown" }
-    bf-field(type, idx, data:f)
-  })
+  let _fields = index_fields(fields)
 
   // Define some variables
   let bpr = meta.cols.main
@@ -73,13 +80,14 @@
     let start = range_idx;
     range_idx += size;
     let end = range_idx - 1;
-    fields.push(data-field(f.field-index, size, start, end, f.data.body, format: f.data.format))
+    fields.push(data-field(f.field-index, size, start, end, f.data.label, format: f.data.format))
   }
 
   // note fields
   for f in _fields.filter(f => is-note-field(f)) {
     let anchor = _get_index_of_next_data_field(f.field-index, _fields)
-    fields.push(note-field(f.field-index, anchor, f.data.side, level: f.data.level, f.data.body, rowspan: f.data.rowspan, format: f.data.format))
+    let data = dict_insert_and_return(f.data, "anchor", anchor)
+    fields.push(dict_insert_and_return(f, "data", data))
   }
 
 
@@ -89,8 +97,8 @@
     let numbers = if f.data.numbers == none { () } else { f.data.numbers + autofill_values }
     let labels = f.data.at("labels", default: (:))
     fields.push(header-field(
-      end: bpr, 
-      msb: f.data.msb == left,
+      end: bpr, // todo: this needs to be changed for multiple headers (rowheaders)
+      msb: f.data.msb,
       numbers: numbers,
       labels: labels,
       ..f.data.format,
@@ -101,21 +109,12 @@
   return fields 
 }
 
-#let is-multirow(field, bpr) = {
-  // if range.start is at the beginn of a new row
-  if (calc.rem(field.data.range.start, bpr) != 0) { return false }
-  // field size is multiple of bpr
-  if (calc.rem(field.data.size, bpr) != 0) { return false }
-  
-  return true
-}
-
+/// generate data cells from data-fields
 #let generate_data_cells(fields, meta) = {
   let data_fields = fields.filter(f => f.field-type == "data-field")
   if (meta.header.msb == left ) { data_fields = data_fields.rev() }
   data_fields = data_fields
   let bpr = meta.cols.main;
-  let msb = meta.header.msb;
 
   let _cells = ();
   let idx = 0;
@@ -142,7 +141,7 @@
       )
       
       if ((len - cell_size) > 0 and data_fields.last().field-index != field.field-index) {
-        _stroke.at("bottom") = field.data.label_format.fill
+        _stroke.at("bottom") = field.data.format.fill
       }
       if (slice_idx > 0){
         _stroke.at("top") = none
@@ -153,7 +152,7 @@
       let y_pos = int(idx/bpr) + meta.header.rows
 
       let cell_format = (
-        fill: field.data.label_format.fill,
+        fill: field.data.format.fill,
         stroke: _stroke,
       )
 
@@ -185,6 +184,7 @@
   return _cells
 }
 
+/// generate note cells from note-fields
 #let generate_note_cells(fields, meta) = {
   let note_fields = fields.filter(f => f.field-type == "note-field")
   let _cells = ()
@@ -194,7 +194,8 @@
     let side = field.data.side
     let level = field.data.level
 
-    let anchor_field = fields.find(f => f.field-index == field.data.anchor) // _get_field_from_index(field_data, annotation.anchor);
+    // get the associated field
+    let anchor_field = fields.find(f => f.field-index == field.data.anchor)
     let row = meta.header.rows;
    
     if anchor_field != none {
@@ -222,6 +223,7 @@
   return _cells
 }
 
+/// generate header cells from header-fields
 #let generate_header_cells(fields, meta) = {
   let header_fields = fields.filter(f => f.field-type == "header-field")
   let bpr = meta.cols.main
@@ -236,7 +238,7 @@
 
       let show_number = num in header.data.numbers  //header.data.numbers != none and num in header.data.numbers
 
-      if header.data.msb {
+      if header.data.msb == left {
         header-cell(num, label: label, show-number: show_number, pos: (bpr -1) - num, meta, ..header.data.format) // TODO
       } else {
         header-cell(num, label: label, show-number: show_number, meta, ..header.data.format) // TODO
@@ -250,17 +252,19 @@
   return _cells
 }
 
+/// generates cells from fields
 #let generate_cells(meta, fields) = {
   // data 
   let data_cells = generate_data_cells(fields, meta);
   // notes
   let note_cells = generate_note_cells(fields, meta);
-  // bitheader 
+  // header 
   let header_cells = generate_header_cells(fields, meta);
 
   return (header_cells, data_cells, note_cells).flatten()
 }
 
+/// map bf custom cells to tablex cells
 #let map_cells(cells) = {
   cells.map(c => {
     let cell_type = c.at("cell-type", default: none)
@@ -308,6 +312,7 @@
   })
 }
 
+/// produce the final output
 #let generate_table(meta, cells) = {
   let cells = map_cells(cells);
 

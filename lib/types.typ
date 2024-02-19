@@ -13,7 +13,7 @@
       size: size,
       range: (start: start, end: end),
       label: label,
-      label_format: format,
+      format: format,
     )
   )
 }
@@ -33,7 +33,7 @@
 }
 
 // header-field hold information about a complete header row. Usually this is the top level header.
-#let header-field(start: 0, end: 32, msb: left, numbers: (), labels: (:), ..args) = {
+#let header-field(start: 0, end: 32, msb: left, autofill: auto, numbers: (), labels: (:), ..args) = {
   // header-field must have index 0.
   bf-field("header-field", none,
     data: (
@@ -45,14 +45,16 @@
       numbers: numbers,
       // Defines which labels should be shown. Dict of number and content.
       labels: labels,
+      // Defines which numbers should be calculated automatically 
+      autofill: autofill,
       // Defines the format of the bitheader.
       format: (
         // Defines the angle of the labels 
         angle: args.named().at("angle", default: -60deg),
         // Defines the text-size for both numbers and labels.
-        text-size: args.named().at("text-size",default: auto), //TODO: connect to global setting
+        text-size: args.named().at("text-size",default: auto), 
         // Defines if a marker should be shown
-        marker: args.named().at("marker", default: true), // false
+        marker: args.named().at("marker", default: true), 
       )
     )
   )
