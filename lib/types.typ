@@ -48,11 +48,11 @@
       // Defines the format of the bitheader.
       format: (
         // Defines the angle of the labels 
-        angle: -60deg,
+        angle: args.named().at("angle", default: -60deg),
         // Defines the text-size for both numbers and labels.
-        text-size: auto, //TODO: connect to global setting
+        text-size: args.named().at("text-size",default: auto), //TODO: connect to global setting
         // Defines if a marker should be shown
-        marker: true, // false
+        marker: args.named().at("marker", default: true), // false
       )
     )
   )
@@ -78,7 +78,7 @@
   data: none,
 )
 
-#let header-cell(num, label: none, pos: auto, align: center + horizon, show-number: true, meta) = {
+#let header-cell(num, label: none, pos: auto, show-number: true, meta, ..args) = {
   bf-cell(
     "header-cell",
     cell-idx: none,
@@ -89,12 +89,18 @@
       text: label,
     ),
     format: (
-      marker: auto,
-      text-size: auto,
+      // Defines if the number should be shown or ommited
       number: show-number,
-      angle: -60deg,
-      align: align,
-      inset: (x: 0pt, y: 4pt),
+      // Defines the angle of the labels 
+      angle: args.named().at("angle", default: -60deg),
+      // Defines the text-size for both numbers and labels.
+      text-size: args.named().at("text-size",default: auto), //TODO: connect to global setting
+      // Defines if a marker should be shown
+      marker: args.named().at("marker", default: true), // false
+      // Defines the alignment
+      align: args.named().at("align", default: center + horizon), 
+      // Defines the inset
+      inset: args.named().at("inset", default: (x: 0pt, y: 4pt)),
     )
   )
 }

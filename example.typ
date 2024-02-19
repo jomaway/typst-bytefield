@@ -48,8 +48,6 @@
   )
 )
 
-
-
 = Bytefield
 
 #show: bf-config.with(
@@ -60,8 +58,18 @@
 
 #example(```typst
 #bytefield(
-  bitheader("bytes", 0, [start], 12, [test], 23, [end_test], 24 ,[start_break],),
-  note(left)[Testing],
+  bitheader(
+    "bytes", 
+    0, [#text(14pt, fill: red, "start")], 
+    12, [test], 
+    23, [end_test], 
+    24 ,[start_break], 
+    36, [Fix],
+    marker: auto,
+    angle: -50deg,
+    text-size: 20pt,
+  ),
+  note(left)[#text(16pt, fill: blue, font: "Consolas", "Testing")],
   bytes(3,
     fill: red.lighten(30%)
   )[Test],
@@ -72,7 +80,10 @@
     fill: green.lighten(30%)
   )[Fill],
   group(right,3)[spanning 3 rows],
-  bytes(12)[Multi Row],
+  bytes(12)[
+    #set text(20pt)
+    *Multi* Row
+    ],
   note(left, bracket: true)[Flags],
   bits(4)[#text(8pt)[reserved]],
   flag[#text(8pt)[SYN]],
@@ -84,8 +95,8 @@
   bytes(2)[Next], 
   bytes(8, fill: yellow.lighten(60%))[Multi break],
   note(right)[#emoji.checkmark Finish],
-  bytes(2)[End]
-, )
+  bytes(2)[_End_], 
+)
 ```)
 
 == Annotations
@@ -262,7 +273,8 @@ You can also show labels and indexes by specifying a `content` after an `number`
     5, [test], 
     8, [next_field], 
     24, [important FLAG], 
-    31, [MSB], 
+    31, [MSB],
+    17,19,
   ),
   byte[LSB],
   bytes(2)[Two],
@@ -283,6 +295,7 @@ It's not possible to only omit numbers for certain labels right now.
     8, [next_field], 
     24, [important_FLAG], 
     31, [MSB], 
+    17, 19,  // those get ommited as well.
     numbers: none,
   ),
   byte[LSB],

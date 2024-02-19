@@ -98,6 +98,7 @@
       msb: f.data.msb == left,
       numbers: numbers,
       labels: labels,
+      ..f.data.format,
     ))
     break // workaround to only allow one bitheader till multiple bitheaders are supported.
   }
@@ -244,9 +245,9 @@
       let show_number = num in header.data.numbers  //header.data.numbers != none and num in header.data.numbers
 
       if header.data.msb {
-        header-cell(num, label: label, show-number: show_number , pos: (bpr -1) - num, meta)
+        header-cell(num, label: label, show-number: show_number, pos: (bpr -1) - num, meta, ..header.data.format) // TODO
       } else {
-        header-cell(num, label: label, show-number: show_number, meta)
+        header-cell(num, label: label, show-number: show_number, meta, ..header.data.format) // TODO
       }
     })
 

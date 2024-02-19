@@ -57,8 +57,8 @@
   numbers: auto,  // or none
   // labels: (:),
   ticks: auto,     // not working
-  fontsize: auto,  // not working 
-  angle: auto,     // not working
+  text-size: auto,  // not working 
+  angle: -60deg,     // not working
   marker: auto,    // not working
   ..args
 ) = {
@@ -89,9 +89,11 @@
     numbers: numbers,
     labels:labels,
     ticks:ticks,
-    fontsize:fontsize,
-    angle: angle,
-    marker: marker,
+    format: (
+      text-size:text-size,
+      angle: angle,
+      marker: marker,
+    )
   )
 }
 
