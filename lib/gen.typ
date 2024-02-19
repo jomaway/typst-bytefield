@@ -11,6 +11,7 @@
   let msb = if (bh == none) {right} else { bh.msb }
   let (pre_levels, post_levels) = _get_max_annotation_levels(fields.filter(f => f.type == "annotation"))
   let meta = (
+    size: fields.filter(f => f.type == "bitbox" /*is-data-field(f)*/).map(f => if (f.size == auto) { args.bpr } else { f.size } ).sum(),
     cols: (
       pre: pre_levels,
       main: args.bpr,
@@ -185,8 +186,6 @@
           format: cell_format 
         )
       )
-
-      
     }
   }
   return _cells
@@ -205,8 +204,7 @@
     let row = meta.header.rows;
    
     if anchor_field != none {
-       let anchor_start = anchor_field.data.range.start
-       row = int(anchor_start/bpr) + meta.header.rows
+       row = int( if (meta.header.msb == left) { (meta.size - anchor_field.data.range.end)/bpr } else { anchor_field.data.range.start/bpr }) + meta.header.rows 
     } else {
       // if no anchor could be found, fail silently
       continue
@@ -278,7 +276,7 @@
       let label_num = c.label.num
       locate(loc => {
         style(styles => {
-          set text(_get_header_font_size(loc))
+          set text(if c.format.text-size == auto { _get_header_font_size(loc) } else { c.format.text-size })
           set align(center + bottom)
           let size = measure(label_text, styles).width
           stack(dir: ttb, spacing: 0pt,

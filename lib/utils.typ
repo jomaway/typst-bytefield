@@ -32,7 +32,7 @@
 
 // Return the index of the next data-field
 #let _get_index_of_next_data_field(idx, fields) = {
-  let res = fields.find(f => f.field-index > idx and is-data-field(f))
+  let res = fields.sorted(key: f => f.field-index).find(f => f.field-index > idx and is-data-field(f))
   if res != none { res.field-index } else { none }
 }
 
