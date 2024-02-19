@@ -56,7 +56,7 @@
   bytes(2)[Source Port], bytes(2)[ Destinatino Port],
   bytes(4)[Sequence Number],
   bytes(4)[Acknowledgment Number],
-  bits(4)[Data Offset],bits(6)[Reserved], bit[#flagtext("URG")], bit[#flagtext("ACK")], bit[#flagtext("PSH")], bit[#flagtext("RST")], bit[#flagtext("SYN")], bit[#flagtext("FIN")], bytes(2)[Window],
+  bits(4)[Data Offset],bits(6)[Reserved], flag("URG"), flag("ACK"), flag("PSH"), flag("RST"), flag("SYN"), flag("FIN"), bytes(2)[Window],
   bytes(2)[Checksum], bytes(2)[Urgent Pointer],
   bytes(3)[Options], byte[Padding],
   padding[...DATA...]

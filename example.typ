@@ -30,7 +30,6 @@
       "bits" : bits,
       "padding" : padding,
       "flag": flag,
-      "flagtext" : flagtext,
       "note" : note,
       "group" : group,
       "section": section,
@@ -60,13 +59,13 @@
 #bytefield(
   // Config the header
   bitheader(
-    msb:right,  // left | right  (default: right)
+    msb:left,  // left | right  (default: right)
     "bytes",    // adds every multiple of 8 to the header. 
     0, [start], // number with label
     5,          // number without label
     12, [#text(14pt, fill: red, "test")], 
     23, [end_test], 
-    24 ,[start_break], 
+    24, [start_break], 
     36, [Fix],  // will not be shown 
     marker: auto, // auto or none (default: auto)
     angle: -50deg, // angle  (default: -60deg)
@@ -117,10 +116,10 @@ The helper `section` takes a `start_addr` and a `end_addr` as string values and 
   pre: (1cm,auto),
   post: (auto,1.8cm, 1cm),
   note(left, rowspan:3, level:1)[
-    #flagtext[spanning_3_rows]
+    #rotate(270deg)[spanning_3_rows]
   ],
   group(right,3, level:2, bracket: false)[
-    #flagtext[spanning_3_rows]
+    #rotate(270deg)[spanning_3_rows]
   ],
   note(left)[0x00],
   group(right,2)[group],
@@ -183,7 +182,7 @@ Showing a text label for a number #positional
 #bytefield(
     bits:16,
     bitheader("all"),
-    ..range(16).map(i => bit[#flagtext[B#i]]).rev(),
+    ..range(16).map(i => flag[B#i]).rev(),
 )
 ```)
 
@@ -191,7 +190,7 @@ Showing a text label for a number #positional
 #bytefield(
     bits:16,
     bitheader("all", msb: left),
-    ..range(16).map(i => bit[#flagtext[B#i]]).rev(),
+    ..range(16).map(i => flag[B#i]).rev(),
 )
 ```)
 
@@ -204,7 +203,7 @@ Show start and end bit of each bitbox with `bitheader("smart")`.
   bitheader("smart"),
   byte[LSB],
   bytes(2)[Two],
-  bit[#flagtext("URG")],
+  flag("URG"),
   bits(7)[MSB],
 )
 ```)
@@ -214,7 +213,7 @@ Show start and end bit of each bitbox with `bitheader("smart")`.
   bitheader("smart", msb: left),
   byte[MSB],
   bytes(2)[Two],
-  bit[#flagtext("URG")],
+  flag("URG"),
   bits(7)[LSB],
 )
 ```, showlines: (2,2))
@@ -228,7 +227,7 @@ Show start bit of each bitbox with `bitheader("bounds")`.
   bitheader("bounds"),
   byte[LSB],
   bytes(2)[Two],
-  bit[#flagtext("URG")],
+  flag("URG"),
   bits(7)[MSB],
 )
 ```)
@@ -238,7 +237,7 @@ Show start bit of each bitbox with `bitheader("bounds")`.
   bitheader("bounds", msb:left),
   byte[MSB],
   bytes(2)[Two],
-  bit[#flagtext("URG")],
+  flag("URG"),
   bits(7)[LSB],
 )
 ```, showlines: (2,2))
@@ -250,7 +249,7 @@ Show start bit of each bitbox with `bitheader("bounds")`.
   bitheader(0,7,8, 24, 31),
   byte[LSB],
   bytes(2)[Two],
-  bit[#flagtext("URG")],
+  flag("URG"),
   bits(7)[MSB],
 )
 ```)
@@ -260,7 +259,7 @@ Show start bit of each bitbox with `bitheader("bounds")`.
   bitheader(..range(16,step:3)),
   byte[LSB],
   bytes(2)[Two],
-  bit[#flagtext("URG")],
+  flag("URG"),
   bits(7)[MSB],
 )
 ```)
@@ -283,7 +282,7 @@ You can also show labels and indexes by specifying a `content` after an `number`
   ),
   byte[LSB],
   bytes(2)[Two],
-  bit[#flagtext("URG")],
+  flag("URG"),
   bits(7)[MSB],
 )
 ```)
@@ -305,7 +304,7 @@ It's not possible to only omit numbers for certain labels right now.
   ),
   byte[LSB],
   bytes(2)[Two],
-  bit[#flagtext("URG")],
+  flag("URG"),
   bits(7)[MSB],
 )
 ```)

@@ -35,7 +35,6 @@
   data-field(none, size, none, none, body, format: (fill: fill))
 }
 
-
 /// Add a bit to the bytefield
 #let bit(..args) = bitbox(1, ..args)
 /// Add multiple bits to the bytefield
@@ -44,12 +43,13 @@
 #let byte(..args) = bitbox(8, ..args)
 /// Add multiple bytes to the bytefield
 #let bytes(len, ..args) = bitbox(len * 8, ..args)
-/// Add a field which extends to the end of the row
-#let padding(..args) = bitbox(auto, ..args)
-/// Rotating text for small flags
-#let flagtext(text) = align(center,rotate(270deg,text)) // Rotating text for flags
 /// Add a flag to the bytefield.
-#let flag(text,..args) = bitbox(1,flagtext(text),..args)
+#let flag(text,..args) = bitbox(1,align(center,rotate(270deg,text)),..args)
+/// Add a field which extends to the end of the row
+///
+/// Warning! This can cause problems with msb:left
+#let padding(..args) = bitbox(auto, ..args)
+
 
 /// Create a annotation
 ///
@@ -128,7 +128,6 @@
 /// - msb (left, right): 
 /// - autofill (string, auto):
 /// - numbers (auto, none): 
-/// - args (any): 
 ///
 #let bitheader(
   msb: right,
