@@ -3,8 +3,7 @@
 #import "asserts.typ": *
 #import "states.typ": *
 
-#import "@preview/tablex:0.0.8": tablex, cellx, gridx, hlinex, vlinex
-
+#import "@preview/tablex:0.0.8": tablex, cellx, gridx
 #let generate_meta(args,fields) = {
   // collect metadata into an dictionary
   let bh = fields.find(f => f.type == "bitheader")
@@ -31,11 +30,6 @@
     )
   )
   return meta;
-}
-
-#let _generate_labels_from_values(values) = {
-  values = values.map(val => (str(val): "") )
-  values.join()
 }
 
 #let _get_header_autofill_values(autofill, fields, meta) = {
