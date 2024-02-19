@@ -21,7 +21,7 @@
 #let example(columns:1,source, showlines: none) = block(
   grid(
     columns:columns,
-    gutter: 5pt,
+    gutter: 1em,
     (align(horizon,eval(source.text, mode:"markup", scope: (
       "bytefield" : bytefield,
       "byte" : byte,
@@ -116,10 +116,10 @@ The helper `section` takes a `start_addr` and a `end_addr` as string values and 
   pre: (1cm,auto),
   post: (auto,1.8cm, 1cm),
   note(left, rowspan:3, level:1)[
-    #rotate(270deg)[spanning_3_rows]
+    #align(center,rotate(270deg)[spanning_3_rows])
   ],
   group(right,3, level:2, bracket: false)[
-    #rotate(270deg)[spanning_3_rows]
+    #align(center,rotate(270deg)[spanning_3_rows])
   ],
   note(left)[0x00],
   group(right,2)[group],
