@@ -127,8 +127,7 @@
 
 /// Bitheader
 ///
-/// - msb (left, right): 
-/// - autofill (string, auto):
+/// - msb (left, right):  This sets the bit order
 /// - numbers (auto, none): 
 ///
 #let bitheader(
