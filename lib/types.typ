@@ -82,7 +82,7 @@
   bf-cell(
     "header-cell",
     cell-idx: none,
-    x: (if (pos == auto) {num} else { pos }) + meta.cols.pre,
+    x: (if (pos == auto) {calc.rem(num, meta.cols.main)} else { pos }) + meta.cols.pre,   //NOTE: we could probably get rid of meta if we change to a subgrid solution.
     y: 0,
     label: (
       num: str(num),

@@ -66,12 +66,14 @@
   })
 
   // Define some variables
-  let bpr = meta.cols.main 
+  let bpr = meta.cols.main
   let range_idx = 0;
   let fields = ();
 
   // data fields
-  for f in _fields.filter(f => is-data-field(f)) {
+  let data_fields = _fields.filter(f => is-data-field(f))
+  if (meta.header.msb == left ) { data_fields = data_fields.rev() }
+  for f in data_fields {
     let size = if (f.data.size == auto) { bpr - calc.rem(range_idx, bpr) } else { f.data.size }  
     let start = range_idx;
     range_idx += size;
@@ -114,7 +116,10 @@
 
 #let generate_data_cells(fields, meta) = {
   let data_fields = fields.filter(f => f.field-type == "data-field")
+  if (meta.header.msb == left ) { data_fields = data_fields.rev() }
+  data_fields = data_fields
   let bpr = meta.cols.main;
+  let msb = meta.header.msb;
 
   let _cells = ();
   let idx = 0;
@@ -232,7 +237,7 @@
 
   for header in header_fields {
     let nums = header.data.at("numbers", default: ()) + header.data.at("labels").keys().map(k => int(k)) 
-    let cell = nums.filter(num => num < header.data.range.end).dedup().map(num =>{
+    let cell = nums.filter(num => num >= header.data.range.start and num < header.data.range.end).dedup().map(num =>{
 
       let label = header.data.labels.at(str(num), default: "")
 
