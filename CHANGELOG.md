@@ -7,12 +7,18 @@ This release is a complete refactor of the bytefield package.
 
 Huge thanks to [nopeslide](https://github.com/nopeslide) for his many ideas through out this process and the annotation feature.
 
+⚠️ Warning: This release breaks some stuff:
+
+- The `bitheader` argument was dropped. The header is now defined with a new function `bitheader()`.
+- The `flagtext` function was removed.
+
+
 ### Added
 
 Just a short list of some new features which have been added.
 
-- Option to add notes on the left and right of the bytefield.
-- First draft of the new bitheader api.
+- `note` field to add annotations on the left and right of the bytefield.
+- First draft of the new `bitheader` api.
 - Multirow and breaking fields look much nicer now.
 - ... see [example.typ](example.typ) for what is possible now.
 
