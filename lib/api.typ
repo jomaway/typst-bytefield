@@ -7,17 +7,17 @@
 /// - pre (auto, int , relative , fraction , array): This is specifies the columns for annotations on the *left* side of the bytefield
 /// - post (auto, int , relative , fraction , array): This is specifies the columns for annotations on the *right* side of the bytefield
 ///
-/// - ..fields (bitbox, annotation, bitheader): arbitrary number of data fields, annotations and headers which build the bytefield. 
+/// - ..fields (_field, annotation, bitheader): arbitrary number of data fields, annotations and headers which build the bytefield. 
 /// -> bytefield
 #let bytefield(
-  bits: 32, 
+  bpr: 32, 
   pre: auto,
   post: auto,
   ..fields
 ) = {
 
   let args = (
-    bpr: bits,
+    bpr: bpr,
     side: (left_cols: pre, right_cols: post)
   )
 
@@ -31,24 +31,24 @@
 /// Base for bit, bits, byte, bytes functions
 ///
 /// This is just a base function which is used by the other functions and should not be called directly
-#let bitbox(size, fill: none, body) = {
+#let _field(size, fill: none, body) = {
   data-field(none, size, none, none, body, format: (fill: fill))
 }
 
 /// Add a bit to the bytefield
-#let bit(..args) = bitbox(1, ..args)
+#let bit(..args) = _field(1, ..args)
 /// Add multiple bits to the bytefield
-#let bits(len, ..args) = bitbox(len, ..args)
+#let bits(len, ..args) = _field(len, ..args)
 /// Add a byte to the bytefield
-#let byte(..args) = bitbox(8, ..args)
+#let byte(..args) = _field(8, ..args)
 /// Add multiple bytes to the bytefield
-#let bytes(len, ..args) = bitbox(len * 8, ..args)
+#let bytes(len, ..args) = _field(len * 8, ..args)
 /// Add a flag to the bytefield.
-#let flag(text,..args) = bitbox(1,align(center,rotate(270deg,text)),..args)
+#let flag(text,..args) = _field(1,align(center,rotate(270deg,text)),..args)
 /// Add a field which extends to the end of the row
 ///
 /// Warning! This can cause problems with msb:left
-#let padding(..args) = bitbox(auto, ..args)
+#let padding(..args) = _field(auto, ..args)
 
 
 /// Create a annotation
