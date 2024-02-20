@@ -17,7 +17,7 @@ Huge thanks to [nopeslide](https://github.com/nopeslide) for his many ideas thro
 
 Just a short list of some new features which have been added.
 
-- `note` field to add annotations on the left and right of the bytefield.
+- `note` and `group` field to add annotations on the left and right of the bytefield.
 - First draft of the new `bitheader` api.
 - Multirow and breaking fields look much nicer now.
 - ... see [example.typ](example.typ) for what is possible now.
