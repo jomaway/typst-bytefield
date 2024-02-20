@@ -11,6 +11,7 @@
 /// -> bytefield
 #let bytefield(
   bpr: 32, 
+  msb: right,
   pre: auto,
   post: auto,
   ..fields
@@ -18,10 +19,11 @@
 
   let args = (
     bpr: bpr,
+    msb: msb,
     side: (left_cols: pre, right_cols: post)
   )
 
-  let meta = generate_meta(args, fields.pos())
+  let meta = generate_meta(fields.pos(), args)
   let fields = finalize_fields(fields.pos(), meta)
   let cells = generate_cells(meta, fields)
   let table = generate_table(meta, cells)

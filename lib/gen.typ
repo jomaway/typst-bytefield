@@ -6,13 +6,14 @@
 #import "@preview/tablex:0.0.8": tablex, cellx, gridx
 
 /// generate metadata which is needed later on
-#let generate_meta(args,fields) = {
+#let generate_meta(fields, args) = {
   // collect metadata into an dictionary
-  let bh = fields.find(f =>  is-header-field(f))
-  let msb = if (bh == none) {right} else { bh.data.msb }
+  // let bh = fields.find(f =>  is-header-field(f))
+  // let msb = if (bh == none) {right} else { bh.data.msb }
   let (pre_levels, post_levels) = _get_max_annotation_levels(fields.filter(f => if is-bf-field(f) { is-note-field(f) } else { f.type == "annotation" } ))
   let meta = (
     size: fields.filter(f => if is-bf-field(f) { is-data-field(f) } else { f.type == "bitbox" } ).map(f => if (f.data.size == auto) { args.bpr } else { f.data.size } ).sum(),
+    msb: args.msb,
     cols: (
       pre: pre_levels,
       main: args.bpr,
@@ -20,7 +21,6 @@
     ),
     header: (
       rows: 1,
-      msb: msb,
     ),
     side: (
       left: (
@@ -76,7 +76,7 @@
 
   // data fields
   let data_fields = _fields.filter(f => is-data-field(f))
-  if (meta.header.msb == left ) { data_fields = data_fields.rev() }
+  if (meta.msb == left ) { data_fields = data_fields.rev() }
   for f in data_fields {
     let size = if (f.data.size == auto) { bpr - calc.rem(range_idx, bpr) } else { f.data.size }  
     let start = range_idx;
@@ -99,9 +99,9 @@
     let numbers = if f.data.numbers == none { () } else { f.data.numbers + autofill_values }
     let labels = f.data.at("labels", default: (:))
     fields.push(header-field(
-      start: if f.data.range.start == auto { if f.data.msb == right { 0 } else { meta.size - bpr } } else { assert.eq(type(f.data.range.start),int); f.data.range.start },
-      end: if f.data.range.end == auto { if f.data.msb == right { bpr } else { meta.size } } else { assert.eq(type(f.data.range.end),int); f.data.range.end }, 
-      msb: f.data.msb,
+      start: if f.data.range.start == auto { if meta.msb == right { 0 } else { meta.size - bpr } } else { assert.eq(type(f.data.range.start),int); f.data.range.start },
+      end: if f.data.range.end == auto { if meta.msb == right { bpr } else { meta.size } } else { assert.eq(type(f.data.range.end),int); f.data.range.end }, 
+      msb: meta.msb,
       numbers: numbers,
       labels: labels,
       ..f.data.format,
@@ -115,7 +115,7 @@
 /// generate data cells from data-fields
 #let generate_data_cells(fields, meta) = {
   let data_fields = fields.filter(f => f.field-type == "data-field")
-  if (meta.header.msb == left ) { data_fields = data_fields.rev() }
+  if (meta.msb == left ) { data_fields = data_fields.rev() }
   data_fields = data_fields
   let bpr = meta.cols.main;
 
@@ -202,7 +202,7 @@
     let row = meta.header.rows;
    
     if anchor_field != none {
-       row = int( if (meta.header.msb == left) { (meta.size - anchor_field.data.range.end)/bpr } else { anchor_field.data.range.start/bpr }) + meta.header.rows 
+       row = int( if (meta.msb == left) { (meta.size - anchor_field.data.range.end)/bpr } else { anchor_field.data.range.start/bpr }) + meta.header.rows 
     } else {
       // if no anchor could be found, fail silently
       continue
