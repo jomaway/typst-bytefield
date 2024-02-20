@@ -9,8 +9,8 @@ Huge thanks to [nopeslide](https://github.com/nopeslide) for his many ideas thro
 
 ⚠️ Warning: This release breaks some stuff:
 
-- The `bitheader` argument was dropped. The header is now defined with a new function `bitheader()`.
-- The `flagtext` function was removed.
+- The `bitheader` argument was dropped. The header is now defined with the new `bitheader()` function.
+- The `flagtext` helper function was removed.
 
 
 ### Added

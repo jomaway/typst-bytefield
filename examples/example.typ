@@ -1,6 +1,6 @@
-// #import "bytefield.typ": *
-// #import "common.typ" as common
-#import "@local/bytefield:0.0.4": *
+#import "../bytefield.typ": *
+#import "../common.typ" as common
+// #import "@local/bytefield:0.0.4": *
 
 #import "@preview/codelst:2.0.0": sourcecode
 
