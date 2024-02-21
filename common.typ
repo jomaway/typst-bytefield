@@ -2,6 +2,7 @@
 
 // Common network protocols
 #let ipv4 = bytefield(
+  bitheader("bytes"),
   bits(4)[Version], bits(4)[TTL], bytes(1)[TOS], bytes(2)[Total Length],
   bytes(2)[Identification], bits(3)[Flags], bits(13)[Fragment Offset],
   bytes(1)[TTL], bytes(1)[Protocol], bytes(2)[Header Checksum],
@@ -11,6 +12,7 @@
 )
 
 #let ipv6 = bytefield(
+  bitheader("bytes"),
   bits(4)[Version], bytes(1)[Traffic Class], bits(20)[Flowlabel],
   bytes(2)[Payload Length], bytes(1)[Next Header], bytes(1)[Hop Limit],
   bytes(int(128/8))[Source Address],
@@ -18,19 +20,20 @@
 )
 
 #let icmp = bytefield(
-  header: (0,8,16,31),
+  bitheader("bytes"),
   byte[Type], byte[Code], bytes(2)[Checksum],
   bytes(2)[Identifier], bytes(2)[Sequence Number],
   padding[Optional Data ]
 )
 
 #let icmpv6 = bytefield(
-  header: (0,8,16,31),
+  bitheader("bytes"),
   byte[Type], byte[Code], bytes(2)[Checksum],
   padding[Internet Header + 64 bits of Original Data Datagram  ]
 )
 
 #let dns = bytefield(
+  bitheader("bytes"),
   bytes(2)[Identification], bytes(2)[Flags],
   bytes(2)[Number of Questions], bytes(2)[Number of answer RRs],
   bytes(2)[Number of authority RRs], bytes(2)[Number of additional RRs],
@@ -41,6 +44,7 @@
 )
 
 #let tcp = bytefield(
+  bitheader("bytes"),
   bytes(2)[Source Port], bytes(2)[ Destinatino Port],
   bytes(4)[Sequence Number],
   bytes(4)[Acknowledgment Number],

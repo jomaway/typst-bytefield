@@ -3,12 +3,15 @@
 
 /// Create a new bytefield.
 ///
-/// - bits (int): Number of bits which are shown per row.
+/// *Example:*  See @chap:use-cases
+///
+///
+/// - bpr (int): Number of bits which are shown per row.
 /// - pre (auto, int , relative , fraction , array): This is specifies the columns for annotations on the *left* side of the bytefield
 /// - post (auto, int , relative , fraction , array): This is specifies the columns for annotations on the *right* side of the bytefield
 ///
-/// - ..fields (_field, annotation, bitheader): arbitrary number of data fields, annotations and headers which build the bytefield. 
-/// -> bytefield
+/// - ..fields (bf-field): arbitrary number of data fields, annotations and headers which build the bytefield. 
+/// -> bytefield 
 #let bytefield(
   bpr: 32, 
   msb: right,
@@ -30,26 +33,66 @@
   return table
 }
 
-/// Base for bit, bits, byte, bytes functions
+/// Base for `bit`, `bits`, `byte`, `bytes`, `flag` field functions
 ///
-/// This is just a base function which is used by the other functions and should not be called directly
+/// #emoji.warning This is just a base function which is used by the other functions and should *not* be called directly.
+///
+/// - size (int): The size of the field in bits.
+/// - fill (color): The background color for the field.
+/// - body (content): The label which is displayed inside the field.
 #let _field(size, fill: none, body) = {
   data-field(none, size, none, none, body, format: (fill: fill))
 }
 
-/// Add a bit to the bytefield
+/// Add a field of the size of *one bit* to the bytefield
+///
+/// Basically just a wrapper for @@_field() 
+///
+/// - ..args (arguments): All arguments which are accepted by `_field`
+///
 #let bit(..args) = _field(1, ..args)
-/// Add multiple bits to the bytefield
+
+/// Add a field of a given size of bits to the bytefield
+///
+/// Basically just a wrapper for @@_field() 
+///
+/// - len (int): Size of the field in bits 
+/// - ..args (arguments): All arguments which are accepted by `_field`
+///
 #let bits(len, ..args) = _field(len, ..args)
-/// Add a byte to the bytefield
+
+/// Add a field of the size of one byte to the bytefield
+///
+/// Basically just a wrapper for @@_field() 
+///
+/// - ..args (arguments): All arguments which are accepted by `_field`
+///
 #let byte(..args) = _field(8, ..args)
-/// Add multiple bytes to the bytefield
+
+/// Add a field of the size of multiple bytes to the bytefield
+///
+/// Basically just a wrapper for @@_field() 
+///
+/// - len (int): Size of the field in bytes 
+/// - ..args (arguments): All arguments which are accepted by `_field`
+///
 #let bytes(len, ..args) = _field(len * 8, ..args)
+
 /// Add a flag to the bytefield.
+///
+/// Basically just a wrapper for @@_field() 
+///
+/// - text (content): The label of the flag which is rotated by `270deg`
+/// - ..args (arguments): All arguments which are accepted by `_field`
+///
 #let flag(text,..args) = _field(1,align(center,rotate(270deg,text)),..args)
+
 /// Add a field which extends to the end of the row
 ///
-/// Warning! This can cause problems with msb:left
+/// #emoji.warning This can cause problems with `msb:left`
+///
+/// - ..args (arguments): All arguments which are accepted by `_field`
+///
 #let padding(..args) = _field(auto, ..args)
 
 
@@ -104,12 +147,15 @@
 
 /// Shows a note with a bracket and spans over multiple rows.
 ///
-/// Basically just a shortcut for a note.
+/// Basically just a shortcut for the `note` field with the argument `bracket:true` by default.
+/// 
 #let group(side,rowspan,level:0, bracket:true,content) = {
   note(side,level:level,rowspan:rowspan,bracket: bracket,content)
 }
 
 /// Shows a special note with a start_addr (top aligned) and end_addr (bottom aligned) on the left of the associated row.
+///
+/// #emoji.warning *experimental:* This will probably change in a future version.
 ///
 /// - start_addr (string, content):  The start address will be top aligned
 /// - end_addr (string, content): The end address will be bottom aligned
@@ -125,16 +171,25 @@
     ]))
 }
 
-/// Bitheader
+/// Config the header on top of the bytefield 
 ///
-/// - msb (left, right): 
-/// - autofill (string, auto):
-/// - numbers (auto, none): 
-///
+/// By default no header is shown.
+/// 
+/// - msb (left, right):  This sets the bit order
+/// - range (array): Specify the range of number which are displayed on the header. Format: `(start, end)`
+/// - autofill (string): Specify on of the following options and let bytefield calculate the numbers for you.
+///   - `"bytes"` shows each multiple of 8 and the last number of the row.
+///   - `"all"` shows all numbers.
+///   - `"bounds"` shows a number for every start and end bit of a field.
+///   - `"offsets"` shows a number for every start bit of a field. 
+/// - numbers (auto, none): if none is specified no numbers will be shown on the header. This is useful to show only labels.
+/// - ..args (int, content): The numbers and labels which should be shown on the header. 
+///   The number will only be shown if it is inside the range.
+///   If a `content` value follows a `int` value it will be interpreted as label for this number.
+///   For more information see the _manual_.
 #let bitheader(
   msb: right,
-  // Defines the range of numbers which should be shown.
-  range: (auto,auto),  // only for debugging will be removed later.
+  range: (auto,auto),  
   autofill: auto,
   numbers: auto,  
   ..args

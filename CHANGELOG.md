@@ -1,11 +1,30 @@
 
 # Changelog
 
-## v0.0.4 (upcoming)
+## [0.0.4] - (Unreleased)
 
 This release is a complete refactor of the bytefield package.
 
-Functions are grouped and separated into multiple files.
+Huge thanks to [nopeslide](https://github.com/nopeslide) for his many ideas through out this process and the annotation feature.
+
+⚠️ Warning: This release breaks some stuff:
+
+- The `bitheader` argument was dropped. The header is now defined with the new `bitheader()` function.
+- The `flagtext` helper function was removed.
+
+
+### Added
+
+Just a short list of some new features which have been added.
+
+- `note` and `group` field to add annotations on the left and right of the bytefield.
+- First draft of the new `bitheader` api.
+- Multirow and breaking fields look much nicer now.
+- ... see [example.typ](example.typ) for what is possible now.
+
+### Changed
+
+Functions are now grouped and separated into multiple files.
 
 **`bytefield.typ`**
 
@@ -13,14 +32,14 @@ Contains now only the entry points to the package and exposes the user facing ap
 
 **`lib/api.typ`**
 
-Contains the user facing api and internal low level api which the user api gets mapped to.
+Contains the user facing api.
 
 **`lib/gen.typ`**
 
 Holds all functions for the new generation pipeline system. 
 As of now the this contains.
 - generation of meta data which is necessary for further processing.
-- generation of bf-field from the low level api fields.
+- finalization of bf-fields, like indexing and additional information.
 - generation of bf-cells from the bf-fields
 - generation of the final outcome by mapping bf-cells to tablex cells 
 
@@ -28,7 +47,7 @@ As of now the this contains.
 
 Contains all type definitions and creator functions.
 
-The following types are defined: `bf-field`, `data-field`, `note-field`, `bf-cell`, `header_cell`
+The following types are defined: `bf-field`, `data-field`, `note-field`, `header-field`, `bf-cell`, `header-cell`
 
 **`lib/states.typ`**
 
@@ -46,7 +65,7 @@ Contains some assertion functions
 Contains some utility functions 
 
 
-## v0.0.3
+## [0.0.3] - 2023-11-20
 
 - Added "smart" bit headers thanks to [hgruniaux](https://github.com/hgruniaux)
   - Added "smart-firstline" to only consider the first row for calculation.
@@ -56,14 +75,14 @@ Contains some utility functions
 
 
 
-## v0.0.2
+## [0.0.2]
 
 - Added support for reversed bitheader order with `msb_first:true`.
 - Quick way to show all headerbits with `bitheader: "all"`.
 - Updated `flagtext` center alignment.
 
 
-## v0.0.1
+## [0.0.1]
 
 Initial Release
 
