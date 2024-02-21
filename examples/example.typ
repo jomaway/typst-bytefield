@@ -23,6 +23,7 @@
   grid(
     columns:columns,
     gutter: 1em,
+    box(align(horizon,sourcecode(showrange: showlines,source))),
     box(align(horizon,eval(source.text, mode:"markup", scope: (
       "bytefield" : bytefield,
       "byte" : byte,
@@ -35,16 +36,16 @@
       "group" : group,
       "section": section,
       "bitheader": bitheader,
-      "ipv4" : common.ipv4,
-      "ipv6": common.ipv6,
-      "icmp": common.icmp,
-      "icmpv6": common.icmpv6,
-      "dns": common.dns,
-      "tcp": common.tcp,
-      "tcp_detailed": common.tcp_detailed,
-      "udp": common.udp,
+      "common": common,
+      "common.ipv4" : common.ipv4,
+      "common.ipv6": common.ipv6,
+      "common.icmp": common.icmp,
+      "common.icmpv6": common.icmpv6,
+      "common.dns": common.dns,
+      "common.tcp": common.tcp,
+      "common.tcp_detailed": common.tcp_detailed,
+      "common.udp": common.udp,
     )))),
-    box(align(horizon,sourcecode(showrange: showlines,source))),
   )
 )
 
@@ -97,111 +98,35 @@
 ```)
 
 #pagebreak()
-== Annotations
+= Header Examples
 
-Define annotations in columns left or right of the bitfields current row with the helpers `note` and `group`.
+#emoji.warning The new bitheader api is still a work in progress.
 
-The needed number of columns is determined automatically,
-but can be forced with the `pre` and `post` arguments.
-
-The helper `note` takes the side it should appear on as first argument, an optional `rowspan` for the number of rows it should span
-and an optional `level` for the nesting level.
-
-The helper `group` takes the side it should appear on as first argument, as second argument `rowspan` for the number of rows it should span and an optional `level` for the nesting level.
-
-The helper `section` takes a `start_addr` and a `end_addr` as string values and displays those on the left side of a row. The `start_addr` is aligned to the top and the `end_addr` is aligned to the bottom.
-
+== Show all bits
 #example(```typst
 #bytefield(
-  bits:32,
-  pre: (1cm,auto),
-  post: (auto,1.8cm, 1cm),
-  note(left, rowspan:3, level:1)[
-    #align(center,rotate(270deg)[spanning_3_rows])
-  ],
-  group(right,3, level:2, bracket: false)[
-    #align(center,rotate(270deg)[spanning_3_rows])
-  ],
-  note(left)[0x00],
-  group(right,2)[group],
-  bytes(4)[some thing],
-
-  // note(left)[0x04],
-  group(right,2,level:1)[another group],
-  bytes(4)[some other thing],
-  note(left)[0x08],
-  bytes(4)[some third thing],
-)
-```)
-
-#example(```typst
-#bytefield(
-  bits:32,
-
-  section("0x00","0x0F"),
-  group(right,2)[group],
-  bytes(4)[some thing],
-  section("0x10","0x1F"),
-  bytes(4)[some other thing],
-)
-```)
-
-#pagebreak()
-= Headers [WIP]
-
-! The new bitheader api is still a work in progress.
-
-The `bitheader` function defines which bit-numbers and text-labels are shown as a header. 
-Currently *only the first* `bitheader` per `bytefield` is processed, all others will be ignored.
-
-There are some #named arguments and an arbitrary amount of #positional arguments which you can pass to a header.
-
-Set the order of the header bits:  #named
- - `msb:right` displays the numbers from (left)  0 --- to --- msb (right)  #default
- - `msb:left`  displays the numbers from (left) msb --- to --- 0 (right)
-
-Show or hide numbers
-- `numbers: none` hide all numbers 
-- `numbers: auto` show all specified numbers #default
-
-
-Some common use cases can be set by adding a `string` value. #positional
-- `"all"` will show numbers for all bits. 
-- `"bytes"` will show every multiple of 8 and the last bit.
-- `"bounds"` will show begin and end of each field in the first row.
-- `"smart"` will show begin of each field in the first row.
-
-Showing a number. #positional
-- Just add an `int` value with the number you would like to show. 
-
-Showing a text label for a number #positional
-- Add a content field after the int value which the label belongs to.
-
-== Header Examples 
-
-#example(```typst
-#bytefield(
-    bits:16,
+    bpr:16,
     bitheader("all"),
     ..range(16).map(i => flag[B#i])
 )
 ```)
 
-#example(showlines: (3,3),```typst
+#example(showlines: (3,4),```typst
 #bytefield(
-    bits:16,
-    bitheader("all", msb: left),
+    bpr:16,
+    msb: left,
+    bitheader("all"),
     ..range(16).map(i => flag[B#i]).rev(),
 )
 ```)
 
-== Smart bit header
+== Show offsets
 
-Show start and end bit of each bitbox with `bitheader("smart")`.
+Show start and end bit of each bitbox with `bitheader("offsets")`.
 
 #example(```typst
 #bytefield(
-  bitheader("smart"),
+  bitheader("offsets"),
   byte[LSB],
   bytes(2)[Two],
   flag("URG"),
@@ -211,15 +136,16 @@ Show start and end bit of each bitbox with `bitheader("smart")`.
 
 #example(```typst
 #bytefield(
-  bitheader("smart", msb: left),
+  msb: left,
+  bitheader("offsets"),
   byte[MSB],
   bytes(2)[Two],
   flag("URG"),
   bits(7)[LSB],
 )
-```, showlines: (2,2))
+```, showlines: (2,3))
 
-== Bounds bit header
+== Show bounds
 
 Show start bit of each bitbox with `bitheader("bounds")`.
 
@@ -235,13 +161,14 @@ Show start bit of each bitbox with `bitheader("bounds")`.
 
 #example(```typst
 #bytefield(
-  bitheader("bounds", msb:left),
+  msb:left,
+  bitheader("bounds"),
   byte[MSB],
   bytes(2)[Two],
   flag("URG"),
   bits(7)[LSB],
 )
-```, showlines: (2,2))
+```, showlines: (2,3))
 
 == Custom bit header
 
@@ -257,7 +184,7 @@ Show start bit of each bitbox with `bitheader("bounds")`.
 
 #example(showlines: (2,2), ```typst
 #bytefield(
-  bitheader(..range(16,step:3)),
+  bitheader(..range(32,step:5)),
   byte[LSB],
   bytes(2)[Two],
   flag("URG"),
@@ -265,21 +192,19 @@ Show start bit of each bitbox with `bitheader("bounds")`.
 )
 ```)
 
-
-== Text header  [*WIP*]
-
 == Numbers and Labels
 You can also show labels and indexes by specifying a `content` after an `number` (`int`).
 
 #example(showlines: (2,8), ```typst
 #bytefield(
   bitheader(
-    0,[LSB_starting_at_bit_0], 
+    0,[LSB], 
     5, [test], 
     8, [next_field], 
     24, [important FLAG], 
     31, [MSB],
     17,19,
+    text-size: 8pt,
   ),
   byte[LSB],
   bytes(2)[Two],
@@ -295,13 +220,14 @@ It's not possible to only omit numbers for certain labels right now.
 #example(showlines: (2,9), ```typst
 #bytefield(
   bitheader(
-    0,[LSB_starting_at_bit_0], 
+    0,[LSB], 
     5, [test], 
     8, [next_field], 
     24, [important_FLAG], 
     31, [MSB], 
     17, 19,  // those get ommited as well.
     numbers: none,
+    text-size: 8pt,
   ),
   byte[LSB],
   bytes(2)[Two],
@@ -311,154 +237,58 @@ It's not possible to only omit numbers for certain labels right now.
 ```)
 
 #pagebreak()
-= Other use cases 
-
-== Memory map 
-
-Workaround with bits. Better support will follow.
-
-#example(
-```typst
-#bytefield(
-  bits: 1,
-  group(right,4)[On Chip Memory],
-  section("0x2002 0000", "0x2002 1fff"),
-  bit[RX Descriptor Memory],
-  bit[],
-  section("0x2000 7fff", "0x2000 0000", span: 2),
-  bits(2)[Bootloader],
-  group(right,4)[ext. DDR3 RAM],
-  section("0x1fff ffff", "0x0000 0000", span: 4),
-  bits(4)[App],
-)
-```
-)
-
-== Register definitions *!WIP*
-
-Register definitions such as shown can be defined with a bit of a hack for the header and two bytefields.
-This will be improved once rowheaders are implemented.
-
-#show: bf-config.with(
-  row_height: 2cm,
-)
-
-#example(```typst 
-#let reg_field(body, size: 1, rw: "rw") = {
-  bits(size,
-    table(
-      columns: (1fr),
-      rows: (2fr, auto),
-      body,
-      rw
-    )
-  )
-}
-
-#let reserved(size) = bits(size)[Reserved]
-
-#set text(8pt)
-#bytefield(
-  bits: 16,
-  msb: left,
-  bitheader(range: (16,32), ..range(16,32), msb: left),
-  reserved(4),
-  reg_field(rw: "r")[PLL I2S RDY],
-  reg_field[PLL I2S ON],
-  reg_field(rw: "r")[PLL RDY],
-  reg_field[PLL ON],
-  reserved(4),
-  reg_field[CSS ON],
-  reg_field[HSE BYP],
-  reg_field(rw: "r")[HSE RDY],
-  reg_field[HSE ON],
-)
-#bytefield(
-  bits: 16,
-  msb: left,
-  bitheader("all", msb: left),
-  reg_field(size:8, rw: "r")[HSICAL[7:0]],
-  reg_field(size:5)[HSITRIM[4:0]],
-  reg_field[Res.],
-  reg_field(rw: "r")[HSI RDY],
-  reg_field[HSION],
-)
-```)
-
-#pagebreak()
-#set text(12pt)
-== Network Protocols 
-
-#show: bf-config.with(
-  row_height: 2em,
-)
-
-
-=== IPv4 
-#example(```typst
-#bytefield(
-  bitheader("bytes"),
-  bits(4)[Version], bits(4)[TTL], bytes(1)[TOS], bytes(2)[Total Length],
-  bytes(2)[Identification], bits(3)[Flags], bits(13)[Fragment Offset],
-  bytes(1)[TTL], bytes(1)[Protocol], bytes(2)[Header Checksum],
-  bytes(4)[Source Address],
-  bytes(4)[Destination Address],
-  bytes(3)[Options], bytes(1)[Padding]
-)
-```)
-
 == Some predefined network protocols
 
 === IPv4
 #example(
 
 ```typst
-#ipv4
+#common.ipv4
 ```)
 
 === IPv6
 #example(
 
 ```typst
-#ipv6
+#common.ipv6
 ```)
 
 === ICMP
 #example(
 
 ```typst
-#icmp
+#common.icmp
 ```)
 
 === ICMPv6
 #example(
 
 ```typst
-#icmpv6
+#common.icmpv6
 ```)
 
 === DNS
 #example(
 
 ```typst
-#dns
+#common.dns
 ```)
 
 === TCP
 #example(
 
 ```typst
-#tcp
+#common.tcp
 ```)
 #example(
 
 ```typst
-#tcp_detailed
+#common.tcp_detailed
 ```)
 
 === UDP
 #example(
 
 ```typst
-#udp
+#common.udp
 ```)
