@@ -40,7 +40,7 @@
     return fields.filter(f => is-data-field(f)).map(f => if f.data.range.start == f.data.range.end { (f.data.range.start,) } else {(f.data.range.start, f.data.range.end)}).flatten()
   } else if (autofill == "all") {
     return range(meta.size)
-  } else if (autofill == "smart") {
+  } else if (autofill == "offsets") {
     let _fields = fields.filter(f => is-data-field(f)).map(f => f.data.range.start).flatten() //.filter(value => value < meta.cols.main).flatten()
     _fields.push(meta.cols.main -1)
     _fields.push(meta.size -1)
