@@ -3,9 +3,6 @@
 #import "@preview/codelst:2.0.0": sourcecode
 #import "@local/bytefield:0.0.4": *
 
-
-
-
 #let tag(value, fill: orange.lighten(45%)) = {
   box(
     inset: (x: 3pt, y: 0pt),
@@ -216,7 +213,7 @@ Showing a text label for a number #positional
 - Add a content field after the int value which the label belongs to.
 
 #info[
-Set the order of the bits with the `msb` argument directly on the `bitheader`.
+Set the order of the bits with the `msb` argument directly on the `bytefield`.
  - `msb:right` displays the numbers from (left)  0 --- to --- msb (right)  #default
  - `msb:left`  displays the numbers from (left) msb --- to --- 0 (right)
 ]
