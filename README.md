@@ -10,7 +10,7 @@ Using [tablex](https://github.com/PgBiel/typst-tablex) under the hood.
 
 ## Example
 
-![random colored bytefield example](bytefield_example.png)
+![random colored bytefield example](docs/bytefield_example.png)
 
 ```typst
 #import "@preview/bytefield:0.0.4": *
