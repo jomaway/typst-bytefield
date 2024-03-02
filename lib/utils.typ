@@ -62,8 +62,8 @@
 
 /// calculates the max annotation level for both sides
 #let _get_max_annotation_levels(annotations) = {
-  let left_max_level = 0
-  let right_max_level = 0
+  let left_max_level = -1
+  let right_max_level = -1
   for field in annotations {
     assert_bf-field(field)
     let (side, level, ..) = field.data;
@@ -79,7 +79,22 @@
   )
 }
 
-///
+/// Check if given dict is a bf-cell
+#let is-bf-cell(cell) = {
+  cell.at("bf-type", default: none) == "bf-cell"
+}
+
+/// Check if bf-cell is a data cell.
+#let is-data-cell(cell) = {
+  cell.at("cell-type", default: none) == "data-cell" 
+}
+
+/// Check if bf-cell is a note cell.
+#let is-note-cell(cell) = {
+  cell.at("cell-type", default: none) == "note-cell" 
+}
+
+/// Check if bf-cell is a header cell.
 #let is-header-cell(cell) = {
   cell.at("cell-type", default: none) == "header-cell" 
 }
@@ -97,5 +112,16 @@
     return string != none and string != ""
   } else if (type(string) == content) {
     return string != []
+  }
+}
+
+/// Return the current index of a field or cell 
+#let _get_index(f) = {
+  if is-bf-field(f) {
+    return f.field-index
+  } else if is-bf-cell(f) {
+    return f.cell-index
+  } else {
+    none
   }
 }
