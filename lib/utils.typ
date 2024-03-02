@@ -53,13 +53,6 @@
   return true
 }
 
-/// calculates the cell position, based on the start_bit and the column count.
-#let _get_cell_position(start, columns: 32, pre_cols: 1, header_rows: 1) = {
-  let x = calc.rem(start,columns) + pre_cols
-  let y = int(start/columns) + header_rows 
-  return (x,y)
-}
-
 /// calculates the max annotation level for both sides
 #let _get_max_annotation_levels(annotations) = {
   let left_max_level = -1

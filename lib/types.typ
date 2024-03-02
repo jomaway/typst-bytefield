@@ -65,11 +65,12 @@
 }
 
 // bf-cell holds all information which are necessary for cell positioning inside the table. 
-#let bf-cell(type, grid: center, x: auto, y: auto, colspan:1, rowspan:1, label: none, cell-idx: (auto, auto) ,format: auto) = (
+#let bf-cell(type, grid: center, x: auto, y: auto, colspan:1, rowspan:1, label: none, cell-index: (auto, auto) ,format: auto) = (
   bf-type: "bf-cell",
   cell-type: type,
-  cell-index: cell-idx,  // cell index is a tuple (field-index, slice-index)
-  // has-next-slice: false,  // indicates if a cell follows which belongs to the same field.
+  // cell index is a tuple (field-index, slice-index)
+  cell-index: cell-index,  
+  // position specifies the grid and and the position inside the grid. 
   position: (
     grid: grid,
     x: x,
@@ -79,34 +80,8 @@
     rows: rowspan,
     cols: colspan,
   ),
+  // The text which will be shown.
   label: label,
-  format: format,  // fill, stroke, align, inset, ...
-  data: none,
+  // specified format for the label like fill, stroke, align, inset, ...
+  format: format,
 )
-
-#let header-cell(num, label: none, pos: auto, show-number: true, meta, ..args) = {
-  bf-cell(
-    "header-cell",
-    cell-idx: none,
-    x: (if (pos == auto) {calc.rem(num, meta.cols.main)} else { calc.rem(pos, meta.cols.main) }),
-    y: 0,
-    label: (
-      num: str(num),
-      text: label,
-    ),
-    format: (
-      // Defines if the number should be shown or ommited
-      number: show-number,
-      // Defines the angle of the labels 
-      angle: args.named().at("angle", default: -60deg),
-      // Defines the text-size for both numbers and labels.
-      text-size: args.named().at("text-size",default: auto), //TODO: connect to global setting
-      // Defines if a marker should be shown
-      marker: args.named().at("marker", default: true), // false
-      // Defines the alignment
-      align: args.named().at("align", default: center + horizon), 
-      // Defines the inset
-      inset: args.named().at("inset", default: (x: 0pt, y: 4pt)),
-    )
-  )
-}
