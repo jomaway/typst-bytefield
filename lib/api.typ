@@ -222,7 +222,6 @@
   return header-field(
       start: range.at(0, default: auto),  // todo. fix this
       end: range.at(1, default: auto),    // todo. fix this
-      msb: auto,  // todo: check if this can be removed.
       autofill: autofill,
       numbers: numbers,
       labels: labels,

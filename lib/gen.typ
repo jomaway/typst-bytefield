@@ -156,8 +156,8 @@
       let y_pos = int(idx/bpr)
 
       let cell_format = (
-        fill: field.data.format.fill,
         stroke: _stroke,
+        ..field.data.format,
       )
 
       // adjust label for breaking fields.
