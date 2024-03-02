@@ -10,9 +10,9 @@
   // collect metadata into an dictionary
   let bh = fields.find(f =>  is-header-field(f))
   // check level indentation for annotations
-  let (pre_levels, post_levels) = _get_max_annotation_levels(fields.filter(f => if is-bf-field(f) { is-note-field(f) } else { f.type == "annotation" } ))
+  let (pre_levels, post_levels) = _get_max_annotation_levels(fields.filter(f => is-note-field(f) ))
   let meta = (
-    size: fields.filter(f => if is-bf-field(f) { is-data-field(f) } else { f.type == "bitbox" } ).map(f => if (f.data.size == auto) { args.bpr } else { f.data.size } ).sum(),
+    size: fields.filter(f => is-data-field(f) ).map(f => if (f.data.size == auto) { args.bpr } else { f.data.size } ).sum(),
     msb: args.msb,
     cols: (
       pre: pre_levels,
@@ -43,7 +43,7 @@
   } else if (autofill == "all") {
     return range(meta.size)
   } else if (autofill == "offsets") {
-    let _fields = fields.filter(f => is-data-field(f)).map(f => f.data.range.start).flatten() //.filter(value => value < meta.cols.main).flatten()
+    let _fields = fields.filter(f => is-data-field(f)).map(f => f.data.range.start).flatten()
     _fields.push(meta.cols.main -1)
     _fields.push(meta.size -1)
     return _fields.dedup()
@@ -179,7 +179,7 @@
           colspan: cell_size,
           rowspan: if(should_span) { int(field.data.size/bpr)} else {1}, 
           label: label, 
-          cell-idx: cell_index, 
+          cell-index: cell_index, 
           format: cell_format 
         )
       )
@@ -211,7 +211,7 @@
 
     _cells.push(
       bf-cell("note-cell", 
-          cell-idx: (field.field-index, 0),
+          cell-index: (field.field-index, 0),
           grid: side,
           x: if (side == left) {
             meta.cols.pre - level - 1
@@ -239,15 +239,37 @@
     let nums = header.data.at("numbers", default: ()) + header.data.at("labels").keys().map(k => int(k)) 
     let cell = nums.filter(num => num >= header.data.range.start and num < header.data.range.end).dedup().map(num =>{
 
+      // extract the label from the header field.
       let label = header.data.labels.at(str(num), default: "")
-
+      // check if the number should be shown on this cell.
       let show_number = num in header.data.numbers
+      // calculate the x position inside the grid depending on the msb
+      let x_pos = if (header.data.msb == left) { (bpr - 1) - calc.rem(num,bpr) } else { calc.rem(num, bpr) }
 
-      if header.data.msb == left {
-        header-cell(num, label: label, show-number: show_number, pos: (bpr - 1) - calc.rem(num,bpr) , meta, ..header.data.format) // TODO
-      } else {
-        header-cell(num, label: label, show-number: show_number, meta, ..header.data.format) // TODO
-      }
+      bf-cell("header-cell", 
+          cell-index: (header.field-index, num),
+          grid: top,
+          x: x_pos,
+          y: 0,
+          label: (
+            num: str(num),
+            text: label,
+          ),
+          format: (
+            // Defines if the number should be shown or ommited
+            number: show_number,
+            // Defines the angle of the labels 
+            angle: header.data.format.at("angle", default: -60deg),
+            // Defines the text-size for both numbers and labels.
+            text-size: header.data.format.at("text-size",default: auto), //TODO: connect to global setting
+            // Defines if a marker should be shown
+            marker: header.data.format.at("marker", default: true), // false
+            // Defines the alignment
+            align: header.data.format.at("align", default: center + horizon), 
+            // Defines the inset
+            inset: header.data.format.at("inset", default: (x: 0pt, y: 4pt)),
+          )
+        )
     })
 
     _cells.push(cell)
