@@ -1,7 +1,7 @@
 #import "@preview/tidy:0.2.0"
 #import "@preview/gentle-clues:0.6.0": abstract, info
 #import "@preview/codelst:2.0.0": sourcecode
-#import "@local/bytefield:0.0.4": *
+#import "../bytefield.typ": *
 
 #let tag(value, fill: orange.lighten(45%)) = {
   box(
@@ -195,17 +195,6 @@ Currently *only the first* `bitheader` per `bytefield` is processed, all others 
 
 There are some #named arguments and an arbitrary amount of #positional arguments which you can pass to a header.
 
-Show or hide numbers
-- `numbers: none` hide all numbers 
-- `numbers: auto` show all specified numbers #default
-
-
-Some common use cases can be set by adding a `string` value. #positional
-- `"all"` will show numbers for all bits. 
-- `"bytes"` will show every multiple of 8 and the last bit.
-- `"bounds"` will show begin and end of each field in the first row.
-- `"offsets"` will show begin of each field in the first row.
-
 Showing a number. #positional
 - Just add an `int` value with the number you would like to show. 
 
@@ -218,6 +207,21 @@ Set the order of the bits with the `msb` argument directly on the `bytefield`.
  - `msb:left`  displays the numbers from (left) msb --- to --- 0 (right)
 ]
 
+Show or hide numbers
+- `numbers: none` hide all numbers 
+- `numbers: auto` show all specified numbers #default
+
+Some common use cases can be set by adding a `string` value. #positional
+- `"all"` will show numbers for all bits. 
+- `"bytes"` will show every multiple of 8 and the last bit.
+- `"bounds"` will show begin and end of each field in the first row.
+- `"offsets"` will show begin of each field in the first row.
+
+You can use #named arguments to adjust the header styling.
+
+- `fill` argument adds an background color to the header.
+- `text-size` sets the size of the text.
+- `stroke` defines the border style.
 
 === Numbers and Labels example
 You can also show labels and indexes by specifying a `content` after an `number` (`int`).
@@ -225,7 +229,7 @@ You can also show labels and indexes by specifying a `content` after an `number`
 #example(showlines: (2,8), ```typst
 #bytefield(
   bitheader(
-    0,[LSB_starting_at_bit_0], 
+    0,[LSB], 
     5, [test], 
     8, [next_field], 
     24, [important FLAG], 
