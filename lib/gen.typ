@@ -8,11 +8,11 @@
 /// generate metadata which is needed later on
 #let generate_meta(fields, args) = {
   // collect metadata into an dictionary
-  // let bh = fields.find(f =>  is-header-field(f))
-  // let msb = if (bh == none) {right} else { bh.data.msb }
-  let (pre_levels, post_levels) = _get_max_annotation_levels(fields.filter(f => if is-bf-field(f) { is-note-field(f) } else { f.type == "annotation" } ))
+  let bh = fields.find(f =>  is-header-field(f))
+  // check level indentation for annotations
+  let (pre_levels, post_levels) = _get_max_annotation_levels(fields.filter(f => is-note-field(f) ))
   let meta = (
-    size: fields.filter(f => if is-bf-field(f) { is-data-field(f) } else { f.type == "bitbox" } ).map(f => if (f.data.size == auto) { args.bpr } else { f.data.size } ).sum(),
+    size: fields.filter(f => is-data-field(f) ).map(f => if (f.data.size == auto) { args.bpr } else { f.data.size } ).sum(),
     msb: args.msb,
     cols: (
       pre: pre_levels,
@@ -21,6 +21,8 @@
     ),
     header: (
       rows: 1,
+      fill: if (bh == none) { none } else { bh.data.format.at("fill", default: none) },
+      stroke: if (bh == none) { none } else { bh.data.format.at("stroke", default: none) },
     ),
     side: (
       left: (
@@ -41,7 +43,7 @@
   } else if (autofill == "all") {
     return range(meta.size)
   } else if (autofill == "offsets") {
-    let _fields = fields.filter(f => is-data-field(f)).map(f => f.data.range.start).flatten() //.filter(value => value < meta.cols.main).flatten()
+    let _fields = fields.filter(f => is-data-field(f)).map(f => f.data.range.start).flatten()
     _fields.push(meta.cols.main -1)
     _fields.push(meta.size -1)
     return _fields.dedup()
@@ -129,7 +131,6 @@
     let slice_idx = 0;
     let should_span = is-multirow(field, bpr)
     let current_offset = calc.rem(idx, bpr)
-    // let num_of_wraps = calc_row_wrapping(field, bpr, current_offset)
 
     while len > 0 {
       let rem_space = bpr - calc.rem(idx, bpr);
@@ -151,12 +152,12 @@
       }
 
       let cell_index = (field.field-index, slice_idx)
-      let x_pos = calc.rem(idx,bpr) + meta.cols.pre
-      let y_pos = int(idx/bpr) + meta.header.rows
+      let x_pos = calc.rem(idx,bpr) 
+      let y_pos = int(idx/bpr)
 
       let cell_format = (
-        fill: field.data.format.fill,
         stroke: _stroke,
+        ..field.data.format,
       )
 
       // adjust label for breaking fields.
@@ -178,7 +179,7 @@
           colspan: cell_size,
           rowspan: if(should_span) { int(field.data.size/bpr)} else {1}, 
           label: label, 
-          cell-idx: cell_index, 
+          cell-index: cell_index, 
           format: cell_format 
         )
       )
@@ -199,10 +200,10 @@
 
     // get the associated field
     let anchor_field = fields.find(f => f.field-index == field.data.anchor)
-    let row = meta.header.rows;
+    let row = 0;
    
     if anchor_field != none {
-       row = int( if (meta.msb == left) { (meta.size - anchor_field.data.range.end)/bpr } else { anchor_field.data.range.start/bpr }) + meta.header.rows 
+       row = int( if (meta.msb == left) { (meta.size - anchor_field.data.range.end)/bpr } else { anchor_field.data.range.start/bpr })
     } else {
       // if no anchor could be found, fail silently
       continue
@@ -210,11 +211,12 @@
 
     _cells.push(
       bf-cell("note-cell", 
-          cell-idx: (field.field-index, 0),
+          cell-index: (field.field-index, 0),
+          grid: side,
           x: if (side == left) {
             meta.cols.pre - level - 1
           } else {
-            meta.cols.pre + bpr + level
+            level
           },
           y: int(row), 
           rowspan: field.data.rowspan,
@@ -237,15 +239,37 @@
     let nums = header.data.at("numbers", default: ()) + header.data.at("labels").keys().map(k => int(k)) 
     let cell = nums.filter(num => num >= header.data.range.start and num < header.data.range.end).dedup().map(num =>{
 
+      // extract the label from the header field.
       let label = header.data.labels.at(str(num), default: "")
+      // check if the number should be shown on this cell.
+      let show_number = num in header.data.numbers
+      // calculate the x position inside the grid depending on the msb
+      let x_pos = if (header.data.msb == left) { (bpr - 1) - calc.rem(num,bpr) } else { calc.rem(num, bpr) }
 
-      let show_number = num in header.data.numbers  //header.data.numbers != none and num in header.data.numbers
-
-      if header.data.msb == left {
-        header-cell(num, label: label, show-number: show_number, pos: (bpr - 1) - calc.rem(num,bpr) , meta, ..header.data.format) // TODO
-      } else {
-        header-cell(num, label: label, show-number: show_number, meta, ..header.data.format) // TODO
-      }
+      bf-cell("header-cell", 
+          cell-index: (header.field-index, num),
+          grid: top,
+          x: x_pos,
+          y: 0,
+          label: (
+            num: str(num),
+            text: label,
+          ),
+          format: (
+            // Defines if the number should be shown or ommited
+            number: show_number,
+            // Defines the angle of the labels 
+            angle: header.data.format.at("angle", default: -60deg),
+            // Defines the text-size for both numbers and labels.
+            text-size: header.data.format.at("text-size",default: auto), //TODO: connect to global setting
+            // Defines if a marker should be shown
+            marker: header.data.format.at("marker", default: true), // false
+            // Defines the alignment
+            align: header.data.format.at("align", default: center + horizon), 
+            // Defines the inset
+            inset: header.data.format.at("inset", default: (x: 0pt, y: 4pt)),
+          )
+        )
     })
 
     _cells.push(cell)
@@ -317,17 +341,45 @@
 
 /// produce the final output
 #let generate_table(meta, cells) = {
-  let cells = map_cells(cells);
-
-  // TODO: new grid with subgrids.
   let table = locate(loc => {
-      gridx(
-        columns:  meta.side.left.cols + range(meta.cols.main).map(i => 1fr) + meta.side.right.cols,
-        rows: (auto, _get_row_height(loc)),
-        align: center + horizon,
-        inset: (x:0pt, y: 4pt),
-        ..cells
+
+      let header = gridx(
+        columns: range(meta.cols.main).map(i => 1fr) ,
+        rows: auto,
+        ..map_cells(cells.filter(c => is-header-cell(c)))
       )
+
+      let grid_left = gridx(
+        columns: meta.side.left.cols,
+        rows: _get_row_height(loc),
+        ..map_cells(cells.filter(c => is-note-cell(c) and c.position.grid == left))
+      )
+
+      let grid_right = gridx(
+        columns: meta.side.right.cols,
+        rows: _get_row_height(loc),
+        ..map_cells(cells.filter(c => is-note-cell(c) and c.position.grid == right))
+      )
+
+      let grid_center = gridx(
+        columns:range(meta.cols.main).map(i => 1fr) ,
+        rows: _get_row_height(loc),
+        ..map_cells(cells.filter(c => is-data-cell(c)))
+      )
+
+      return gridx(
+        columns: (if (meta.cols.pre > 0) { auto } else { 0pt }, 1fr, if (meta.cols.post > 0) { auto } else { 0pt }),
+        inset: 0pt,
+        ..if (cells.filter(c => is-header-cell(c)) != none) {
+          ([/* top left*/], 
+          align(bottom, box(fill: meta.header.fill, stroke: meta.header.stroke, width: 100%, header)), 
+          [/*top right*/],)
+        },
+        align(top,grid_left), 
+        align(top,grid_center),
+        align(top,grid_right),
+      )
+
     })
   return table
 }

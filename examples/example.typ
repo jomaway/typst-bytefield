@@ -237,6 +237,39 @@ It's not possible to only omit numbers for certain labels right now.
 ```)
 
 #pagebreak()
+== Styling the header
+
+You can use #named arguments to adjust the header styling.
+
+- `fill` argument adds an background color to the header.
+- `text-size` sets the size of the text.
+- `stroke` defines the border style.
+
+=== Fancy orange header with big font
+#example(showlines: (2,2), ```typst
+#bytefield(
+  bitheader("bytes", fill: orange.lighten(60%), text-size: 16pt, stroke: red),
+  byte[LSB],
+  bytes(2)[Two],
+  flag("URG"),
+  bits(7)[MSB],
+)
+```)
+
+=== Gray and boxed header
+#example(showlines: (3,3),```typst
+#bytefield(
+  bpr: 8,
+  bitheader("all", fill: luma(200), stroke: black),
+  bits(4)[Session Key Locator],
+  bits(4, fill: luma(200))[Reserved],
+  bytes(2)[MAC input data],
+  byte[...]
+)
+```)
+ _info: example taken from discord discussion (author: \_\_Warez)_
+
+#pagebreak()
 == Some predefined network protocols
 
 === IPv4

@@ -110,9 +110,9 @@
   side,
   rowspan:1,
   level:0, 
-  inset: 5pt, 
-  bracket: false, 
-  content
+  inset: 5pt,
+  bracket: false,
+  content,
 ) = {
   let _align  = none
   let _first  = none
@@ -149,8 +149,8 @@
 ///
 /// Basically just a shortcut for the `note` field with the argument `bracket:true` by default.
 /// 
-#let group(side,rowspan,level:0, bracket:true,content) = {
-  note(side,level:level,rowspan:rowspan,bracket: bracket,content)
+#let group(side, rowspan, level:0, bracket:true, content) = {
+  note(side, level:level, rowspan:rowspan, bracket:bracket, content)
 }
 
 /// Shows a special note with a start_addr (top aligned) and end_addr (bottom aligned) on the left of the associated row.
@@ -175,7 +175,6 @@
 ///
 /// By default no header is shown.
 /// 
-/// - msb (left, right):  This sets the bit order
 /// - range (array): Specify the range of number which are displayed on the header. Format: `(start, end)`
 /// - autofill (string): Specify on of the following options and let bytefield calculate the numbers for you.
 ///   - `"bytes"` shows each multiple of 8 and the last number of the row.
@@ -188,7 +187,6 @@
 ///   If a `content` value follows a `int` value it will be interpreted as label for this number.
 ///   For more information see the _manual_.
 #let bitheader(
-  msb: right,
   range: (auto,auto),  
   autofill: auto,
   numbers: auto,  
@@ -217,12 +215,13 @@
     angle: args.named().at("angle", default: -60deg),
     text-size: args.named().at("text-size",default: auto),
     marker: args.named().at("marker", default: true),
+    fill: args.named().at("fill", default: none),
+    stroke: args.named().at("stroke", default: none),
   )
   
   return header-field(
       start: range.at(0, default: auto),  // todo. fix this
       end: range.at(1, default: auto),    // todo. fix this
-      msb: msb,
       autofill: autofill,
       numbers: numbers,
       labels: labels,
