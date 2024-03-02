@@ -236,6 +236,23 @@ It's not possible to only omit numbers for certain labels right now.
 )
 ```)
 
+=== Styling the header
+You can use #named arguments to adjust the header styling.
+
+- `fill` argument adds an background color to the header.
+- `text-size` sets the size of the text.
+- `stroke` defines the border style.
+
+#example(showlines: (2,2), ```typst
+#bytefield(
+  bitheader(..range(32,step:9), 31, fill: orange.lighten(60%), text-size: 16pt, stroke: red),
+  byte[LSB],
+  bytes(2)[Two],
+  flag("URG"),
+  bits(7)[MSB],
+)
+```)
+
 #pagebreak()
 == Some predefined network protocols
 

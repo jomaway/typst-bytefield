@@ -217,6 +217,8 @@
     angle: args.named().at("angle", default: -60deg),
     text-size: args.named().at("text-size",default: auto),
     marker: args.named().at("marker", default: true),
+    fill: args.named().at("fill", default: none),
+    stroke: args.named().at("stroke", default: none),
   )
   
   return header-field(
