@@ -54,7 +54,11 @@
         // Defines the text-size for both numbers and labels.
         text-size: args.named().at("text-size",default: auto), 
         // Defines if a marker should be shown
-        marker: args.named().at("marker", default: true), 
+        marker: args.named().at("marker", default: true),
+        // Defines the background color.
+        fill: args.named().at("fill", default: none),
+        // Defines the border stroke.
+        stroke: args.named().at("stroke", default: none),
       )
     )
   )
@@ -84,7 +88,7 @@
   bf-cell(
     "header-cell",
     cell-idx: none,
-    x: (if (pos == auto) {calc.rem(num, meta.cols.main)} else { calc.rem(pos, meta.cols.main) }) + meta.cols.pre,   //NOTE: we could probably get rid of meta if we change to a subgrid solution.
+    x: (if (pos == auto) {calc.rem(num, meta.cols.main)} else { calc.rem(pos, meta.cols.main) }),
     y: 0,
     label: (
       num: str(num),
