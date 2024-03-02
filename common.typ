@@ -57,7 +57,8 @@
 
 
 #let tcp_detailed = bytefield(
-  bytes(2)[Source Port], bytes(2)[ Destinatino Port],
+  bitheader("bytes"),
+  bytes(2)[Source Port], bytes(2)[ Destination Port],
   bytes(4)[Sequence Number],
   bytes(4)[Acknowledgment Number],
   bits(4)[Data Offset],bits(6)[Reserved], flag("URG"), flag("ACK"), flag("PSH"), flag("RST"), flag("SYN"), flag("FIN"), bytes(2)[Window],
@@ -67,7 +68,7 @@
 )
 
 #let udp = bytefield(
-  bitheader: (0,16,31),
+  bitheader("bytes"),
   bytes(2)[Source Port], bytes(2)[ Destination Port],
   bytes(2)[Length], bytes(2)[Checksum],
   padding[...DATA...]
