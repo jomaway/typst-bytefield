@@ -1,7 +1,11 @@
-
 # Changelog
 
-## [0.0.4] - (Unreleased)
+## [0.0.5] - (Unreleased)
+
+### Added
+- Option to style the header with a background color (`fill`) and stroke (`stroke`).
+
+## [0.0.4] - (2024-02-18)
 
 This release is a complete refactor of the bytefield package.
 
