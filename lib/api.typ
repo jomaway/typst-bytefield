@@ -44,6 +44,8 @@
 /// - fill (color): The background color for the field.
 /// - body (content): The label which is displayed inside the field.
 #let _field(size, fill: none, body) = {
+  if size != auto { assert.eq(type(size), int, message: strfmt("expected size to be an integer or auto, found {}", type(size))) } 
+  if fill != none { assert(type(fill) in (color, gradient), message: strfmt("expected fill to be an color or gradient, found {}.", type(fill)))}
   data-field(none, size, none, none, body, format: (fill: fill))
 }
 
@@ -117,6 +119,12 @@
   bracket: false,
   content,
 ) = {
+  assert(side in (left,right), message: strfmt("expected side to be left or right, found {}", side));
+  assert.eq(type(bracket), bool, message: strfmt("expected bracket to be of type bool, found {}", type(bracket)));
+  assert.eq(type(rowspan), int, message: strfmt("expected rowspan to be a integer, found {}.", type(rowspan)));
+  assert.eq(type(level), int, message: strfmt("expected level to be a integer, found {}.", type(level)));
+  assert(type(inset) in (length, dictionary), message: strfmt("expected inset to be a length or dictionary, found {}.", type(inset)));
+
   let _align  = none
   let _first  = none
   let _second = none
@@ -195,9 +203,11 @@
   numbers: auto,  
   ..args
 ) = {
-  // let _numbers = ()
-  let labels = (:)
+  // assertions
+  if (autofill != auto) { assert.eq(type(autofill), str, message: strfmt("expected autofill to be a string, found {}", type(autofill)))}
+
   let _numbers = ()
+  let labels = (:)
   let last = 0
   let step = 1
   for arg in args.pos() {
