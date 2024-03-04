@@ -101,7 +101,9 @@
   for f in _fields.filter(f => is-note-field(f)) {
     let anchor = _get_index_of_next_data_field(f.field-index, _fields)
     let data = dict_insert_and_return(f.data, "anchor", anchor)
-    fields.push(dict_insert_and_return(f, "data", data))
+    let field = dict_insert_and_return(f, "data", data)
+    assert_note-field(field);
+    fields.push(field)
   }
 
 
@@ -113,7 +115,6 @@
     fields.push(header-field(
       start: if f.data.range.start == auto { if meta.msb == right { 0 } else { meta.size - bpr } } else { assert.eq(type(f.data.range.start),int); f.data.range.start },
       end: if f.data.range.end == auto { if meta.msb == right { bpr } else { meta.size } } else { assert.eq(type(f.data.range.end),int); f.data.range.end }, 
-      msb: meta.msb,
       numbers: numbers,
       labels: labels,
       ..f.data.format,
@@ -126,7 +127,7 @@
 
 /// generate data cells from data-fields
 #let generate_data_cells(fields, meta) = {
-  let data_fields = fields.filter(f => f.field-type == "data-field")
+  let data_fields = fields.filter(f => is-data-field(f))
   if (meta.msb == left ) { data_fields = data_fields.rev() }
   data_fields = data_fields
   let bpr = meta.cols.main;
@@ -200,11 +201,12 @@
 
 /// generate note cells from note-fields
 #let generate_note_cells(fields, meta) = {
-  let note_fields = fields.filter(f => f.field-type == "note-field")
+  let note_fields = fields.filter(f => is-note-field(f))
   let _cells = ()
   let bpr = meta.cols.main
 
   for field in note_fields {
+    assert_note-field(field)
     let side = field.data.side
     let level = field.data.level
 
@@ -240,12 +242,13 @@
 
 /// generate header cells from header-fields
 #let generate_header_cells(fields, meta) = {
-  let header_fields = fields.filter(f => f.field-type == "header-field")
+  let header_fields = fields.filter(f => is-header-field(f))
   let bpr = meta.cols.main
 
   let _cells = ()
 
   for header in header_fields {
+    assert_header-field(header)
     let nums = header.data.at("numbers", default: ()) + header.data.at("labels").keys().map(k => int(k)) 
     let cell = nums.filter(num => num >= header.data.range.start and num < header.data.range.end).dedup().map(num =>{
 
@@ -254,7 +257,7 @@
       // check if the number should be shown on this cell.
       let show_number = num in header.data.numbers
       // calculate the x position inside the grid depending on the msb
-      let x_pos = if (header.data.msb == left) { (bpr - 1) - calc.rem(num,bpr) } else { calc.rem(num, bpr) }
+      let x_pos = if (meta.msb == left) { (bpr - 1) - calc.rem(num,bpr) } else { calc.rem(num, bpr) }
 
       bf-cell("header-cell", 
           cell-index: (header.field-index, num),
@@ -304,6 +307,7 @@
 /// map bf custom cells to tablex cells
 #let map_cells(cells) = {
   cells.map(c => {
+    assert_bf-cell(c)
     let cell_type = c.at("cell-type", default: none)
 
     let body = if (cell_type == "header-cell") {

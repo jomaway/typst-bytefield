@@ -33,14 +33,12 @@
 }
 
 // header-field hold information about a complete header row. Usually this is the top level header.
-#let header-field(start: auto, end: auto, msb: left, autofill: auto, numbers: (), labels: (:), ..args) = {
+#let header-field(start: auto, end: auto, autofill: auto, numbers: (), labels: (:), ..args) = {
   // header-field must have index 0.
   bf-field("header-field", none,
     data: (
       // This is at the moment always 0 - (bpr), but in the future there might be header fields between data rows. 
       range: (start: start, end: end),
-      // Defines the order of the bits. false: start - end, true: end - start
-      msb: msb,
       // Defines which numbers should be shown. Possible none or array if numbers.
       numbers: numbers,
       // Defines which labels should be shown. Dict of number and content.
