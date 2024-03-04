@@ -354,28 +354,28 @@
   let table = locate(loc => {
     let rows = if (meta.rows.main == auto) { _get_row_height(loc) } else { meta.rows.main }
 
-      let header = gridx(
+      let grid_header = gridx(
         columns: range(meta.cols.main).map(i => 1fr) ,
         rows: auto,
-        ..map_cells(cells.filter(c => is-header-cell(c)))
+        ..map_cells(cells.filter(c => is-in-header-grid(c)))
       )
 
       let grid_left = gridx(
         columns: meta.side.left.cols,
         rows: rows,
-        ..map_cells(cells.filter(c => is-note-cell(c) and c.position.grid == left))
+        ..map_cells(cells.filter(c => is-in-left-grid(c)))
       )
 
       let grid_right = gridx(
         columns: meta.side.right.cols,
         rows: rows,
-        ..map_cells(cells.filter(c => is-note-cell(c) and c.position.grid == right))
+        ..map_cells(cells.filter(c => is-in-right-grid(c)))
       )
 
       let grid_center = gridx(
         columns:range(meta.cols.main).map(i => 1fr) ,
         rows: rows,
-        ..map_cells(cells.filter(c => is-data-cell(c)))
+        ..map_cells(cells.filter(c => is-in-main-grid(c)))
       )
 
       return gridx(
@@ -383,7 +383,7 @@
         inset: 0pt,
         ..if (cells.filter(c => is-header-cell(c)) != none) {
           ([/* top left*/], 
-          align(bottom, box(fill: meta.header.fill, stroke: meta.header.stroke, width: 100%, header)), 
+          align(bottom, box(fill: meta.header.fill, stroke: meta.header.stroke, width: 100%, grid_header)), 
           [/*top right*/],)
         },
         align(top,grid_left), 

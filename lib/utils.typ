@@ -118,3 +118,23 @@
     none
   }
 }
+
+/// Check if in a certain grid
+#let is-in-main-grid(cell) = {
+  center == cell.position.grid
+}
+
+/// Check if in a certain grid
+#let is-in-left-grid(cell) = {
+  left == cell.position.grid
+}
+
+/// Check if in a certain grid
+#let is-in-right-grid(cell) = {
+  right == cell.position.grid 
+}
+
+/// Check if in a certain grid
+#let is-in-header-grid(cell) = {
+  top == cell.position.grid
+}
