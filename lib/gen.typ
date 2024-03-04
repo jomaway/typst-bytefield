@@ -5,15 +5,25 @@
 
 #import "@preview/tablex:0.0.8": tablex, cellx, gridx
 
+#let assert_level_cols(levels, cols, side) = {
+  if (cols != auto) {
+    cols = if (int == type(cols)) { cols } else if (array == type(cols)) { cols.len() } else { panic(strfmt("expected {} argument to be auto, int or array, found {}",if (side == "left") {"pre"} else {"post"} ,type(cols) )) }
+    
+    assert(cols >= levels, message: strfmt("max notes level on the {} is {}, but found only {} cols.",side, levels, cols))
+  }
+}
+
 /// generate metadata which is needed later on
 #let generate_meta(fields, args) = {
   // collect metadata into an dictionary
   let bh = fields.find(f =>  is-header-field(f))
   // check level indentation for annotations
   let (pre_levels, post_levels) = _get_max_annotation_levels(fields.filter(f => is-note-field(f) ))
+  assert_level_cols(pre_levels, args.side.left_cols, "left")
+  assert_level_cols(post_levels, args.side.right_cols, "right")
   let meta = (
     // the total size in bits of all data-fields inside the bytefield. // todo: check if this is calculated correct if msb:left is selected.
-    size: fields.filter(f => is-data-field(f) ).map(f => if (f.data.size == auto) { args.bpr } else { f.data.size } ).sum(),
+    size: fields.filter(f => is-data-field(f) ).map(f => if (f.data.size == auto) { args.bpr /* fix: this is not consistent with how auto is handled in generate_fields */ } else { f.data.size } ).sum(),
     // the position of the msb (left | right), default: right 
     msb: args.msb,
     // number of cols for each grid.
