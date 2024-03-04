@@ -12,18 +12,28 @@
   // check level indentation for annotations
   let (pre_levels, post_levels) = _get_max_annotation_levels(fields.filter(f => is-note-field(f) ))
   let meta = (
+    // the total size in bits of all data-fields inside the bytefield. // todo: check if this is calculated correct if msb:left is selected.
     size: fields.filter(f => is-data-field(f) ).map(f => if (f.data.size == auto) { args.bpr } else { f.data.size } ).sum(),
+    // the position of the msb (left | right), default: right 
     msb: args.msb,
+    // number of cols for each grid.
     cols: (
       pre: pre_levels,
       main: args.bpr,
       post: post_levels,
     ),
+    // contains the height of the rows. 
+    rows: (
+      header: auto, // !unused
+      main: args.rows, // default: auto
+    ),
+    // contains information about the header 
     header: (
       rows: 1,
       fill: if (bh == none) { none } else { bh.data.format.at("fill", default: none) },
       stroke: if (bh == none) { none } else { bh.data.format.at("stroke", default: none) },
     ),
+    // stores the cols arguments for annotations
     side: (
       left: (
         cols: if (args.side.left_cols == auto) { (auto,)*pre_levels } else { args.side.left_cols },
@@ -342,6 +352,7 @@
 /// produce the final output
 #let generate_table(meta, cells) = {
   let table = locate(loc => {
+    let rows = if (meta.rows.main == auto) { _get_row_height(loc) } else { meta.rows.main }
 
       let header = gridx(
         columns: range(meta.cols.main).map(i => 1fr) ,
@@ -351,19 +362,19 @@
 
       let grid_left = gridx(
         columns: meta.side.left.cols,
-        rows: _get_row_height(loc),
+        rows: rows,
         ..map_cells(cells.filter(c => is-note-cell(c) and c.position.grid == left))
       )
 
       let grid_right = gridx(
         columns: meta.side.right.cols,
-        rows: _get_row_height(loc),
+        rows: rows,
         ..map_cells(cells.filter(c => is-note-cell(c) and c.position.grid == right))
       )
 
       let grid_center = gridx(
         columns:range(meta.cols.main).map(i => 1fr) ,
-        rows: _get_row_height(loc),
+        rows: rows,
         ..map_cells(cells.filter(c => is-data-cell(c)))
       )
 
