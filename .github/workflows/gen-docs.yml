@@ -10,3 +10,7 @@ jobs:
       - name: Typst
         uses: typst-community/setup-typst@v3
       - run: typst compile docs/docs.typ --root ..
+      - uses: actions/upload-artifact@v4
+        with:
+          name: docs
+          path: docs/docs.pdf
