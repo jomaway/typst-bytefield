@@ -23,13 +23,13 @@
   bitheader("bytes"),
   byte[Type], byte[Code], bytes(2)[Checksum],
   bytes(2)[Identifier], bytes(2)[Sequence Number],
-  padding[Optional Data]
+  bits(auto)[Optional Data]
 )
 
 #let icmpv6 = bytefield(
   bitheader("bytes"),
   byte[Type], byte[Code], bytes(2)[Checksum],
-  padding[Internet Header + 64 bits of Original Data Datagram]
+  bits(auto)[Internet Header + 64 bits of Original Data Datagram]
 )
 
 #let dns = bytefield(
@@ -51,7 +51,7 @@
   bits(4)[Data Offset],bits(6)[Reserved], bits(6)[Flags], bytes(2)[Window],
   bytes(2)[Checksum], bytes(2)[Urgent Pointer],
   bytes(3)[Options], byte[Padding],
-  padding[...DATA...]
+  bits(auto)[...DATA...]
 )
 
 #let tcp_detailed = bytefield(
@@ -62,12 +62,12 @@
   bits(4)[Data Offset],bits(6)[Reserved], flag("URG"), flag("ACK"), flag("PSH"), flag("RST"), flag("SYN"), flag("FIN"), bytes(2)[Window],
   bytes(2)[Checksum], bytes(2)[Urgent Pointer],
   bytes(3)[Options], byte[Padding],
-  padding[...DATA...]
+  bits(auto)[...DATA...]
 )
 
 #let udp = bytefield(
   bitheader("bytes"),
   bytes(2)[Source Port], bytes(2)[ Destination Port],
   bytes(2)[Length], bytes(2)[Checksum],
-  padding[...DATA...]
+  bits(auto)[...DATA...]
 )

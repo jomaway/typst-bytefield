@@ -40,7 +40,6 @@
       "bytes" : bytes,
       "bit" : bit,
       "bits" : bits,
-      "padding" : padding,
       "flag": flag,
       "note" : note,
       "group" : group,
