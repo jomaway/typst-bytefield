@@ -4,6 +4,7 @@
 
 ### Added
 - Option to style the header with a background color (`fill`) and stroke (`stroke`).
+- Option to specify the row heights of the bytefield with a `row` argument.
 
 ## [0.0.4] - (2024-02-18)
 

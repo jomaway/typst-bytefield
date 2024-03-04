@@ -269,6 +269,24 @@ You can use #named arguments to adjust the header styling.
 ```)
  _info: example taken from discord discussion (author: \_\_Warez)_
 
+
+== Set row height
+
+The height of the rows can be set with the `rows` argument.
+
+#example(showlines: (2,2), ```typst
+#bytefield(
+  rows: (3cm, 2cm, 1cm),
+  bitheader("bytes", fill: luma(200), stroke: luma(140)),
+  byte[LSB], bytes(2)[Two], flag("URG"), bits(7)[MSB],
+  byte[LSB], bytes(2)[Two], flag("URG"), bits(7)[MSB],
+  byte[LSB], bytes(2)[Two], flag("URG"), bits(7)[MSB],
+  byte[LSB], bytes(2)[Two], flag("URG"), bits(7)[MSB],
+)
+```)
+
+
+
 #pagebreak()
 == Some predefined network protocols
 
