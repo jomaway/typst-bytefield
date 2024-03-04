@@ -18,7 +18,6 @@ Using [tablex](https://github.com/PgBiel/typst-tablex) under the hood.
 #bytefield(
 // Config the header
 bitheader(
-msb:right, // left | right (default: right)
 "bytes",
 // adds every multiple of 8 to the header.
 0, [start], // number with label
