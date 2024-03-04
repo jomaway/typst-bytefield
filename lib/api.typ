@@ -92,15 +92,6 @@
 ///
 #let flag(text,..args) = _field(1,align(center,rotate(270deg,text)),..args)
 
-/// Add a field which extends to the end of the row
-///
-/// #emoji.warning This can cause problems with `msb:left`
-///
-/// - ..args (arguments): All arguments which are accepted by `_field`
-///
-#let padding(..args) = _field(auto, ..args)
-
-
 /// Create a annotation
 ///
 /// The note is always shown in the same row as the next data field which is specified. 
