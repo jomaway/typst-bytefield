@@ -243,6 +243,14 @@ You can also show labels and indexes by specifying a `content` after an `number`
 )
 ```)
 
+
+== Styling
+
+You can use the `row` argument on the `bytefield` to specify custom row heights. #emoji.warning This does not affect the header row. 
+Usage is equal to _typst_ table or grid row argument.
+
+See @reg-def as an example.
+
 #pagebreak()
 = Use cases<chap:use-cases>
 
@@ -296,14 +304,14 @@ Generate memory maps. Currently possible with a little workaround using bits. Be
 )
 
 #pagebreak()
-== Register Definitions
+== Register Definitions<reg-def>
 
 Creating register definition like @bf-reg is currently possible by using two `bytefields` and tweaking the header accordingly.
 
 
-#show: bf-config.with(
-  row_height: 2cm,
-)
+// #show: bf-config.with(
+//   row_height: 2cm,
+// )
 
 #figure(
 	example(
@@ -318,6 +326,7 @@ Creating register definition like @bf-reg is currently possible by using two `by
 	#bytefield(
 		bpr: 16,
 		msb: left,
+		rows: 2cm,
 		bitheader(range: (16,32), ..range(16,32), msb: left),
 		reserved(4),
 		reg_field(rw: "r")[PLL I2S RDY],
@@ -333,6 +342,7 @@ Creating register definition like @bf-reg is currently possible by using two `by
 	#bytefield(
 		bpr: 16,
 		msb: left,
+		rows: 2cm,
 		bitheader("all", msb: left),
 		reg_field(size:8, rw: "r")[HSICAL[7:0]],
 		reg_field(size:5)[HSITRIM[4:0]],
