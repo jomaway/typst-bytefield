@@ -7,6 +7,7 @@
 ///
 ///
 /// - bpr (int): Number of bits which are shown per row.
+/// - msb (left, right): position of the msb.
 /// - pre (auto, int , relative , fraction , array): This is specifies the columns for annotations on the *left* side of the bytefield
 /// - post (auto, int , relative , fraction , array): This is specifies the columns for annotations on the *right* side of the bytefield
 ///
@@ -15,6 +16,7 @@
 #let bytefield(
   bpr: 32, 
   msb: right,
+  rows: auto,
   pre: auto,
   post: auto,
   ..fields
@@ -23,6 +25,7 @@
   let args = (
     bpr: bpr,
     msb: msb,
+    rows: rows,
     side: (left_cols: pre, right_cols: post)
   )
 
