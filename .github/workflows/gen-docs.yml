@@ -1,5 +1,8 @@
 name: generate docs
-on: push
+on: 
+  push:
+    branches:
+      - main
 
 jobs:
   generate_docs:
