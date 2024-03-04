@@ -1,0 +1,12 @@
+name: generate docs
+on: push
+
+jobs:
+  generate_docs:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+      - name: Typst
+        uses: typst-community/setup-typst@v3
+      - run: typst compile docs/docs.typ --root ..
