@@ -372,43 +372,46 @@
     let rows = if (meta.rows.main == auto) { _get_row_height(loc) } else { meta.rows.main }
     if (type(rows) == array) { rows = rows.map(r => if (r == auto) { _get_row_height(loc) } else { r } )}
 
-      let grid_header = gridx(
+    // somehow grid_header still needs to exists. 
+    let grid_header = if (meta.header != none) { 
+      gridx(
         columns: range(meta.cols.main).map(i => 1fr) ,
         rows: auto,
         ..map_cells(cells.filter(c => is-in-header-grid(c)))
       )
+    } else { none }
 
-      let grid_left = gridx(
-        columns: meta.side.left.cols,
-        rows: rows,
-        ..map_cells(cells.filter(c => is-in-left-grid(c)))
-      )
+    let grid_left = gridx(
+      columns: meta.side.left.cols,
+      rows: rows,
+      ..map_cells(cells.filter(c => is-in-left-grid(c)))
+    )
 
-      let grid_right = gridx(
-        columns: meta.side.right.cols,
-        rows: rows,
-        ..map_cells(cells.filter(c => is-in-right-grid(c)))
-      )
+    let grid_right = gridx(
+      columns: meta.side.right.cols,
+      rows: rows,
+      ..map_cells(cells.filter(c => is-in-right-grid(c)))
+    )
 
-      let grid_center = gridx(
-        columns:range(meta.cols.main).map(i => 1fr) ,
-        rows: rows,
-        ..map_cells(cells.filter(c => is-in-main-grid(c)))
-      )
+    let grid_center = gridx(
+      columns:range(meta.cols.main).map(i => 1fr) ,
+      rows: rows,
+      ..map_cells(cells.filter(c => is-in-main-grid(c)))
+    )
 
-      return gridx(
-        columns: (if (meta.cols.pre > 0) { auto } else { 0pt }, 1fr, if (meta.cols.post > 0) { auto } else { 0pt }),
-        inset: 0pt,
-        ..if (cells.filter(c => is-header-cell(c)) != none) {
-          ([/* top left*/], 
-          align(bottom, box(fill: meta.header.fill, stroke: meta.header.stroke, width: 100%, grid_header)), 
-          [/*top right*/],)
-        },
-        align(top,grid_left), 
-        align(top,grid_center),
-        align(top,grid_right),
-      )
+    return gridx(
+      columns: (if (meta.cols.pre > 0) { auto } else { 0pt }, 1fr, if (meta.cols.post > 0) { auto } else { 0pt }),
+      inset: 0pt,
+      ..if (meta.header != none) {
+        ([/* top left*/], 
+        align(bottom, box(fill: meta.header.fill, stroke: meta.header.stroke, width: 100%, grid_header)), 
+        [/*top right*/],)
+      },
+      align(top,grid_left), 
+      align(top,grid_center),
+      align(top,grid_right),
+    )
 
-    })
+  })
   return table
 }
