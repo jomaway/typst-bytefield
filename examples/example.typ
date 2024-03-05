@@ -15,6 +15,22 @@
   )[#value]
 }
 
+#let v_ruler = grid(rows: 100%, columns: (1fr,1fr), gutter: 5pt)[
+  #set align(end + top);
+      #layout(size => {
+        box(height: size.height, inset: (top: 1pt, bottom: 2pt))[
+          #sym.arrow.t.stop; 
+          #v(1fr) 
+          #sym.arrow.b.stop;
+        ]
+      })
+][
+  #set align(start + horizon)
+  #layout(size => [
+    #calc.round(size.height.cm(), digits: 2) cm 
+  ])
+]
+
 #let default = tag[_default_]
 #let positional = tag(fill: green.lighten(60%))[_positional_]
 #let named = tag(fill: blue.lighten(60%))[_named_]
@@ -35,6 +51,7 @@
       "group" : group,
       "section": section,
       "bitheader": bitheader,
+      "v_ruler": v_ruler,
       "common": common,
       "common.ipv4" : common.ipv4,
       "common.ipv6": common.ipv6,
@@ -271,30 +288,7 @@ You can use #named arguments to adjust the header styling.
 
 The height of the rows can be set with the `rows` argument.
 
-#let v_ruler = grid(rows: 100%, columns: (1fr,1fr), gutter: 5pt)[
-  #set align(end + top);
-      #layout(size => {
-        box(height: size.height, inset: (top: 1pt, bottom: 2pt))[
-          #sym.arrow.t.stop; 
-          #v(1fr) 
-          #sym.arrow.b.stop;
-        ]
-      })
-][
-  #set align(start + horizon)
-  #layout(size => [
-    #calc.round(size.height.cm(), digits: 2) cm 
-  ])
-]
-
-
-#sourcecode[
-```typc 
-rows: (auto, 3cm, 2cm, 1cm, auto),
-```
-]
-
-
+#example(showlines: (2,2),```typst
 #bytefield(
   rows: (auto, 3cm, 2cm, 1cm, auto),
   bitheader("bytes", fill: luma(200), stroke: luma(140)),
@@ -304,9 +298,7 @@ rows: (auto, 3cm, 2cm, 1cm, auto),
   byte[LSB], bytes(2)[#v_ruler], byte[MSB],
   byte[LSB], bytes(2)[#v_ruler], byte[MSB],
 )
-
-
-
+```)
 
 #pagebreak()
 == Some predefined network protocols
