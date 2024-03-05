@@ -419,7 +419,12 @@
       inset: 0pt,
       ..if (meta.header != none) {
         ([/* top left*/], 
-        align(bottom, box(fill: meta.header.fill, stroke: meta.header.stroke, width: 100%, grid_header)), 
+        align(bottom, box(
+          width: 100%,
+          fill: if (meta.header.fill != auto) { meta.header.fill } else { _get_header_background(loc) }, 
+          stroke: if (meta.header.stroke != auto) { meta.header.stroke } else { _get_header_border(loc) },
+          grid_header
+        )), 
         [/*top right*/],)
       },
       align(top,grid_left), 

@@ -73,6 +73,14 @@
 
 #set text(9.5pt);
 
+#show: bf-config.with(
+  // field_font_size: 15.5pt,
+  // note_font_size: 6pt,
+  // header_font_size: 12pt,
+  // header_background: luma(200),
+  // header_border: luma(80),
+)
+
 #example(```typst
 #bytefield(
   // Config the header
@@ -86,12 +94,11 @@
     36, [Fix],  // will not be shown 
     marker: auto, // auto or none (default: auto)
     angle: -50deg, // angle  (default: -60deg)
-    text-size: 8pt,  // length  (default: global header_font_size or 9pt)
   ),
   // Add data fields (bit, bits, byte, bytes) and notes
   // A note always aligns on the same row as the start of the next data field. 
   note(left)[#text(16pt, fill: blue, font: "Consolas", "Testing")], 
-  bytes(3,fill: red.lighten(30%))[Test],
+  bytes(3,fill: red.lighten(30%))[#text(8pt, "Test")],
   note(right)[#set text(9pt); #sym.arrow.l This field \ breaks into 2 rows.],  
   bytes(2)[Break],
   note(left)[#set text(9pt); and continues \ here #sym.arrow],
@@ -103,7 +110,7 @@
   flag[#text(8pt)[SYN]],
   flag(fill: orange.lighten(60%))[#text(8pt)[ACK]],
   flag[#text(8pt)[BOB]],
-  bits(25, fill: purple.lighten(60%))[Padding],
+  bits(25, fill: purple.lighten(60%))[#v_ruler],
   bytes(2)[Next], 
   bytes(8, fill: yellow.lighten(60%))[Multi break],
   note(right)[#emoji.checkmark Finish],
