@@ -250,7 +250,20 @@ Usage is equal to _typst_ table or grid row argument.
 
 See @reg-def as an example.
 
+== Global config
 
+You can set some global default values which affect all `bytefields` by using a show rule.
+
+*Example:*
+```typst
+#show: bf-config.with(
+  field_font_size: 15.5pt,
+  note_font_size: 6pt,
+  header_font_size: 12pt,
+  header_background: luma(200),
+  header_border: luma(80),
+)
+``` 
 
 #pagebreak()
 = Use cases<chap:use-cases>
