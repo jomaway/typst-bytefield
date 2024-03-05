@@ -60,7 +60,6 @@
 #bytefield(
   // Config the header
   bitheader(
-    msb:right,  // left | right  (default: right)
     "bytes",    // adds every multiple of 8 to the header. 
     0, [start], // number with label
     5,          // number without label
@@ -88,7 +87,6 @@
   flag(fill: orange.lighten(60%))[#text(8pt)[ACK]],
   flag[#text(8pt)[BOB]],
   bits(25, fill: purple.lighten(60%))[Padding],
-  // padding(fill: purple.lighten(40%))[Padding],
   bytes(2)[Next], 
   bytes(8, fill: yellow.lighten(60%))[Multi break],
   note(right)[#emoji.checkmark Finish],
@@ -273,16 +271,40 @@ You can use #named arguments to adjust the header styling.
 
 The height of the rows can be set with the `rows` argument.
 
-#example(showlines: (2,2), ```typst
+#let v_ruler = grid(rows: 100%, columns: (1fr,1fr), gutter: 5pt)[
+  #set align(end + top);
+      #layout(size => {
+        box(height: size.height, inset: (top: 1pt, bottom: 2pt))[
+          #sym.arrow.t.stop; 
+          #v(1fr) 
+          #sym.arrow.b.stop;
+        ]
+      })
+][
+  #set align(start + horizon)
+  #layout(size => [
+    #calc.round(size.height.cm(), digits: 2) cm 
+  ])
+]
+
+
+#sourcecode[
+```typc 
+rows: (auto, 3cm, 2cm, 1cm, auto),
+```
+]
+
+
 #bytefield(
-  rows: (3cm, 2cm, 1cm),
+  rows: (auto, 3cm, 2cm, 1cm, auto),
   bitheader("bytes", fill: luma(200), stroke: luma(140)),
-  byte[LSB], bytes(2)[Two], flag("URG"), bits(7)[MSB],
-  byte[LSB], bytes(2)[Two], flag("URG"), bits(7)[MSB],
-  byte[LSB], bytes(2)[Two], flag("URG"), bits(7)[MSB],
-  byte[LSB], bytes(2)[Two], flag("URG"), bits(7)[MSB],
+  byte[LSB], bytes(2)[#v_ruler], byte[MSB],
+  byte[LSB], bytes(2)[#v_ruler], byte[MSB],
+  byte[LSB], bytes(2)[#v_ruler], byte[MSB],
+  byte[LSB], bytes(2)[#v_ruler], byte[MSB],
+  byte[LSB], bytes(2)[#v_ruler], byte[MSB],
 )
-```)
+
 
 
 
