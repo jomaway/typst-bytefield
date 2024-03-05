@@ -349,8 +349,22 @@
         height: 100%,
         width: if (cell_type == "data-cell") { 100% } else {auto},
         stroke: c.format.at("stroke", default: none),
-        c.label
-      )
+      )[
+        #locate(loc => {
+          if (is-data-cell(c) and (_get_field_font_size(loc) != auto)) {
+            [
+              #set text(_get_field_font_size(loc));
+              #c.label
+            ]
+          } else if (is-note-cell(c) and (_get_note_font_size(loc) != auto)) {
+            [
+              #set text(_get_note_font_size(loc));
+              #c.label
+            ]
+          } else { c.label }
+    
+        })
+      ]
     }
 
     return cellx(
@@ -394,10 +408,11 @@
     )
 
     let grid_center = gridx(
-      columns:range(meta.cols.main).map(i => 1fr) ,
-      rows: rows,
-      ..map_cells(cells.filter(c => is-in-main-grid(c)))
-    )
+        columns:range(meta.cols.main).map(i => 1fr) ,
+        rows: rows,
+        ..map_cells(cells.filter(c => is-in-main-grid(c)))
+      )
+
 
     return gridx(
       columns: (if (meta.cols.pre > 0) { auto } else { 0pt }, 1fr, if (meta.cols.post > 0) { auto } else { 0pt }),
