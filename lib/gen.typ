@@ -21,6 +21,8 @@
   let (pre_levels, post_levels) = _get_max_annotation_levels(fields.filter(f => is-note-field(f) ))
   assert_level_cols(pre_levels, args.side.left_cols, "left")
   assert_level_cols(post_levels, args.side.right_cols, "right")
+  // check if msb value is valid 
+  assert(args.msb in (left,right), message: strfmt("expected left or right for msb, found {}", args.msb))
   let meta = (
     // the total size in bits of all data-fields inside the bytefield. // todo: check if this is calculated correct if msb:left is selected.
     size: fields.filter(f => is-data-field(f) ).map(f => if (f.data.size == auto) { args.bpr /* fix: this is not consistent with how auto is handled in generate_fields */ } else { f.data.size } ).sum(),
@@ -38,11 +40,12 @@
       main: args.rows, // default: auto
     ),
     // contains information about the header 
-    header: (
-      rows: 1,
-      fill: if (bh == none) { none } else { bh.data.format.at("fill", default: none) },
-      stroke: if (bh == none) { none } else { bh.data.format.at("stroke", default: none) },
-    ),
+    header: if (bh == none) { none } else {
+      (
+        fill: bh.data.format.at("fill", default: none),
+        stroke: bh.data.format.at("stroke", default: none),
+      )
+    },
     // stores the cols arguments for annotations
     side: (
       left: (
@@ -367,6 +370,7 @@
 #let generate_table(meta, cells) = {
   let table = locate(loc => {
     let rows = if (meta.rows.main == auto) { _get_row_height(loc) } else { meta.rows.main }
+    if (type(rows) == array) { rows = rows.map(r => if (r == auto) { _get_row_height(loc) } else { r } )}
 
       let grid_header = gridx(
         columns: range(meta.cols.main).map(i => 1fr) ,
