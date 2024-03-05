@@ -250,6 +250,8 @@ Usage is equal to _typst_ table or grid row argument.
 
 See @reg-def as an example.
 
+
+
 #pagebreak()
 = Use cases<chap:use-cases>
 
@@ -264,7 +266,7 @@ Generate protocol headers like the one from the *ipv4* protocol.
 	```typst
 	#bytefield(
 		bitheader("bytes"),
-		bits(4)[Version], bits(4)[TTL], bytes(1)[TOS], bytes(2)[Total Length],
+		bits(4)[Version], bits(4)[IHL], bytes(1)[TOS], bytes(2)[Total Length],
 		bytes(2)[Identification], bits(3)[Flags], bits(13)[Fragment Offset],
 		bytes(1)[TTL], bytes(1)[Protocol], bytes(2)[Header Checksum],
 		bytes(4)[Source Address],
