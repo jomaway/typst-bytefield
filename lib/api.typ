@@ -227,11 +227,11 @@
   }
 
   let format = (
-    angle: args.named().at("angle", default: -60deg),
-    text-size: args.named().at("text-size",default: auto),
-    marker: args.named().at("marker", default: true),
-    fill: args.named().at("fill", default: auto),
-    stroke: args.named().at("stroke", default: auto),
+    angle: angle,
+    text-size: text-size,
+    marker: marker,
+    fill: fill,
+    stroke: stroke,
   )
   
   return header-field(
