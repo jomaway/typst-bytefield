@@ -3,8 +3,6 @@
 #import "asserts.typ": *
 #import "states.typ": *
 
-#import "@preview/tablex:0.0.8": tablex, cellx, gridx
-
 #let assert_level_cols(levels, cols, side) = {
   if (cols != auto) {
     cols = if (int == type(cols)) { cols } else if (array == type(cols)) { cols.len() } else { panic(strfmt("expected {} argument to be auto, int or array, found {}",if (side == "left") {"pre"} else {"post"} ,type(cols) )) }
@@ -203,7 +201,7 @@
           colspan: cell_size,
           rowspan: if(should_span) { int(field.data.size/bpr)} else {1}, 
           label: label, 
-          cell-index: cell_index, 
+          cell-index: cell_index,
           format: cell_format 
         )
       )
@@ -355,29 +353,28 @@
         })
       }) 
     } else {
-      box(
-        height: 100%,
-        width: if is-data-cell(c) { 100% } else {auto},
-        stroke: c.format.at("stroke", default: none),
-      )[
-        #locate(loc => {
-          if (is-data-cell(c) and (_get_field_font_size(loc) != auto)) {
-            [
-              #set text(_get_field_font_size(loc));
-              #c.label
-            ]
-          } else if (is-note-cell(c) and (_get_note_font_size(loc) != auto)) {
-            [
-              #set text(_get_note_font_size(loc));
-              #c.label
-            ]
-          } else { c.label }
-    
-        })
-      ]
+      locate(loc => {
+        box(
+          height: _get_row_height(loc)*c.span.rows,
+          width: if is-data-cell(c) { 100% } else {auto},
+          stroke: c.format.at("stroke", default: none),
+        )[
+            #if (is-data-cell(c) and (_get_field_font_size(loc) != auto)) {
+              [
+                #set text(_get_field_font_size(loc));
+                #c.label
+              ]
+            } else if (is-note-cell(c) and (_get_note_font_size(loc) != auto)) {
+              [
+                #set text(_get_note_font_size(loc));
+                #c.label
+              ]
+            } else { c.label }
+        ]
+      })
     }
 
-    return cellx(
+    return grid.cell(
       x: c.position.x,
       y: c.position.y,
       colspan: c.span.cols,
@@ -398,33 +395,33 @@
 
     // somehow grid_header still needs to exists. 
     let grid_header = if (meta.header != none) { 
-      gridx(
-        columns: range(meta.cols.main).map(i => 1fr) ,
+      grid(
+        columns: (1fr,)*meta.cols.main,
         rows: auto,
         ..map_cells(cells.filter(c => is-in-header-grid(c)))
       )
     } else { none }
 
-    let grid_left = gridx(
+    let grid_left = grid(
       columns: meta.side.left.cols,
       rows: rows,
       ..map_cells(cells.filter(c => is-in-left-grid(c)))
     )
 
-    let grid_right = gridx(
+    let grid_right = grid(
       columns: meta.side.right.cols,
       rows: rows,
       ..map_cells(cells.filter(c => is-in-right-grid(c)))
     )
 
-    let grid_center = gridx(
-        columns:range(meta.cols.main).map(i => 1fr) ,
+    let grid_center = grid(
+        columns:(1fr,)*meta.cols.main,
         rows: rows,
         ..map_cells(cells.filter(c => is-in-main-grid(c)))
       )
 
 
-    return gridx(
+    return grid(
       columns: (if (meta.cols.pre > 0) { auto } else { 0pt }, 1fr, if (meta.cols.post > 0) { auto } else { 0pt }),
       inset: 0pt,
       ..if (meta.header != none) {
