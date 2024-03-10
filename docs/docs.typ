@@ -198,7 +198,8 @@ Showing a number. #positional
 - Just add an `int` value with the number you would like to show. 
 
 Showing a text label for a number #positional
-- Add a content field after the int value which the label belongs to.
+- Add a content field after the int value which the label belongs to. 
+- To show a label without the number use the negativ number. _Example: (-5) instead of (5)_
 
 #info[
 Set the order of the bits with the `msb` argument directly on the `bytefield`.
@@ -221,6 +222,12 @@ You can use #named arguments to adjust the header styling.
 - `fill` argument adds an background color to the header.
 - `text-size` sets the size of the text.
 - `stroke` defines the border style.
+- `marker` [bool] defines if there is a marker line shown below the label. 
+	- `marker: true`: shows a marker on each label.
+	- `marker: false`: no marker is shown at all.
+	- `marker: (true,false)`: shows markers only on labels with numbers.
+	- `marker: (false, true)`: shows markers only on labels without numbers.
+
 
 === Numbers and Labels example
 You can also show labels and indexes by specifying a `content` after an `number` (`int`).

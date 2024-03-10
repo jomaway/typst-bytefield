@@ -184,6 +184,11 @@
 ///   - `"bounds"` shows a number for every start and end bit of a field.
 ///   - `"offsets"` shows a number for every start bit of a field. 
 /// - numbers (auto, none): if none is specified no numbers will be shown on the header. This is useful to show only labels.
+/// - marker (bool, array): defines if marker lines are shown under a label.
+/// - angle (angle): The rotation angle of the label.
+/// - fill (color): The background of the header.
+/// - stroke (color): The border stroke of the header.
+/// - text-size(length): The text-size for the header labels and numbers.
 /// - ..args (int, content): The numbers and labels which should be shown on the header. 
 ///   The number will only be shown if it is inside the range.
 ///   If a `content` value follows a `int` value it will be interpreted as label for this number.
@@ -191,7 +196,12 @@
 #let bitheader(
   range: (auto,auto),  
   autofill: auto,
-  numbers: auto,  
+  numbers: auto,
+  marker: true,
+  fill: auto,
+  stroke: auto,
+  text-size: auto,  
+  angle: -60deg,
   ..args
 ) = {
   // assertions
