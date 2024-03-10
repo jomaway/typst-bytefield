@@ -1,6 +1,6 @@
 [package]
 name="bytefield"
-version = "0.0.4"
+version = "0.0.5"
 entrypoint = "bytefield.typ"
 authors = ["Jomaway <https://github.com/jomaway>"]
 license = "MIT"

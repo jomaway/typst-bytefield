@@ -13,7 +13,7 @@ Using [tablex](https://github.com/PgBiel/typst-tablex) under the hood.
 ![random colored bytefield example](docs/bytefield_example.png)
 
 ```typst
-#import "@preview/bytefield:0.0.4": *
+#import "@preview/bytefield:0.0.5": *
 
 #bytefield(
 // Config the header
@@ -27,7 +27,6 @@ bitheader(
 23, [end_test],
 24, [start_break],
 36, [Fix], // will not be shown
-marker: auto, // auto or none (default: auto)
 angle: -50deg, // angle (default: -60deg)
 text-size: 8pt, // length (default: global header_font_size or 9pt)
 ),
@@ -58,7 +57,7 @@ bytes(2)[_End_],
 
 ## Usage
 
-To use this library through the Typst package manager import bytefield with `#import "@preview/bytefield:0.0.4": *` at the top of your file.
+To use this library through the Typst package manager import bytefield with `#import "@preview/bytefield:0.0.5": *` at the top of your file.
 
 The package contains some of the most common network protocol headers which are available under: `common.ipv4`, `common.ipv6`, `common.icmp`, `common.icmpv6`, `common.dns`, `common.tcp`, `common.udp`.
 
