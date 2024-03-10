@@ -272,6 +272,18 @@
       // calculate the x position inside the grid depending on the msb
       let x_pos = if (meta.msb == left) { (bpr - 1) - calc.rem(num,bpr) } else { calc.rem(num, bpr) }
 
+      // check if a marker should be used.
+      let marker = header.data.format.at("marker", default: true) // false
+      if (type(marker) == array) {
+        assert(marker.len() == 2, message: strfmt("expected a array of length two, found array with length {}", marker.len()));
+        if (show_number) {
+          marker = marker.at(0, default: true)
+        } else {
+          marker = marker.at(1, default: true)
+        }
+      }
+      assert(type(marker) == bool, message: strfmt("expects marker to be a bool, found {}", type(marker)));
+
       bf-cell("header-cell", 
           cell-index: (header.field-index, num),
           grid: top,
@@ -287,9 +299,9 @@
             // Defines the angle of the labels 
             angle: header.data.format.at("angle", default: -60deg),
             // Defines the text-size for both numbers and labels.
-            text-size: header.data.format.at("text-size",default: auto), //TODO: connect to global setting
+            text-size: header.data.format.at("text-size",default: auto), 
             // Defines if a marker should be shown
-            marker: header.data.format.at("marker", default: true), // false
+            marker: marker,
             // Defines the alignment
             align: header.data.format.at("align", default: center + horizon), 
             // Defines the inset
@@ -321,9 +333,8 @@
 #let map_cells(cells) = {
   cells.map(c => {
     assert_bf-cell(c)
-    let cell_type = c.at("cell-type", default: none)
 
-    let body = if (cell_type == "header-cell") {
+    let body = if is-header-cell(c) {
       let label_text = c.label.text
       let label_num = c.label.num
       locate(loc => {
@@ -335,19 +346,18 @@
             if is-not-empty(label_text) {
               box(height: size, inset: (left: 50%, rest: 0pt))[
                 #set align(start)
-                #rotate(c.format.at("angle", default: -60deg), origin: left, label_text)
+                #rotate(c.format.at("angle"), origin: left, label_text)
               ]
             },
-            if (is-not-empty(label_text) and c.format.at("marker", default: auto) != none){ line(end:(0pt, 5pt)) },
+            if (is-not-empty(label_text) and c.format.at("marker") != false){ line(end:(0pt, 5pt)) },
             if c.format.number {box(inset: (top:3pt, rest: 0pt), label_num)},  
           )
-          
         })
       }) 
     } else {
       box(
         height: 100%,
-        width: if (cell_type == "data-cell") { 100% } else {auto},
+        width: if is-data-cell(c) { 100% } else {auto},
         stroke: c.format.at("stroke", default: none),
       )[
         #locate(loc => {

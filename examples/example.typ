@@ -92,7 +92,7 @@
     23, [end_test], 
     24, [start_break], 
     36, [Fix],  // will not be shown 
-    marker: auto, // auto or none (default: auto)
+    marker: false, // true or false or (true, false) or (false, true) (default: true)
     angle: -50deg, // angle  (default: -60deg)
   ),
   // Add data fields (bit, bits, byte, bytes) and notes

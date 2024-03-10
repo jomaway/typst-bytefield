@@ -88,11 +88,11 @@
 			"bytes",    // adds every multiple of 8 to the header. 
 			0, [start], // number with label
 			5,          // number without label
-			12, [#text(14pt, fill: red, "test")], 
+			-12, [#text(14pt, fill: red, "test")], //label without number
 			23, [end_test], 
 			24, [start_break], 
 			36, [Fix],  // will not be shown 
-			marker: auto, // auto or none (default: auto)
+			marker: true, // true or false (default: auto)
 			angle: -50deg, // angle  (default: -60deg)
 			text-size: 8pt,  // length  (default: global header_font_size or 9pt)
 		),
