@@ -7,17 +7,19 @@ default:
 
 # generate example pdf
 gen-example:
-	typst compile --root {{ self }} examples/example.typ 
+	typst compile --root {{ self }} examples/example.typ
 
 # generate bytefield manual
 gen-docs:
-	typst compile docs/docs.typ --root {{ self }}
+	typst compile --root {{ self }} docs/docs.typ
 
-# watch examples and docs
-watch:
-	typst watch docs/docs.typ --root {{ self }} & \
-	typst watch examples/example.typ --root {{ self }} \
-	&& fg
+# watch docs
+watch-docs:
+	typst watch docs/docs.typ --root {{ self }}
+
+# watch example
+watch-example:
+	typst watch examples/example.typ --root {{ self }} 
 
 # open the bytefield manual
 open-docs:
