@@ -203,14 +203,15 @@
   let step = 1
   for arg in args.pos() {
     if type(arg) == int {
-      _numbers.push(arg)
-      last = arg
-      step = arg
+      if (arg >= 0) {
+        _numbers.push(arg)
+      }
+      last = calc.abs(arg)
     } else if type(arg) == str {
       autofill = arg
     } else if type(arg) == content { 
       labels.insert(str(last),arg)
-      last += step
+      last += 1
     }
     if numbers != none { numbers = _numbers }
   }
