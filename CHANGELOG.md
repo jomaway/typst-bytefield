@@ -1,10 +1,12 @@
 # Changelog
 
-## [0.0.5] - (Unreleased)
+## [0.0.5] - (2024-03-11)
 
 ### Added
 - Option to style the header with a background color (`fill`) and stroke (`stroke`).
 - Option to specify the row heights of the bytefield with a `row` argument.
+- Option to add labels without a number by using a negative number.
+- Improved option to show or hide markers underneath a label.
 
 ## [0.0.4] - (2024-02-18)
 
