@@ -354,11 +354,7 @@
       }) 
     } else {
       locate(loc => {
-        box(
-          height: _get_row_height(loc)*c.span.rows,
-          width: if is-data-cell(c) { 100% } else {auto},
-          stroke: c.format.at("stroke", default: none),
-        )[
+        [
             #if (is-data-cell(c) and (_get_field_font_size(loc) != auto)) {
               [
                 #set text(_get_field_font_size(loc));
@@ -380,6 +376,7 @@
       colspan: c.span.cols,
       rowspan: c.span.rows,
       inset: c.format.at("inset", default: 0pt),
+      stroke: c.format.at("stroke", default: none),
       fill: c.format.at("fill", default: none),
       align: c.format.at("align", default: center + horizon),
       body
