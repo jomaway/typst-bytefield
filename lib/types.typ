@@ -19,15 +19,15 @@
 }
 
 // note-field holds information about an field outside (left or right) the main grid.
-#let note-field(index, anchor, side, level:0, label, format: none, rowspan: 1) = {
+#let note-field(index, side, level:0, label, format: none, row: auto, rowspan: 1) = {
   bf-field("note-field", index,
     data: (
-      anchor: anchor,
       side: side,
+      row: row,
+      rowspan: rowspan,
       level: level,
       label: label,
       format: format,  // TODO
-      rowspan: rowspan,
     )
   )
 }

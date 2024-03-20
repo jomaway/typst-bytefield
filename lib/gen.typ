@@ -97,7 +97,7 @@
   let range_idx = 0;
   let fields = ();
 
-  // data fields
+  // data fields - important! must be processed first.
   let data_fields = _fields.filter(f => is-data-field(f))
   if (meta.msb == left ) { data_fields = data_fields.rev() }
   for f in data_fields {
@@ -110,8 +110,14 @@
 
   // note fields
   for f in _fields.filter(f => is-note-field(f)) {
-    let anchor = _get_index_of_next_data_field(f.field-index, _fields)
-    let data = dict_insert_and_return(f.data, "anchor", anchor)
+    let row = if (f.data.row == auto) {
+      let anchor = _get_index_of_next_data_field(f.field-index, _fields)
+      let anchor_field = fields.find(f => f.field-index == anchor)
+      int( if (meta.msb == left) { (meta.size - anchor_field.data.range.end)/bpr } else { anchor_field.data.range.start/bpr })
+    } else {
+      f.data.row
+    }
+    let data = dict_insert_and_return(f.data, "row", row)
     let field = dict_insert_and_return(f, "data", data)
     assert_note-field(field);
     fields.push(field)
@@ -221,17 +227,6 @@
     let side = field.data.side
     let level = field.data.level
 
-    // get the associated field
-    let anchor_field = fields.find(f => f.field-index == field.data.anchor)
-    let row = 0;
-   
-    if anchor_field != none {
-       row = int( if (meta.msb == left) { (meta.size - anchor_field.data.range.end)/bpr } else { anchor_field.data.range.start/bpr })
-    } else {
-      // if no anchor could be found, fail silently
-      continue
-    }
-
     _cells.push(
       bf-cell("note-cell", 
           cell-index: (field.field-index, 0),
@@ -241,7 +236,7 @@
           } else {
             level
           },
-          y: int(row), 
+          y: int(field.data.row), 
           rowspan: field.data.rowspan,
           label: field.data.label, 
           format: field.data.format,
