@@ -301,7 +301,7 @@
             // Defines if a marker should be shown
             marker: marker,
             // Defines the alignment
-            align: header.data.format.at("align", default: center + horizon), 
+            align: header.data.format.at("align", default: center + bottom), 
             // Defines the inset
             inset: header.data.format.at("inset", default: (x: 0pt, y: 4pt)),
           )
