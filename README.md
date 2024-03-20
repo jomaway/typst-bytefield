@@ -2,8 +2,6 @@
 
 A simple way to create network protocol headers, memory maps, register definitions and more in typst.
 
-Using [tablex](https://github.com/PgBiel/typst-tablex) under the hood.
-
 ⚠️ Warning. As this package is still in an early stage, things might break with the next version.
 
 ℹ️ If you find a bug or a feature which is missing, please open an issue and/or send an PR.
