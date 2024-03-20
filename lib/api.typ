@@ -97,13 +97,15 @@
 /// The note is always shown in the same row as the next data field which is specified. 
 ///
 /// - side (left, right): Where the annotation should be displayed
-/// - level (int): Defines the nesting level of the note.
+/// - row (int, auto): Define a row where the note should be displayed.
 /// - rowspan (int): Defines if the cell is spanned over multiple rows.
+/// - level (int): Defines the nesting level of the note.
 /// - inset (length): Inset of the the annotation cell.
 /// - bracket (bool): Defines if a bracket will be shown for this note.
 /// - content (content): The content of the note.
 #let note(
   side,
+  row: auto,
   rowspan:1,
   level:0, 
   inset: 5pt,
@@ -144,7 +146,7 @@
     align:_align+horizon,
   )
 
-  return note-field(none, none, side, level:level, body, format: format, rowspan: rowspan)
+  return note-field(none, side, level:level, body, format: format, row: row, rowspan: rowspan)
 }
 
 /// Shows a note with a bracket and spans over multiple rows.

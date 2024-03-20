@@ -31,8 +31,9 @@
   let field-type = field.at("field-type", default: none)
   assert.eq(field-type, "note-field", message: strfmt("expected field-type == note-field, found {}",field-type))
   // Check if it has a valid anchor id 
-  let anchor = field.data.anchor
-  assert(type(anchor) == int, message: strfmt("expected integer for parameter anchor, found {} ", type(anchor)))
+  let row = field.data.row
+  assert(type(row) == int, message: strfmt("expected integer for parameter anchor, found {} ", type(row)))
+  
   // Check side 
   assert(field.data.side == left or field.data.side == right, message: strfmt("expected left or right for the notes side argument."))
 }
