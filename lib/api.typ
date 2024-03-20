@@ -122,12 +122,12 @@
 
   if (side == left) {
     _align  = right
-    _first  = box(height:100%,content)
-    _second = box(height:100%,inset:(right:0pt),layout(size => {math.lr("{",size:size.height)}))
+    _first  = content
+    _second = layout(size => {$ lr("{",size:size.height) $})
   } else {
     _align  = left
-    _first  = box(height:100%,inset:(left:0pt),layout(size => {math.lr("}",size:size.height)}))
-    _second = box(height:100%,content)
+    _first  = layout(size => {$ lr("}",size:size.height) $})
+    _second = content
   }
 
   let body = if (bracket == false) { content } else {
