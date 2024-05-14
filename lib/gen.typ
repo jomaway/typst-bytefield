@@ -330,9 +330,9 @@
     let body = if is-header-cell(c) {
       let label_text = c.label.text
       let label_num = c.label.num
-      locate(loc => {
+      context {
         style(styles => {
-          set text(if c.format.text-size == auto { _get_header_font_size(loc) } else { c.format.text-size })
+          set text(if c.format.text-size == auto { _get_header_font_size() } else { c.format.text-size })
           set align(center + bottom)
           let size = measure(label_text, styles).width
           stack(dir: ttb, spacing: 0pt,
@@ -346,23 +346,23 @@
             if c.format.number {box(inset: (top:3pt, rest: 0pt), label_num)},  
           )
         })
-      }) 
+      }
     } else {
-      locate(loc => {
+      {
         [
-            #if (is-data-cell(c) and (_get_field_font_size(loc) != auto)) {
+            #if (is-data-cell(c) and (_get_field_font_size() != auto)) {
               [
-                #set text(_get_field_font_size(loc));
+                #set text(_get_field_font_size());
                 #c.label
               ]
-            } else if (is-note-cell(c) and (_get_note_font_size(loc) != auto)) {
+            } else if (is-note-cell(c) and (_get_note_font_size() != auto)) {
               [
-                #set text(_get_note_font_size(loc));
+                #set text(_get_note_font_size());
                 #c.label
               ]
             } else { c.label }
         ]
-      })
+      }
     }
 
     return grid.cell(
@@ -381,9 +381,9 @@
 
 /// produce the final output
 #let generate_table(meta, cells) = {
-  let table = locate(loc => {
-    let rows = if (meta.rows.main == auto) { _get_row_height(loc) } else { meta.rows.main }
-    if (type(rows) == array) { rows = rows.map(r => if (r == auto) { _get_row_height(loc) } else { r } )}
+  let table = context {
+    let rows = if (meta.rows.main == auto) { _get_row_height() } else { meta.rows.main }
+    if (type(rows) == array) { rows = rows.map(r => if (r == auto) { _get_row_height() } else { r } )}
 
     // somehow grid_header still needs to exists. 
     let grid_header = if (meta.header != none) { 
@@ -420,8 +420,8 @@
         ([/* top left*/], 
         align(bottom, box(
           width: 100%,
-          fill: if (meta.header.fill != auto) { meta.header.fill } else { _get_header_background(loc) }, 
-          stroke: if (meta.header.stroke != auto) { meta.header.stroke } else { _get_header_border(loc) },
+          fill: if (meta.header.fill != auto) { meta.header.fill } else { _get_header_background() }, 
+          stroke: if (meta.header.stroke != auto) { meta.header.stroke } else { _get_header_border() },
           grid_header
         )), 
         [/*top right*/],)
@@ -431,6 +431,6 @@
       align(top,grid_right),
     )
 
-  })
+  }
   return table
 }
