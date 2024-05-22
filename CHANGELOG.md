@@ -1,5 +1,13 @@
 # Changelog
 
+## [0.0.6] - (2024-05-22)
+
+- Removed tablex dependencies
+- Fixed bracket hight calculation
+- Feat: Add option to specify row to note-fields.
+- Feat: Allow pattern as fill arguments
+- Replaced locate with context
+
 ## [0.0.5] - (2024-03-11)
 
 ### Added
