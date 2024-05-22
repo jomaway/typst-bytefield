@@ -3,7 +3,7 @@
 #import "asserts.typ": *
 #import "states.typ": *
 
-#let assert_level_cols(levels, cols, side) = {
+#let assert-level-cols(levels, cols, side) = {
   if (cols != auto) {
     cols = if (int == type(cols)) { cols } else if (array == type(cols)) { cols.len() } else { panic(strfmt("expected {} argument to be auto, int or array, found {}",if (side == "left") {"pre"} else {"post"} ,type(cols) )) }
     
@@ -12,13 +12,13 @@
 }
 
 /// generate metadata which is needed later on
-#let generate_meta(fields, args) = {
+#let generate-meta(fields, args) = {
   // collect metadata into an dictionary
   let bh = fields.find(f =>  is-header-field(f))
   // check level indentation for annotations
-  let (pre_levels, post_levels) = _get_max_annotation_levels(fields.filter(f => is-note-field(f) ))
-  assert_level_cols(pre_levels, args.side.left_cols, "left")
-  assert_level_cols(post_levels, args.side.right_cols, "right")
+  let (pre_levels, post_levels) = get-max-annotation-levels(fields.filter(f => is-note-field(f) ))
+  assert-level-cols(pre_levels, args.side.left_cols, "left")
+  assert-level-cols(post_levels, args.side.right_cols, "right")
   // check if msb value is valid 
   assert(args.msb in (left,right), message: strfmt("expected left or right for msb, found {}", args.msb))
   let meta = (
@@ -58,7 +58,7 @@
 }
 
 /// helper to calc number values from autofill string arguments
-#let _get_header_autofill_values(autofill, fields, meta) = {
+#let get-header-autofill-values(autofill, fields, meta) = {
   if (autofill == "bounds") {
     return fields.filter(f => is-data-field(f)).map(f => if f.data.range.start == f.data.range.end { (f.data.range.start,) } else {(f.data.range.start, f.data.range.end)}).flatten()
   } else if (autofill == "all") {
@@ -79,18 +79,18 @@
 }
 
 /// Index all fields
-#let index_fields(fields) = {
+#let index-fields(fields) = {
   fields.enumerate().map(((idx, f)) => {
-    assert_bf-field(f)
-    dict_insert_and_return(f, "field-index", idx)
+    assert-bf-field(f)
+    dict-insert-and-return(f, "field-index", idx)
   })
 }
 
 /// indexes all fields and add some additional field data
-#let finalize_fields(fields, meta) = {
+#let finalize-fields(fields, meta) = {
 
   // This part must be changed if the user low level api changes.
-  let _fields = index_fields(fields)
+  let _fields = index-fields(fields)
 
   // Define some variables
   let bpr = meta.cols.main
@@ -111,22 +111,22 @@
   // note fields
   for f in _fields.filter(f => is-note-field(f)) {
     let row = if (f.data.row == auto) {
-      let anchor = _get_index_of_next_data_field(f.field-index, _fields)
+      let anchor = get-index-of-next-data-field(f.field-index, _fields)
       let anchor_field = fields.find(f => f.field-index == anchor)
       int( if (meta.msb == left) { (meta.size - anchor_field.data.range.end)/bpr } else { anchor_field.data.range.start/bpr })
     } else {
       f.data.row
     }
-    let data = dict_insert_and_return(f.data, "row", row)
-    let field = dict_insert_and_return(f, "data", data)
-    assert_note-field(field);
+    let data = dict-insert-and-return(f.data, "row", row)
+    let field = dict-insert-and-return(f, "data", data)
+    assert-note-field(field);
     fields.push(field)
   }
 
 
   // header fields  -- needs data fields already processed !!
   for f in _fields.filter(f => is-header-field(f)) {
-    let autofill_values = _get_header_autofill_values(f.data.autofill, fields, meta);
+    let autofill_values = get-header-autofill-values(f.data.autofill, fields, meta);
     let numbers = if f.data.numbers == none { () } else { f.data.numbers + autofill_values }
     let labels = f.data.at("labels", default: (:))
     fields.push(header-field(
@@ -143,7 +143,7 @@
 }
 
 /// generate data cells from data-fields
-#let generate_data_cells(fields, meta) = {
+#let generate-data-cells(fields, meta) = {
   let data_fields = fields.filter(f => is-data-field(f))
   if (meta.msb == left ) { data_fields = data_fields.rev() }
   data_fields = data_fields
@@ -153,7 +153,7 @@
   let idx = 0;
 
   for field in data_fields {
-    assert_data-field(field)
+    assert-data-field(field)
     let len = field.data.size
 
     let slice_idx = 0;
@@ -217,13 +217,13 @@
 }
 
 /// generate note cells from note-fields
-#let generate_note_cells(fields, meta) = {
+#let generate-note-cells(fields, meta) = {
   let note_fields = fields.filter(f => is-note-field(f))
   let _cells = ()
   let bpr = meta.cols.main
 
   for field in note_fields {
-    assert_note-field(field)
+    assert-note-field(field)
     let side = field.data.side
     let level = field.data.level
 
@@ -247,14 +247,14 @@
 }
 
 /// generate header cells from header-fields
-#let generate_header_cells(fields, meta) = {
+#let generate-header-cells(fields, meta) = {
   let header_fields = fields.filter(f => is-header-field(f))
   let bpr = meta.cols.main
 
   let _cells = ()
 
   for header in header_fields {
-    assert_header-field(header)
+    assert-header-field(header)
     let nums = header.data.at("numbers", default: ()) + header.data.at("labels").keys().map(k => int(k)) 
     let cell = nums.filter(num => num >= header.data.range.start and num < header.data.range.end).dedup().map(num =>{
 
@@ -311,28 +311,28 @@
 }
 
 /// generates cells from fields
-#let generate_cells(meta, fields) = {
+#let generate-cells(meta, fields) = {
   // data 
-  let data_cells = generate_data_cells(fields, meta);
+  let data_cells = generate-data-cells(fields, meta);
   // notes
-  let note_cells = generate_note_cells(fields, meta);
+  let note_cells = generate-note-cells(fields, meta);
   // header 
-  let header_cells = generate_header_cells(fields, meta);
+  let header_cells = generate-header-cells(fields, meta);
 
   return (header_cells, data_cells, note_cells).flatten()
 }
 
 /// map bf custom cells to tablex cells
-#let map_cells(cells) = {
+#let map-cells(cells) = {
   cells.map(c => {
-    assert_bf-cell(c)
+    assert-bf-cell(c)
 
     let body = if is-header-cell(c) {
       let label_text = c.label.text
       let label_num = c.label.num
       context {
         style(styles => {
-          set text(if c.format.text-size == auto { _get_header_font_size() } else { c.format.text-size })
+          set text(if c.format.text-size == auto { get-default-header-font-size() } else { c.format.text-size })
           set align(center + bottom)
           let size = measure(label_text, styles).width
           stack(dir: ttb, spacing: 0pt,
@@ -350,14 +350,14 @@
     } else {
       {
         [
-            #if (is-data-cell(c) and (_get_field_font_size() != auto)) {
+            #if (is-data-cell(c) and (get-default-field-font-size() != auto)) {
               [
-                #set text(_get_field_font_size());
+                #set text(get-default-field-font-size());
                 #c.label
               ]
-            } else if (is-note-cell(c) and (_get_note_font_size() != auto)) {
+            } else if (is-note-cell(c) and (get-default-note-font-size() != auto)) {
               [
-                #set text(_get_note_font_size());
+                #set text(get-default-note-font-size());
                 #c.label
               ]
             } else { c.label }
@@ -380,36 +380,36 @@
 }
 
 /// produce the final output
-#let generate_table(meta, cells) = {
+#let generate-table(meta, cells) = {
   let table = context {
-    let rows = if (meta.rows.main == auto) { _get_row_height() } else { meta.rows.main }
-    if (type(rows) == array) { rows = rows.map(r => if (r == auto) { _get_row_height() } else { r } )}
+    let rows = if (meta.rows.main == auto) { get-default-row-height() } else { meta.rows.main }
+    if (type(rows) == array) { rows = rows.map(r => if (r == auto) { get-default-row-height() } else { r } )}
 
     // somehow grid_header still needs to exists. 
     let grid_header = if (meta.header != none) { 
       grid(
         columns: (1fr,)*meta.cols.main,
         rows: auto,
-        ..map_cells(cells.filter(c => is-in-header-grid(c)))
+        ..map-cells(cells.filter(c => is-in-header-grid(c)))
       )
     } else { none }
 
     let grid_left = grid(
       columns: meta.side.left.cols,
       rows: rows,
-      ..map_cells(cells.filter(c => is-in-left-grid(c)))
+      ..map-cells(cells.filter(c => is-in-left-grid(c)))
     )
 
     let grid_right = grid(
       columns: meta.side.right.cols,
       rows: rows,
-      ..map_cells(cells.filter(c => is-in-right-grid(c)))
+      ..map-cells(cells.filter(c => is-in-right-grid(c)))
     )
 
     let grid_center = grid(
         columns:(1fr,)*meta.cols.main,
         rows: rows,
-        ..map_cells(cells.filter(c => is-in-main-grid(c)))
+        ..map-cells(cells.filter(c => is-in-main-grid(c)))
       )
 
 
@@ -420,8 +420,8 @@
         ([/* top left*/], 
         align(bottom, box(
           width: 100%,
-          fill: if (meta.header.fill != auto) { meta.header.fill } else { _get_header_background() }, 
-          stroke: if (meta.header.stroke != auto) { meta.header.stroke } else { _get_header_border() },
+          fill: if (meta.header.fill != auto) { meta.header.fill } else { get-default-header-background() }, 
+          stroke: if (meta.header.stroke != auto) { meta.header.stroke } else { get-default-header-border() },
           grid_header
         )), 
         [/*top right*/],)

@@ -26,26 +26,26 @@
 }
 
 
-#let _get_row_height() = {
+#let get-default-row-height() = {
   default_row_height.get()
 }
 
-#let _get_header_font_size() = {
+#let get-default-header-font-size() = {
   default_header_font_size.get()
 }
 
-#let _get_field_font_size() = {
+#let get-default-field-font-size() = {
   default_field_font_size.get()
 }
 
-#let _get_note_font_size() = {
+#let get-default-note-font-size() = {
   default_note_font_size.get()
 }
 
-#let _get_header_background() = {
+#let get-default-header-background() = {
   default_header_background.get()
 }
 
-#let _get_header_border() = {
+#let get-default-header-border() = {
   default_header_border.get()
 }

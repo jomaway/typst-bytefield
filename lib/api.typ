@@ -29,10 +29,10 @@
     side: (left_cols: pre, right_cols: post)
   )
 
-  let meta = generate_meta(fields.pos(), args)
-  let fields = finalize_fields(fields.pos(), meta)
-  let cells = generate_cells(meta, fields)
-  let table = generate_table(meta, cells)
+  let meta = generate-meta(fields.pos(), args)
+  let fields = finalize-fields(fields.pos(), meta)
+  let cells = generate-cells(meta, fields)
+  let table = generate-table(meta, cells)
   return table
 }
 

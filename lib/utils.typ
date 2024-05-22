@@ -1,15 +1,15 @@
 #import "asserts.typ": *
 
 // insert a value into an dict and return the dict
-#let dict_insert_and_return(dict, key, value) = {
+#let dict-insert-and-return(dict, key, value) = {
   assert.eq(type(dict), dictionary);
   assert.eq(type(key), str);
   dict.insert(key,value);
   return dict
 }
 
-#let _get_field_type(field) = {
-  assert_bf-field(field);
+#let get-field-type(field) = {
+  assert-bf-field(field);
   return field.at("field-type", default: none);
 }
 
@@ -21,24 +21,24 @@
 
 /// Check if a given field is a data-field
 #let is-data-field(field) = {
-  assert_bf-field(field);
+  assert-bf-field(field);
   field.at("field-type", default: none) == "data-field"
 }
 
 /// Check if a given field is a note-field
 #let is-note-field(field) = {
-  assert_bf-field(field);
+  assert-bf-field(field);
   field.at("field-type", default: none) == "note-field"
 }
 
 /// Check if a given field is a header-field
 #let is-header-field(field) = {
-  assert_bf-field(field);
+  assert-bf-field(field);
   field.at("field-type", default: none) == "header-field"
 }
 
 /// Return the index of the next data-field
-#let _get_index_of_next_data_field(idx, fields) = {
+#let get-index-of-next-data-field(idx, fields) = {
   let res = fields.sorted(key: f => f.field-index).find(f => f.field-index > idx and is-data-field(f))
   if res != none { res.field-index } else { none }
 }
@@ -54,11 +54,11 @@
 }
 
 /// calculates the max annotation level for both sides
-#let _get_max_annotation_levels(annotations) = {
+#let get-max-annotation-levels(annotations) = {
   let left_max_level = -1
   let right_max_level = -1
   for field in annotations {
-    assert_bf-field(field)
+    assert-bf-field(field)
     let (side, level, ..) = field.data;
     if (side == left) {
       left_max_level = calc.max(left_max_level,level)
@@ -109,7 +109,7 @@
 }
 
 /// Return the current index of a field or cell 
-#let _get_index(f) = {
+#let get-index(f) = {
   if is-bf-field(f) {
     return f.field-index
   } else if is-bf-cell(f) {
