@@ -77,7 +77,7 @@
 = Example
 #block[
 	#show: bf-config.with(
-		row_height: 2em,
+		row-height: 2em,
 	)
 
 #figure(
