@@ -1,10 +1,13 @@
 #import "../bytefield.typ": *
 #import "../common.typ" as common
-// #import "@local/bytefield:0.0.4": *
 
-#import "@preview/codelst:2.0.0": sourcecode
+#import "@preview/codly:1.0.0": *
+#show: codly-init.with()
+
 
 #set text(font: "Rubik", weight: 300);
+
+#let sticky(body, ..args) = block(sticky: true, ..args, body)
 
 #let tag(value, fill: orange.lighten(45%)) = {
   box(
@@ -19,15 +22,15 @@
   #set align(end + top);
       #layout(size => {
         box(height: size.height, inset: (top: 1pt, bottom: 2pt))[
-          #sym.arrow.t.stop; 
-          #v(1fr) 
+          #sym.arrow.t.stop;
+          #v(1fr)
           #sym.arrow.b.stop;
         ]
       })
 ][
   #set align(start + horizon)
   #layout(size => [
-    #calc.round(size.height.cm(), digits: 2) cm 
+    #calc.round(size.height.cm(), digits: 2) cm
   ])
 ]
 
@@ -39,7 +42,7 @@
   grid(
     columns:columns,
     gutter: 1em,
-    box(align(horizon,sourcecode(showrange: showlines,source))),
+    box(align(horizon,source)),
     box(align(horizon,eval(source.text, mode:"markup", scope: (
       "bytefield" : bytefield,
       "byte" : byte,
@@ -85,21 +88,21 @@
 #bytefield(
   // Config the header
   bitheader(
-    "bytes",    // adds every multiple of 8 to the header. 
+    "bytes",    // adds every multiple of 8 to the header.
     0, [start], // number with label
     5,          // number without label
-    -12, [#text(14pt, fill: red, "test")], 
-    23, [end_test], 
-    24, [start_break], 
-    36, [Fix],  // will not be shown 
+    -12, [#text(14pt, fill: red, "test")],
+    23, [end_test],
+    24, [start_break],
+    36, [Fix],  // will not be shown
     marker: false, // true or false or (true, false) or (false, true) (default: true)
     angle: -50deg, // angle  (default: -60deg)
   ),
   // Add data fields (bit, bits, byte, bytes) and notes
-  // A note always aligns on the same row as the start of the next data field. 
-  note(left)[#text(16pt, fill: blue, font: "Consolas", "Testing")], 
+  // A note always aligns on the same row as the start of the next data field.
+  note(left)[#text(16pt, fill: blue, font: "Consolas", "Testing")],
   bytes(3,fill: red.lighten(30%))[#text(8pt, "Test")],
-  note(right)[#set text(9pt); #sym.arrow.l This field \ breaks into 2 rows.],  
+  note(right)[#set text(9pt); #sym.arrow.l This field \ breaks into 2 rows.],
   bytes(2)[Break],
   note(left)[#set text(9pt); and continues \ here #sym.arrow],
   bits(24,fill: green.lighten(30%))[Fill],
@@ -111,10 +114,10 @@
   flag(fill: orange.lighten(60%))[#text(8pt)[ACK]],
   flag[#text(8pt)[BOB]],
   bits(25, fill: purple.lighten(60%))[#v_ruler],
-  bytes(2)[Next], 
+  bytes(2)[Next],
   bytes(8, fill: yellow.lighten(60%))[Multi break],
   note(right)[#emoji.checkmark Finish],
-  bytes(2)[_End_], 
+  bytes(2)[_End_],
 )
 ```)
 
@@ -143,7 +146,7 @@
 
 == Show offsets
 
-Show start and end bit of each bitbox with `bitheader("offsets")`.
+#sticky[Show start and end bit of each bitbox with `bitheader("offsets")`.]
 
 #example(```typst
 #bytefield(
@@ -168,7 +171,7 @@ Show start and end bit of each bitbox with `bitheader("offsets")`.
 
 == Show bounds
 
-Show start bit of each bitbox with `bitheader("bounds")`.
+#sticky[ start bit of each bitbox with `bitheader("bounds")`.]
 
 #example(showlines: (2,2), ```typst
 #bytefield(
@@ -214,15 +217,16 @@ Show start bit of each bitbox with `bitheader("bounds")`.
 ```)
 
 == Numbers and Labels
-You can also show labels and indexes by specifying a `content` after an `number` (`int`).
-
+#sticky[
+  You can also show labels and indexes by specifying a `content` after an `number` (`int`).
+]
 #example(showlines: (2,8), ```typst
 #bytefield(
   bitheader(
-    0,[LSB], 
-    5, [test], 
-    8, [next_field], 
-    24, [important FLAG], 
+    0,[LSB],
+    5, [test],
+    8, [next_field],
+    24, [important FLAG],
     31, [MSB],
     17,19,
     text-size: 8pt,
@@ -235,17 +239,18 @@ You can also show labels and indexes by specifying a `content` after an `number`
 ```)
 
 === No numbers, only labels
-You can omit numbers by setting `numbers: none` inside the bitheader function. 
-It's not possible to only omit numbers for certain labels right now. 
-
+#sticky[
+You can omit numbers by setting `numbers: none` inside the bitheader function.
+It's not possible to only omit numbers for certain labels right now.
+]
 #example(showlines: (2,9), ```typst
 #bytefield(
   bitheader(
-    0,[LSB], 
-    5, [test], 
-    8, [next_field], 
-    24, [important_FLAG], 
-    31, [MSB], 
+    0,[LSB],
+    5, [test],
+    8, [next_field],
+    24, [important_FLAG],
+    31, [MSB],
     17, 19,  // those get ommited as well.
     numbers: none,
     text-size: 8pt,
@@ -293,7 +298,7 @@ You can use #named arguments to adjust the header styling.
 
 == Set row height
 
-The height of the rows can be set with the `rows` argument.
+#sticky[The height of the rows can be set with the `rows` argument.]
 
 #example(showlines: (2,2),```typst
 #bytefield(

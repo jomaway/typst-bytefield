@@ -1,7 +1,14 @@
-#import "@preview/tidy:0.2.0"
-#import "@preview/gentle-clues:0.6.0": abstract, info
-#import "@preview/codelst:2.0.0": sourcecode
 #import "../bytefield.typ": *
+#import "@preview/tidy:0.3.0"
+#import "@preview/gentle-clues:1.0.0": abstract, info
+#import "@preview/codly:1.0.0": *
+#show: codly-init.with()
+
+// extract version from typst.toml package file.
+#let pkg-data = toml("../typst.toml").package
+#let version = pkg-data.at("version")
+#let import_statement = raw(block: true, lang: "typ", "#import \"@preview/bytefield:" + version +"\": *")
+
 
 #let tag(value, fill: orange.lighten(45%)) = {
   box(
@@ -21,15 +28,14 @@
 #set heading(numbering: (..args) => {
 	let nums = args.pos()
 	if nums.len() < 3 { numbering("1.", ..nums)}
-}) 
+})
 #show link: set text(blue);
 #show ref: set text(blue);
 #show raw.where(block: false): it => tag(fill: luma(230))[#it]
-#show raw.where(block: true): it => box(width: 100%, inset: 1em, fill: luma(220))[#it]
 
 #let user-api = tidy.show-module(
 	tidy.parse-module(read("../lib/api.typ"), name: "User API",),
-	style: tidy.styles.default, 
+	style: tidy.styles.default,
 	show-outline:true,
 	sort-functions: none,
 )
@@ -52,24 +58,22 @@
   grid(
     columns:columns,
     gutter: 1em,
-    box(align(horizon,sourcecode(showrange: showlines,source))),
+    box(align(horizon,source)),
     box(align(horizon,eval(source.text, mode:"markup", scope: scope))),
   )
 }
 
 #set page("a4", margin: 2cm)
-// read package info from `typst.toml` 
-#let pkginfo = toml("../typst.toml").package
 
-// title 
+// title
 #align(center, text(24pt, weight: 500)[bytefield manual])
 
 #abstract[
 	#link("https://github.com/jomaway/typst-bytefield")[*bytefield*] is a package for creating _network protocol headers_, _memory maps_, _register definitions_	and more in typst.
 
-	Version: #pkginfo.version \
+	Version: #pkg-data.version \
 	Authors: #link("https://github.com/jomaway","jomaway") + community contributions. \
-	License: #pkginfo.license
+	License: #pkg-data.license
 ]
 
 #outline(depth: 2, indent: 2em)
@@ -85,22 +89,22 @@
 		msb:right,  // left | right  (default: right)
 		// Config the header
 		bitheader(
-			"bytes",    // adds every multiple of 8 to the header. 
+			"bytes",    // adds every multiple of 8 to the header.
 			0, [start], // number with label
 			5,          // number without label
 			-12, [#text(14pt, fill: red, "test")], //label without number
-			23, [end_test], 
-			24, [start_break], 
-			36, [Fix],  // will not be shown 
+			23, [end_test],
+			24, [start_break],
+			36, [Fix],  // will not be shown
 			marker: true, // true or false (default: auto)
 			angle: -50deg, // angle  (default: -60deg)
 			text-size: 8pt,  // length  (default: global header_font_size or 9pt)
 		),
 		// Add data fields (bit, bits, byte, bytes) and notes
-		// A note always aligns on the same row as the start of the next data field. 
-		note(left)[#text(16pt, fill: blue, font: "Consolas", "Testing")], 
+		// A note always aligns on the same row as the start of the next data field.
+		note(left)[#text(16pt, fill: blue, font: "Consolas", "Testing")],
 		bytes(3,fill: red.lighten(30%))[Test],
-		note(right)[#set text(9pt); #sym.arrow.l This field \ breaks into 2 rows.],  
+		note(right)[#set text(9pt); #sym.arrow.l This field \ breaks into 2 rows.],
 		bytes(2)[Break],
 		note(left)[#set text(9pt); and continues \ here #sym.arrow],
 		bits(24,fill: green.lighten(30%))[Fill],
@@ -113,10 +117,10 @@
 		flag[#text(8pt)[BOB]],
 		bits(25, fill: purple.lighten(60%))[Padding],
 		// padding(fill: purple.lighten(40%))[Padding],
-		bytes(2)[Next], 
+		bytes(2)[Next],
 		bytes(8, fill: yellow.lighten(60%))[Multi break],
 		note(right)[#emoji.checkmark Finish],
-		bytes(2)[_End_], 
+		bytes(2)[_End_],
 	),
 	caption: "Random example of a colored bytefield.",
 	supplement: "Bytefield"
@@ -129,12 +133,12 @@
 
 = Usage
 Import the package from the official package manager
-```typc
-#import "@preview/bytefield:0.0.4": *
-```
+
+#import_statement
+
 or download the package and put it inside the folder for local packages.
 
-= Features 
+= Features
 
 == Data fields
 
@@ -142,7 +146,7 @@ By default a bytefield shows 32 bits per row. This can be changed by using the `
 
 You can add fields of different size to the bytefield by using one of the following field functions.
 
-`bit`, `bits`, `byte`, `bytes`, `flag` 
+`bit`, `bits`, `byte`, `bytes`, `flag`
 
   - Fields can be colored with a `fill` argument.
 
@@ -185,20 +189,20 @@ The helper `group` takes the side it should appear on as first argument, as seco
 #pagebreak()
 == Headers [WIP]
 
-#emoji.warning The new bitheader api is still a work in progress and might change a bit in the next version. 
+#emoji.warning The new bitheader api is still a work in progress and might change a bit in the next version.
 
 The current API is described here:
 
-The `bitheader` function defines which bit-numbers and text-labels are shown as a header. 
+The `bitheader` function defines which bit-numbers and text-labels are shown as a header.
 Currently *only the first* `bitheader` per `bytefield` is processed, all others will be ignored.
 
 There are some #named arguments and an arbitrary amount of #positional arguments which you can pass to a header.
 
 Showing a number. #positional
-- Just add an `int` value with the number you would like to show. 
+- Just add an `int` value with the number you would like to show.
 
 Showing a text label for a number #positional
-- Add a content field after the int value which the label belongs to. 
+- Add a content field after the int value which the label belongs to.
 - To show a label without the number use the negativ number. _Example: (-5) instead of (5)_
 
 #info[
@@ -208,11 +212,11 @@ Set the order of the bits with the `msb` argument directly on the `bytefield`.
 ]
 
 Show or hide numbers
-- `numbers: none` hide all numbers 
+- `numbers: none` hide all numbers
 - `numbers: auto` show all specified numbers #default
 
 Some common use cases can be set by adding a `string` value. #positional
-- `"all"` will show numbers for all bits. 
+- `"all"` will show numbers for all bits.
 - `"bytes"` will show every multiple of 8 and the last bit.
 - `"bounds"` will show begin and end of each field in the first row.
 - `"offsets"` will show begin of each field in the first row.
@@ -222,7 +226,7 @@ You can use #named arguments to adjust the header styling.
 - `fill` argument adds an background color to the header.
 - `text-size` sets the size of the text.
 - `stroke` defines the border style.
-- `marker` [bool] defines if there is a marker line shown below the label. 
+- `marker` [bool] defines if there is a marker line shown below the label.
 	- `marker: true`: shows a marker on each label.
 	- `marker: false`: no marker is shown at all.
 	- `marker: (true,false)`: shows markers only on labels with numbers.
@@ -235,10 +239,10 @@ You can also show labels and indexes by specifying a `content` after an `number`
 #example(showlines: (2,8), ```typst
 #bytefield(
   bitheader(
-    0,[LSB], 
-    5, [test], 
-    8, [next_field], 
-    24, [important FLAG], 
+    0,[LSB],
+    5, [test],
+    8, [next_field],
+    24, [important FLAG],
     31, [MSB],
     17,19,
   ),
@@ -252,7 +256,7 @@ You can also show labels and indexes by specifying a `content` after an `number`
 
 == Styling
 
-You can use the `row` argument on the `bytefield` to specify custom row heights. #emoji.warning This does not affect the header row. 
+You can use the `row` argument on the `bytefield` to specify custom row heights. #emoji.warning This does not affect the header row.
 Usage is equal to _typst_ table or grid row argument.
 
 See @reg-def as an example.
@@ -270,7 +274,7 @@ You can set some global default values which affect all `bytefields` by using a 
   header_background: luma(200),
   header_border: luma(80),
 )
-``` 
+```
 
 #pagebreak()
 = Use cases<chap:use-cases>
@@ -336,7 +340,7 @@ Creating register definition like @bf-reg is currently possible by using two `by
 
 #figure(
 	example(
-	```typst 
+	```typst
 	#let reg_field(body, size: 1, rw: "rw") = {
 		bits(size,table(columns: 1fr,rows: (2fr, auto),body,rw))
 	}
@@ -378,9 +382,9 @@ Creating register definition like @bf-reg is currently possible by using two `by
 
 
 #pagebreak()
-= Reference 
+= Reference
 
-#show heading.where(level:2): set text(18pt) // module names 
-#show heading.where(level:3): set text(16pt, fill: red.darken(20%)) // function names 
+#show heading.where(level:2): set text(18pt) // module names
+#show heading.where(level:3): set text(16pt, fill: red.darken(20%)) // function names
 
 #user-api<user-api>
