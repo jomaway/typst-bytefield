@@ -102,7 +102,7 @@
 		),
 		// Add data fields (bit, bits, byte, bytes) and notes
 		// A note always aligns on the same row as the start of the next data field.
-		note(left)[#text(16pt, fill: blue, font: "Consolas", "Testing")],
+		note(left)[#text(16pt, fill: blue, "Testing")],
 		bytes(3,fill: red.lighten(30%))[Test],
 		note(right)[#set text(9pt); #sym.arrow.l This field \ breaks into 2 rows.],
 		bytes(2)[Break],

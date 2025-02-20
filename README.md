@@ -11,7 +11,7 @@ A simple way to create network protocol headers, memory maps, register definitio
 ![random colored bytefield example](docs/bytefield_example.png)
 
 ```typst
-#import "@preview/bytefield:0.0.6": *
+#import "@preview/bytefield:0.0.7": *
 
 #bytefield(
 // Config the header
@@ -30,7 +30,7 @@ text-size: 8pt, // length (default: global header_font_size or 9pt)
 ),
 // Add data fields (bit, bits, byte, bytes) and notes
 // A note always aligns on the same row as the start of the next data field.
-note(left)[#text(16pt, fill: blue, font: "Consolas", "Testing")],
+note(left)[#text(16pt, fill: blue, "Testing")],
 bytes(3,fill: red.lighten(30%))[Test],
 note(right)[#set text(9pt); #sym.arrow.l This field \ breaks into 2 rows.],
 bytes(2)[Break],
@@ -55,7 +55,7 @@ bytes(2)[_End_],
 
 ## Usage
 
-To use this library through the Typst package manager import bytefield with `#import "@preview/bytefield:0.0.6": *` at the top of your file.
+To use this library through the Typst package manager import bytefield with `#import "@preview/bytefield:0.0.7": *` at the top of your file.
 
 The package contains some of the most common network protocol headers which are available under: `common.ipv4`, `common.ipv6`, `common.icmp`, `common.icmpv6`, `common.dns`, `common.tcp`, `common.udp`.
 
