@@ -45,7 +45,7 @@
 /// - body (content): The label which is displayed inside the field.
 #let _field(size, fill: none, body) = {
   if size != auto { assert.eq(type(size), int, message: strfmt("expected size to be an integer or auto, found {}", type(size))) } 
-  if fill != none { assert(type(fill) in (color, gradient, pattern), message: strfmt("expected fill to be an color or gradient, found {}.", type(fill)))}
+  if fill != none { assert(type(fill) in (color, gradient, tiling), message: strfmt("expected fill to be an color or gradient, found {}.", type(fill)))}
   data-field(none, size, none, none, body, format: (fill: fill))
 }
 

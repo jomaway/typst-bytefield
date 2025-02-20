@@ -331,21 +331,19 @@
       let label_text = c.label.text
       let label_num = c.label.num
       context {
-        style(styles => {
-          set text(if c.format.text-size == auto { get-default-header-font-size() } else { c.format.text-size })
-          set align(center + bottom)
-          let size = measure(label_text, styles).width
-          stack(dir: ttb, spacing: 0pt,
-            if is-not-empty(label_text) {
-              box(height: size, inset: (left: 50%, rest: 0pt))[
-                #set align(start)
-                #rotate(c.format.at("angle"), origin: left, label_text)
-              ]
-            },
-            if (is-not-empty(label_text) and c.format.at("marker") != false){ line(end:(0pt, 5pt)) },
-            if c.format.number {box(inset: (top:3pt, rest: 0pt), label_num)},  
-          )
-        })
+        set text(if c.format.text-size == auto { get-default-header-font-size() } else { c.format.text-size })
+        set align(center + bottom)
+        let size = measure(label_text).width
+        stack(dir: ttb, spacing: 0pt,
+          if is-not-empty(label_text) {
+            box(height: size, inset: (left: 50%, rest: 0pt))[
+              #set align(start)
+              #rotate(c.format.at("angle"), origin: left, label_text)
+            ]
+          },
+          if (is-not-empty(label_text) and c.format.at("marker") != false){ line(end:(0pt, 5pt)) },
+          if c.format.number {box(inset: (top:3pt, rest: 0pt), label_num)},  
+        )
       }
     } else {
       {

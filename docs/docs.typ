@@ -1,6 +1,6 @@
-#import "@preview/tidy:0.2.0"
-#import "@preview/gentle-clues:0.6.0": abstract, info
-#import "@preview/codelst:2.0.0": sourcecode
+#import "@preview/tidy:0.4.1"
+#import "@preview/gentle-clues:1.1.0": abstract, info
+#import "@preview/codelst:2.0.2": sourcecode
 #import "../bytefield.typ": *
 
 #let tag(value, fill: orange.lighten(45%)) = {
