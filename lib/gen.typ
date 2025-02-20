@@ -6,7 +6,7 @@
 #let assert-level-cols(levels, cols, side) = {
   if (cols != auto) {
     cols = if (int == type(cols)) { cols } else if (array == type(cols)) { cols.len() } else { panic(strfmt("expected {} argument to be auto, int or array, found {}",if (side == "left") {"pre"} else {"post"} ,type(cols) )) }
-    
+
     assert(cols >= levels, message: strfmt("max notes level on the {} is {}, but found only {} cols.",side, levels, cols))
   }
 }
@@ -19,12 +19,12 @@
   let (pre-levels, post-levels) = get-max-annotation-levels(fields.filter(f => is-note-field(f) ))
   assert-level-cols(pre-levels, args.side.left-cols, "left")
   assert-level-cols(post-levels, args.side.right-cols, "right")
-  // check if msb value is valid 
+  // check if msb value is valid
   assert(args.msb in (left,right), message: strfmt("expected left or right for msb, found {}", args.msb))
   let meta = (
     // the total size in bits of all data-fields inside the bytefield. // todo: check if this is calculated correct if msb:left is selected.
     size: fields.filter(f => is-data-field(f) ).map(f => if (f.data.size == auto) { args.bpr /* fix: this is not consistent with how auto is handled in generate_fields */ } else { f.data.size } ).sum(),
-    // the position of the msb (left | right), default: right 
+    // the position of the msb (left | right), default: right
     msb: args.msb,
     // number of cols for each grid.
     cols: (
@@ -32,12 +32,12 @@
       main: args.bpr,
       post: post-levels,
     ),
-    // contains the height of the rows. 
+    // contains the height of the rows.
     rows: (
       header: auto, // !unused
       main: args.rows, // default: auto
     ),
-    // contains information about the header 
+    // contains information about the header
     header: if (bh == none) { none } else {
       (
         fill: bh.data.format.at("fill", default: none),
@@ -101,7 +101,7 @@
   let data_fields = _fields.filter(f => is-data-field(f))
   if (meta.msb == left ) { data_fields = data_fields.rev() }
   for f in data_fields {
-    let size = if (f.data.size == auto) { bpr - calc.rem(range_idx, bpr) } else { f.data.size }  
+    let size = if (f.data.size == auto) { bpr - calc.rem(range_idx, bpr) } else { f.data.size }
     let start = range_idx;
     range_idx += size;
     let end = range_idx - 1;
@@ -131,7 +131,7 @@
     let labels = f.data.at("labels", default: (:))
     fields.push(header-field(
       start: if f.data.range.start == auto { if meta.msb == right { 0 } else { meta.size - bpr } } else { assert.eq(type(f.data.range.start),int); f.data.range.start },
-      end: if f.data.range.end == auto { if meta.msb == right { bpr } else { meta.size } } else { assert.eq(type(f.data.range.end),int); f.data.range.end }, 
+      end: if f.data.range.end == auto { if meta.msb == right { bpr } else { meta.size } } else { assert.eq(type(f.data.range.end),int); f.data.range.end },
       numbers: numbers,
       labels: labels,
       ..f.data.format,
@@ -139,7 +139,7 @@
     break // workaround to only allow one bitheader till multiple bitheaders are supported.
   }
 
-  return fields 
+  return fields
 }
 
 /// generate data cells from data-fields
@@ -163,7 +163,7 @@
     while len > 0 {
       let rem_space = bpr - calc.rem(idx, bpr);
       let cell_size = calc.min(len, rem_space);
-      
+
       // calc stroke
       let _default_stroke = (1pt + black)
       let _stroke = (
@@ -171,7 +171,7 @@
         bottom: _default_stroke,
         rest: _default_stroke,
       )
-      
+
       if ((len - cell_size) > 0 and data_fields.last().field-index != field.field-index) {
         _stroke.at("bottom") = field.data.format.fill
       }
@@ -180,7 +180,7 @@
       }
 
       let cell_index = (field.field-index, slice_idx)
-      let x_pos = calc.rem(idx,bpr) 
+      let x_pos = calc.rem(idx,bpr)
       let y_pos = int(idx/bpr)
 
       let cell_format = (
@@ -191,7 +191,7 @@
       // adjust label for breaking fields.
       let middle = int(field.data.size / 2 / bpr)  // roughly calc the row where the label should be displayed
       let label = if (should_span or middle == slice_idx) { field.data.label } else if (slice_idx < 2 and len < bpr) { "..." } else {none}
-      
+
       // prepare for next cell
       let tmp_size = if should_span {field.data.size} else {cell_size}
       idx += tmp_size;
@@ -201,14 +201,14 @@
       // add bf-cell to _cells
       _cells.push(
         //type, grid, x, y, colspan:1, rowspan:1, label, idx ,format: auto
-        bf-cell("data-cell", 
+        bf-cell("data-cell",
           x: x_pos,
           y: y_pos,
           colspan: cell_size,
-          rowspan: if(should_span) { int(field.data.size/bpr)} else {1}, 
-          label: label, 
+          rowspan: if(should_span) { int(field.data.size/bpr)} else {1},
+          label: label,
           cell-index: cell_index,
-          format: cell_format 
+          format: cell_format
         )
       )
     }
@@ -228,7 +228,7 @@
     let level = field.data.level
 
     _cells.push(
-      bf-cell("note-cell", 
+      bf-cell("note-cell",
           cell-index: (field.field-index, 0),
           grid: side,
           x: if (side == left) {
@@ -236,12 +236,12 @@
           } else {
             level
           },
-          y: int(field.data.row), 
+          y: int(field.data.row),
           rowspan: field.data.rowspan,
-          label: field.data.label, 
+          label: field.data.label,
           format: field.data.format,
         )
-    ) 
+    )
   }
   return _cells
 }
@@ -255,7 +255,7 @@
 
   for header in header_fields {
     assert-header-field(header)
-    let nums = header.data.at("numbers", default: ()) + header.data.at("labels").keys().map(k => int(k)) 
+    let nums = header.data.at("numbers", default: ()) + header.data.at("labels").keys().map(k => int(k))
     let cell = nums.filter(num => num >= header.data.range.start and num < header.data.range.end).dedup().map(num =>{
 
       // extract the label from the header field.
@@ -277,7 +277,7 @@
       }
       assert(type(marker) == bool, message: strfmt("expects marker to be a bool, found {}", type(marker)));
 
-      bf-cell("header-cell", 
+      bf-cell("header-cell",
           cell-index: (header.field-index, num),
           grid: top,
           x: x_pos,
@@ -289,14 +289,14 @@
           format: (
             // Defines if the number should be shown or ommited
             number: show_number,
-            // Defines the angle of the labels 
+            // Defines the angle of the labels
             angle: header.data.format.at("angle", default: -60deg),
             // Defines the text-size for both numbers and labels.
-            text-size: header.data.format.at("text-size",default: auto), 
+            text-size: header.data.format.at("text-size",default: auto),
             // Defines if a marker should be shown
             marker: marker,
             // Defines the alignment
-            align: header.data.format.at("align", default: center + bottom), 
+            align: header.data.format.at("align", default: center + bottom),
             // Defines the inset
             inset: header.data.format.at("inset", default: (x: 0pt, y: 4pt)),
           )
@@ -312,11 +312,11 @@
 
 /// generates cells from fields
 #let generate-cells(meta, fields) = {
-  // data 
+  // data
   let data_cells = generate-data-cells(fields, meta);
   // notes
   let note_cells = generate-note-cells(fields, meta);
-  // header 
+  // header
   let header_cells = generate-header-cells(fields, meta);
 
   return (header_cells, data_cells, note_cells).flatten()
@@ -342,7 +342,7 @@
             ]
           },
           if (is-not-empty(label_text) and c.format.at("marker") != false){ line(end:(0pt, 5pt)) },
-          if c.format.number {box(inset: (top:3pt, rest: 0pt), label_num)},  
+          if c.format.number {box(inset: (top:3pt, rest: 0pt), label_num)},
         )
       }
     } else {
@@ -383,8 +383,8 @@
     let rows = if (meta.rows.main == auto) { get-default-row-height() } else { meta.rows.main }
     if (type(rows) == array) { rows = rows.map(r => if (r == auto) { get-default-row-height() } else { r } )}
 
-    // somehow grid_header still needs to exists. 
-    let grid_header = if (meta.header != none) { 
+    // somehow grid_header still needs to exists.
+    let grid_header = if (meta.header != none) {
       grid(
         columns: (1fr,)*meta.cols.main,
         rows: auto,
@@ -415,16 +415,16 @@
       columns: (if (meta.cols.pre > 0) { auto } else { 0pt }, 1fr, if (meta.cols.post > 0) { auto } else { 0pt }),
       inset: 0pt,
       ..if (meta.header != none) {
-        ([/* top left*/], 
+        ([/* top left*/],
         align(bottom, box(
           width: 100%,
-          fill: if (meta.header.fill != auto) { meta.header.fill } else { get-default-header-background() }, 
+          fill: if (meta.header.fill != auto) { meta.header.fill } else { get-default-header-background() },
           stroke: if (meta.header.stroke != auto) { meta.header.stroke } else { get-default-header-border() },
           grid_header
-        )), 
+        )),
         [/*top right*/],)
       },
-      align(top,grid_left), 
+      align(top,grid_left),
       align(top,grid_center),
       align(top,grid_right),
     )
