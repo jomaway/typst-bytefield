@@ -165,14 +165,15 @@
       let cell_size = calc.min(len, rem_space);
 
       // calc stroke
-      let _default_stroke = (1pt + black)
+      // this gets populated with the default stroke later, when the context is available
+      let _default_stroke = auto
       let _stroke = (
         top: _default_stroke,
         bottom: _default_stroke,
         rest: _default_stroke,
       )
 
-      if ((len - cell_size) > 0 and data_fields.last().field-index != field.field-index) {
+      if ((len - cell_size) > 0 and data_fields.last().field-index != field.field-index and not should_span) {
         _stroke.at("bottom") = field.data.format.fill
       }
       if (slice_idx > 0){
@@ -362,6 +363,16 @@
         ]
       }
     }
+    
+    let stroke = c.format.at("stroke", default: none)
+    // context available now, so changing to default stroke
+    if type(stroke) == dictionary {
+      for key in stroke.keys() {
+        if stroke.at(key) == auto {
+          stroke.at(key) = get-default-stoke()
+        }
+      }
+    }
 
     return grid.cell(
       x: c.position.x,
@@ -369,7 +380,7 @@
       colspan: c.span.cols,
       rowspan: c.span.rows,
       inset: c.format.at("inset", default: 0pt),
-      stroke: c.format.at("stroke", default: none),
+      stroke: stroke,
       fill: c.format.at("fill", default: none),
       align: c.format.at("align", default: center + horizon),
       body
@@ -382,6 +393,8 @@
   let table = context {
     let rows = if (meta.rows.main == auto) { get-default-row-height() } else { meta.rows.main }
     if (type(rows) == array) { rows = rows.map(r => if (r == auto) { get-default-row-height() } else { r } )}
+
+    let default-stroke = get-default-stoke()
 
     // somehow grid_header still needs to exists.
     let grid_header = if (meta.header != none) {

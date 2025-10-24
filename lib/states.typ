@@ -5,6 +5,7 @@
 #let default-note-font-size = state("bf-note-font-size", auto);
 #let default-header-background = state("bf-header-bg", none);
 #let default-header-border = state("bf-header-border", none);
+#let default-stroke = state("bf-default-stroke", (1pt + black));
 
 // function to use with show rule
 #let bf-config(
@@ -14,6 +15,7 @@
   header-font-size: 9pt,
   header-background: none,
   header-border: none,
+  stroke: (1pt + black),
   content
   ) = {
   default-row-height.update(row-height);
@@ -22,6 +24,7 @@
   default-note-font-size.update(note-font-size)
   default-header-background.update(header-background)
   default-header-border.update(header-border)
+  default-stroke.update(stroke)
   content
 }
 
@@ -48,4 +51,8 @@
 
 #let get-default-header-border() = {
   default-header-border.get()
+}
+
+#let get-default-stoke() = {
+  default-stroke.get()
 }
