@@ -394,8 +394,6 @@
     let rows = if (meta.rows.main == auto) { get-default-row-height() } else { meta.rows.main }
     if (type(rows) == array) { rows = rows.map(r => if (r == auto) { get-default-row-height() } else { r } )}
 
-    let default-stroke = get-default-stoke()
-
     // somehow grid_header still needs to exists.
     let grid_header = if (meta.header != none) {
       grid(
