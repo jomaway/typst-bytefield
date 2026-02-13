@@ -1,6 +1,16 @@
 #import "lib/api.typ": *
 
 // Common network protocols
+#let eth = bytefield(
+  bpr: 8 * 6,
+  bitheader("bytes"),
+  bytes(6)[Destination MAC],
+  bytes(6)[Source MAC],
+  bytes(2)[Ethertype],
+  bytes(42)[Payload (42-1500)],
+  bytes(4)[CRC],
+)
+
 #let ipv4 = bytefield(
   bitheader("bytes"),
   bits(4)[Version], bits(4)[IHL], bytes(1)[TOS], bytes(2)[Total Length],
