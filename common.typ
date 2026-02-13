@@ -11,6 +11,16 @@
   bytes(4)[CRC],
 )
 
+#let ipv6_frag_ext_h = bytefield(
+  bitheader("bytes"),
+  bits(8)[Next Header],
+  bits(8)[Reserved],
+  bits(13)[Fragment offset],
+  bits(2)[res],
+  flag[M],
+  bits(4 * 8)[Identification],
+)
+
 #let ipv4 = bytefield(
   bitheader("bytes"),
   bits(4)[Version], bits(4)[IHL], bytes(1)[TOS], bytes(2)[Total Length],
