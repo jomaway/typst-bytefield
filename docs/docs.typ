@@ -1,7 +1,7 @@
 #import "../bytefield.typ": *
-#import "@preview/tidy:0.4.1"
-#import "@preview/gentle-clues:1.1.0": abstract, info
-#import "@preview/codly:1.2.0": *
+#import "@preview/tidy:0.4.3"
+#import "@preview/gentle-clues:1.3.0": abstract, info
+#import "@preview/codly:1.3.0": *
 #show: codly-init.with()
 
 // extract version from typst.toml package file.
