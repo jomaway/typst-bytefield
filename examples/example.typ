@@ -1,7 +1,7 @@
 #import "../bytefield.typ": *
 #import "../common.typ" as common
 
-#import "@preview/codly:1.2.0": *
+#import "@preview/codly:1.3.0": *
 #show: codly-init.with()
 
 #set text(font: "Rubik", weight: 300);
@@ -81,6 +81,7 @@
   // header_font_size: 12pt,
   // header_background: luma(200),
   // header_border: luma(80),
+  // stroke: 0.5pt + red
 )
 
 #example(```typst
@@ -113,8 +114,8 @@
   flag(fill: orange.lighten(60%))[#text(8pt)[ACK]],
   flag[#text(8pt)[BOB]],
   bits(25, fill: purple.lighten(60%))[#v_ruler],
-  bytes(2)[Next],
-  bytes(8, fill: yellow.lighten(60%))[Multi break],
+  bytes(2, stroke: 3pt + blue)[ Big blue stroke ],
+  bytes(12, fill: yellow.lighten(60%))[Multi break],
   note(right)[#emoji.checkmark Finish],
   bytes(2)[_End_],
 )
@@ -309,6 +310,70 @@ You can use #named arguments to adjust the header styling.
   byte[LSB], bytes(2)[#v_ruler], byte[MSB],
   byte[LSB], bytes(2)[#v_ruler], byte[MSB],
 )
+```)
+
+#pagebreak()
+== Stroke and fill
+
+#show: bf-config.with(
+  stroke: (paint: blue, thickness: 1pt, dash: "dashed"),
+)
+
+#example(showlines: (2,2),```typst
+  #bytefield(
+    bitheader("bytes"),
+    byte()[LSB], bytes(2, stroke: red)[middle], byte[MSB],
+  )
+```)
+
+#example(```typst
+  #bytefield(
+    bitheader("bytes"),
+    byte[LSB], bytes(6, stroke: red)[middle], byte[MSB],
+  )
+```)
+
+#example(```typst
+  #bytefield(
+    bitheader("bytes"),
+    bytes(2)[LSB], bytes(4, stroke: red)[middle], bytes(2)[MSB],
+  )
+```)
+
+#example(```typst
+  #bytefield(
+    bitheader("bytes"),
+    bytes(3)[LSB], bytes(2, stroke: red)[middle], bytes(3)[MSB],
+  )
+```)
+
+
+#example(```typst
+  #bytefield(
+    bitheader("bytes"),
+    bytes(3)[LSB], bytes(6)[middle], bytes(3)[MSB],
+  )
+```)
+
+#example(```typst
+  #bytefield(
+    bitheader("bytes"),
+    bytes(3)[LSB], bytes(6, stroke: red)[middle], bytes(3)[MSB],
+  )
+```)
+
+#example(```typst
+  #bytefield(
+    bitheader("bytes"),
+    byte[LSB], bytes(10)[middle], byte[MSB],
+  )
+```)
+
+#example(```typst
+  #bytefield(
+    bitheader("bytes"),
+    byte[LSB], bytes(10, stroke: red)[middle], byte[MSB],
+  )
 ```)
 
 #pagebreak()
