@@ -127,10 +127,10 @@
   if (side == left) {
     _align  = right
     _first  = content
-    _second = layout(size => {$ lr("{",size:size.height) $})
+    _second = layout(size => {$ stretch(\{,size:size.height) $})
   } else {
     _align  = left
-    _first  = layout(size => {$ lr("}",size:size.height) $})
+    _first  = layout(size => {$stretch(\}, size: size.height)  $})
     _second = content
   }
 
