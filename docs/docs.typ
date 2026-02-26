@@ -268,11 +268,12 @@ You can set some global default values which affect all `bytefields` by using a 
 *Example:*
 ```typst
 #show: bf-config.with(
-  field_font_size: 15.5pt,
-  note_font_size: 6pt,
-  header_font_size: 12pt,
-  header_background: luma(200),
-  header_border: luma(80),
+  field-font-size: 15.5pt,
+  note-font-size: 6pt,
+  header-font-size: 12pt,
+  header-background: luma(200),
+  header-border: luma(80),
+	stroke: .5pt + red
 )
 ```
 

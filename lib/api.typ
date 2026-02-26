@@ -43,10 +43,11 @@
 /// - size (int): The size of the field in bits.
 /// - fill (color): The background color for the field.
 /// - body (content): The label which is displayed inside the field.
-#let _field(size, fill: none, body) = {
+#let _field(size, fill: none, stroke: auto, body) = {
   if size != auto { assert.eq(type(size), int, message: strfmt("expected size to be an integer or auto, found {}", type(size))) }
   if fill != none { assert(type(fill) in (color, gradient, tiling), message: strfmt("expected fill to be an color or gradient, found {}.", type(fill)))}
-  data-field(none, size, none, none, body, format: (fill: fill))
+  let _stroke = if (stroke == auto) { (:) } else { (rest: stroke) }
+  data-field(none, size, none, none, body, format: (fill: fill, stroke: stroke))
 }
 
 /// Add a field of the size of *one bit* to the bytefield

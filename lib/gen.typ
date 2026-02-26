@@ -164,28 +164,26 @@
       let rem_space = bpr - calc.rem(idx, bpr);
       let cell_size = calc.min(len, rem_space);
 
-      // calc stroke
-      let _default_stroke = (1pt + black)
-      let _stroke = (
-        top: _default_stroke,
-        bottom: _default_stroke,
-        rest: _default_stroke,
-      )
 
-      if ((len - cell_size) > 0 and data_fields.last().field-index != field.field-index) {
-        _stroke.at("bottom") = field.data.format.fill
-      }
-      if (slice_idx > 0){
-        _stroke.at("top") = none
+      let d_stroke = field.data.format.at("stroke", default: auto)
+      let _stroke = if (d_stroke == auto) { (:) } else { (rest: d_stroke) }
+
+
+      if (slice_idx == 0 and (len - cell_size) > bpr and not should_span) {
+        _stroke.insert("bottom", 0pt)
+      } else if (slice_idx > 0  and _cells.last().position.at("x") == 0){
+        _stroke.insert("top", 0pt)
+      } else if (slice_idx > 0 and (len - cell_size) > 0) {
+        _stroke = (:)
       }
 
       let cell_index = (field.field-index, slice_idx)
       let x_pos = calc.rem(idx,bpr)
       let y_pos = int(idx/bpr)
 
-      let cell_format = (
-        stroke: _stroke,
+      let cell_format = (:
         ..field.data.format,
+        stroke: _stroke,
       )
 
       // adjust label for breaking fields.
@@ -369,7 +367,7 @@
       colspan: c.span.cols,
       rowspan: c.span.rows,
       inset: c.format.at("inset", default: 0pt),
-      stroke: c.format.at("stroke", default: none),
+      stroke: c.format.at("stroke", default: 0pt),
       fill: c.format.at("fill", default: none),
       align: c.format.at("align", default: center + horizon),
       body
@@ -406,6 +404,7 @@
 
     let grid_center = grid(
         columns:(1fr,)*meta.cols.main,
+        stroke: get-default-stoke(),
         rows: rows,
         ..map-cells(cells.filter(c => is-in-main-grid(c)))
       )
