@@ -47,7 +47,7 @@
   if size != auto { assert.eq(type(size), int, message: strfmt("expected size to be an integer or auto, found {}", type(size))) }
   if fill != none { assert(type(fill) in (color, gradient, tiling), message: strfmt("expected fill to be an color or gradient, found {}.", type(fill)))}
   let _stroke = if (stroke == auto) { (:) } else { (rest: stroke) }
-  data-field(none, size, none, none, body, format: (fill: fill, stroke: stroke))
+  data-field(none, size, none, none, body, format: (fill: fill, stroke: _stroke))
 }
 
 /// Add a field of the size of *one bit* to the bytefield

@@ -165,9 +165,7 @@
       let cell_size = calc.min(len, rem_space);
 
 
-      let d_stroke = field.data.format.at("stroke", default: auto)
-      let _stroke = if (d_stroke == auto) { (:) } else { (rest: d_stroke) }
-
+      let _stroke = field.data.format.at("stroke", default: auto)
 
       if (slice_idx == 0 and (len - cell_size) > bpr and not should_span) {
         _stroke.insert("bottom", 0pt)
