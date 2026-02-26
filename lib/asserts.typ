@@ -1,4 +1,4 @@
-#import "@preview/oxifmt:0.2.1": strfmt
+#import "@preview/oxifmt:1.0.0": strfmt
 
 
 #let assert-dict(arg, var_name) = {
@@ -30,11 +30,11 @@
   // Check for correct field-type
   let field-type = field.at("field-type", default: none)
   assert.eq(field-type, "note-field", message: strfmt("expected field-type == note-field, found {}",field-type))
-  // Check if it has a valid anchor id 
+  // Check if it has a valid anchor id
   let row = field.data.row
   assert(type(row) == int, message: strfmt("expected integer for parameter anchor, found {} ", type(row)))
-  
-  // Check side 
+
+  // Check side
   assert(field.data.side == left or field.data.side == right, message: strfmt("expected left or right for the notes side argument."))
 }
 
@@ -43,7 +43,7 @@
   assert-bf-field(field);
 }
 
-/// fail if cell is not a bf-cell 
+/// fail if cell is not a bf-cell
 #let assert-bf-cell(cell) = {
   assert-dict(cell, "cell");
   // Check bf-type
@@ -53,6 +53,3 @@
   let cell-type = cell.at("cell-type", default: none)
   assert.ne(cell-type, none, message: strfmt("could not find cell-type at bf-cell {}", cell));
 }
-
-
-
