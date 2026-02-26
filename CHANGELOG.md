@@ -1,5 +1,15 @@
 # Changelog
 
+## [0.0.8] - (2026-02-26)
+
+- Feat: Add global stroke option for fields with `bf-config stroke: <color>`.
+- Feat: Added option to specify stroke for fields via `stroke` argument. This does not work with multi break fields yet.
+- Fix: Bracket stretching in group fields.
+
+## [0.0.7] - (2025-02-20)
+
+- Chore: Update to typst 0.13 and fixes two minor issues
+
 ## [0.0.6] - (2024-05-22)
 
 - Removed tablex dependencies
