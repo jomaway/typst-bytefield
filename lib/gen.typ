@@ -99,7 +99,6 @@
 
   // data fields - important! must be processed first.
   let data_fields = _fields.filter(f => is-data-field(f))
-  if (meta.msb == left ) { data_fields = data_fields.rev() }
   for f in data_fields {
     let size = if (f.data.size == auto) { bpr - calc.rem(range_idx, bpr) } else { f.data.size }
     let start = range_idx;
@@ -113,7 +112,7 @@
     let row = if (f.data.row == auto) {
       let anchor = get-index-of-next-data-field(f.field-index, _fields)
       let anchor_field = fields.find(f => f.field-index == anchor)
-      int( if (meta.msb == left) { (meta.size - anchor_field.data.range.end)/bpr } else { anchor_field.data.range.start/bpr })
+      int(anchor_field.data.range.start/bpr)
     } else {
       f.data.row
     }
@@ -130,8 +129,8 @@
     let numbers = if f.data.numbers == none { () } else { f.data.numbers + autofill_values }
     let labels = f.data.at("labels", default: (:))
     fields.push(header-field(
-      start: if f.data.range.start == auto { if meta.msb == right { 0 } else { meta.size - bpr } } else { assert.eq(type(f.data.range.start),int); f.data.range.start },
-      end: if f.data.range.end == auto { if meta.msb == right { bpr } else { meta.size } } else { assert.eq(type(f.data.range.end),int); f.data.range.end },
+      start: if f.data.range.start == auto { 0 } else { assert.eq(type(f.data.range.start),int); f.data.range.start },
+      end: if f.data.range.end == auto { bpr } else { assert.eq(type(f.data.range.end),int); f.data.range.end },
       numbers: numbers,
       labels: labels,
       ..f.data.format,
@@ -145,7 +144,6 @@
 /// generate data cells from data-fields
 #let generate-data-cells(fields, meta) = {
   let data_fields = fields.filter(f => is-data-field(f))
-  if (meta.msb == left ) { data_fields = data_fields.rev() }
   data_fields = data_fields
   let bpr = meta.cols.main;
 
@@ -169,14 +167,14 @@
 
       if (slice_idx == 0 and (len - cell_size) > bpr and not should_span) {
         _stroke.insert("bottom", 0pt)
-      } else if (slice_idx > 0  and _cells.last().position.at("x") == 0){
+      } else if (slice_idx > 0 and _cells.last().span.cols == bpr) {
         _stroke.insert("top", 0pt)
       } else if (slice_idx > 0 and (len - cell_size) > 0) {
         _stroke = (:)
       }
 
       let cell_index = (field.field-index, slice_idx)
-      let x_pos = calc.rem(idx,bpr)
+      let x_pos = if (meta.msb == left) { bpr - calc.rem(idx, bpr) - cell_size } else { calc.rem(idx, bpr) }
       let y_pos = int(idx/bpr)
 
       let cell_format = (:
